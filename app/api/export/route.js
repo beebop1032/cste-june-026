@@ -70,7 +70,7 @@ export async function GET(request) {
     const byNiveau = {}
     for (const n of NIVEAUX) {
       byNiveau[n] = blocExams.filter(e => e.niveau === n)
-        .sort((a, b) => a.groupe.localeCompare(b.groupe))
+        .sort((a, b) => a.matiere.localeCompare(b.matiere) || a.groupe.localeCompare(b.groupe))
     }
     const maxRows = Math.max(...Object.values(byNiveau).map(a => a.length), 1)
     return { byNiveau, maxRows }
