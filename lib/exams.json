@@ -550,13 +550,23 @@
     "local": "T02"
   },
   {
-    "id": "PEC-lg-ce1d-1h-2h-n-19-P1P2",
-    "matiere": "Lg CE1D 1h",
+    "id": "PEC-lg-ce1d-2h-n-19-P1",
+    "matiere": "Lg CE1D",
     "niveau": "2e",
     "groupe": "2H-N",
     "profCode": "PEC",
     "jour": "2026-06-19",
-    "periode": "P1+P2",
+    "periode": "P1",
+    "local": "C217"
+  },
+  {
+    "id": "PEC-lg-1h-ce1d-2h-n-19-P2",
+    "matiere": "Lg 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2H-N",
+    "profCode": "PEC",
+    "jour": "2026-06-19",
+    "periode": "P2",
     "local": "C217"
   },
   {
@@ -610,13 +620,23 @@
     "local": "T12"
   },
   {
-    "id": "VBG-lg-ce1d-1h-2i-n-19-P1P2",
-    "matiere": "Lg CE1D 1h",
+    "id": "VBG-lg-ce1d-2i-n-19-P1",
+    "matiere": "Lg CE1D",
     "niveau": "2e",
     "groupe": "2I-N",
     "profCode": "VBG",
     "jour": "2026-06-19",
-    "periode": "P1+P2",
+    "periode": "P1",
+    "local": "C320"
+  },
+  {
+    "id": "VBG-lg-1h-ce1d-2i-n-19-P2",
+    "matiere": "Lg 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2I-N",
+    "profCode": "VBG",
+    "jour": "2026-06-19",
+    "periode": "P2",
     "local": "C320"
   },
   {
@@ -670,13 +690,23 @@
     "local": "T03"
   },
   {
-    "id": "BAL-lg-ce1d-1h-2j-n-19-P1P2",
-    "matiere": "Lg CE1D 1h",
+    "id": "BAL-lg-ce1d-2j-n-19-P1",
+    "matiere": "Lg CE1D",
     "niveau": "2e",
     "groupe": "2J-N",
     "profCode": "BAL",
     "jour": "2026-06-19",
-    "periode": "P1+P2",
+    "periode": "P1",
+    "local": "C216"
+  },
+  {
+    "id": "BAL-lg-1h-ce1d-2j-n-19-P2",
+    "matiere": "Lg 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2J-N",
+    "profCode": "BAL",
+    "jour": "2026-06-19",
+    "periode": "P2",
     "local": "C216"
   },
   {
@@ -730,13 +760,23 @@
     "local": "T08"
   },
   {
-    "id": "VBG-lg-ce1d-1h-2k-n-19-P1P2",
-    "matiere": "Lg CE1D 1h",
+    "id": "VBG-lg-ce1d-2k-n-19-P1",
+    "matiere": "Lg CE1D",
     "niveau": "2e",
     "groupe": "2K-N",
     "profCode": "VBG",
     "jour": "2026-06-19",
-    "periode": "P1+P2",
+    "periode": "P1",
+    "local": "C223"
+  },
+  {
+    "id": "VBG-lg-1h-ce1d-2k-n-19-P2",
+    "matiere": "Lg 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2K-N",
+    "profCode": "VBG",
+    "jour": "2026-06-19",
+    "periode": "P2",
     "local": "C223"
   },
   {
@@ -780,13 +820,23 @@
     "local": "T16"
   },
   {
-    "id": "PEC-lg-ce1d-1h-2l-a-19-P1P2",
-    "matiere": "Lg CE1D 1h",
+    "id": "PEC-lg-ce1d-2l-a-19-P1",
+    "matiere": "Lg CE1D",
     "niveau": "2e",
     "groupe": "2L-A",
     "profCode": "PEC",
     "jour": "2026-06-19",
-    "periode": "P1+P2",
+    "periode": "P1",
+    "local": "C225"
+  },
+  {
+    "id": "PEC-lg-1h-ce1d-2l-a-19-P2",
+    "matiere": "Lg 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2L-A",
+    "profCode": "PEC",
+    "jour": "2026-06-19",
+    "periode": "P2",
     "local": "C225"
   },
   {
@@ -830,13 +880,23 @@
     "local": "T17"
   },
   {
-    "id": "BAL-lg-ce1d-1h-2m-a-19-P1P2",
-    "matiere": "Lg CE1D 1h",
+    "id": "BAL-lg-ce1d-2m-a-19-P1",
+    "matiere": "Lg CE1D",
     "niveau": "2e",
     "groupe": "2M-A",
     "profCode": "BAL",
     "jour": "2026-06-19",
-    "periode": "P1+P2",
+    "periode": "P1",
+    "local": "C319"
+  },
+  {
+    "id": "BAL-lg-1h-ce1d-2m-a-19-P2",
+    "matiere": "Lg 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2M-A",
+    "profCode": "BAL",
+    "jour": "2026-06-19",
+    "periode": "P2",
     "local": "C319"
   },
   {
@@ -880,13 +940,23 @@
     "local": "T18"
   },
   {
-    "id": "PEC-lg-ce1d-1h-2n-a-19-P1P2",
-    "matiere": "Lg CE1D 1h",
+    "id": "PEC-lg-ce1d-2n-a-19-P1",
+    "matiere": "Lg CE1D",
     "niveau": "2e",
     "groupe": "2N-A",
     "profCode": "PEC",
     "jour": "2026-06-19",
-    "periode": "P1+P2",
+    "periode": "P1",
+    "local": "C226"
+  },
+  {
+    "id": "PEC-lg-1h-ce1d-2n-a-19-P2",
+    "matiere": "Lg 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2N-A",
+    "profCode": "PEC",
+    "jour": "2026-06-19",
+    "periode": "P2",
     "local": "C226"
   },
   {
@@ -1850,13 +1920,23 @@
     "local": "T02"
   },
   {
-    "id": "PIEJ-sc-ce1d-1h-2h-24-P1P2",
-    "matiere": "Sc CE1D 1h",
+    "id": "PIEJ-sc-ce1d-2h-24-P1",
+    "matiere": "Sc CE1D",
     "niveau": "2e",
     "groupe": "2H",
     "profCode": "PIEJ",
     "jour": "2026-06-24",
-    "periode": "P1+P2",
+    "periode": "P1",
+    "local": "C217"
+  },
+  {
+    "id": "PIEJ-sc-1h-ce1d-2h-24-P2",
+    "matiere": "Sc 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2H",
+    "profCode": "PIEJ",
+    "jour": "2026-06-24",
+    "periode": "P2",
     "local": "C217"
   },
   {
@@ -1910,13 +1990,23 @@
     "local": "T12"
   },
   {
-    "id": "DKS-sc-ce1d-1h-2i-24-P1P2",
-    "matiere": "Sc CE1D 1h",
+    "id": "DKS-sc-ce1d-2i-24-P1",
+    "matiere": "Sc CE1D",
     "niveau": "2e",
     "groupe": "2I",
     "profCode": "DKS",
     "jour": "2026-06-24",
-    "periode": "P1+P2",
+    "periode": "P1",
+    "local": "C320"
+  },
+  {
+    "id": "DKS-sc-1h-ce1d-2i-24-P2",
+    "matiere": "Sc 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2I",
+    "profCode": "DKS",
+    "jour": "2026-06-24",
+    "periode": "P2",
     "local": "C320"
   },
   {
@@ -1970,13 +2060,23 @@
     "local": "T03"
   },
   {
-    "id": "DKS-sc-ce1d-1h-2j-24-P1P2",
-    "matiere": "Sc CE1D 1h",
+    "id": "DKS-sc-ce1d-2j-24-P1",
+    "matiere": "Sc CE1D",
     "niveau": "2e",
     "groupe": "2J",
     "profCode": "DKS",
     "jour": "2026-06-24",
-    "periode": "P1+P2",
+    "periode": "P1",
+    "local": "C216"
+  },
+  {
+    "id": "DKS-sc-1h-ce1d-2j-24-P2",
+    "matiere": "Sc 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2J",
+    "profCode": "DKS",
+    "jour": "2026-06-24",
+    "periode": "P2",
     "local": "C216"
   },
   {
@@ -2030,13 +2130,23 @@
     "local": "T08"
   },
   {
-    "id": "DKS-sc-ce1d-1h-2k-24-P1P2",
-    "matiere": "Sc CE1D 1h",
+    "id": "DKS-sc-ce1d-2k-24-P1",
+    "matiere": "Sc CE1D",
     "niveau": "2e",
     "groupe": "2K",
     "profCode": "DKS",
     "jour": "2026-06-24",
-    "periode": "P1+P2",
+    "periode": "P1",
+    "local": "C223"
+  },
+  {
+    "id": "DKS-sc-1h-ce1d-2k-24-P2",
+    "matiere": "Sc 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2K",
+    "profCode": "DKS",
+    "jour": "2026-06-24",
+    "periode": "P2",
     "local": "C223"
   },
   {
@@ -2090,13 +2200,23 @@
     "local": "T16"
   },
   {
-    "id": "DKS-sc-ce1d-1h-2l-24-P1P2",
-    "matiere": "Sc CE1D 1h",
+    "id": "DKS-sc-ce1d-2l-24-P1",
+    "matiere": "Sc CE1D",
     "niveau": "2e",
     "groupe": "2L",
     "profCode": "DKS",
     "jour": "2026-06-24",
-    "periode": "P1+P2",
+    "periode": "P1",
+    "local": "C225"
+  },
+  {
+    "id": "DKS-sc-1h-ce1d-2l-24-P2",
+    "matiere": "Sc 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2L",
+    "profCode": "DKS",
+    "jour": "2026-06-24",
+    "periode": "P2",
     "local": "C225"
   },
   {
@@ -2140,13 +2260,23 @@
     "local": "T17"
   },
   {
-    "id": "PIEJ-sc-ce1d-1h-2m-24-P1P2",
-    "matiere": "Sc CE1D 1h",
+    "id": "PIEJ-sc-ce1d-2m-24-P1",
+    "matiere": "Sc CE1D",
     "niveau": "2e",
     "groupe": "2M",
     "profCode": "PIEJ",
     "jour": "2026-06-24",
-    "periode": "P1+P2",
+    "periode": "P1",
+    "local": "C319"
+  },
+  {
+    "id": "PIEJ-sc-1h-ce1d-2m-24-P2",
+    "matiere": "Sc 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2M",
+    "profCode": "PIEJ",
+    "jour": "2026-06-24",
+    "periode": "P2",
     "local": "C319"
   },
   {
@@ -2190,13 +2320,23 @@
     "local": "T18"
   },
   {
-    "id": "BERS-sc-ce1d-1h-2n-24-P1P2",
-    "matiere": "Sc CE1D 1h",
+    "id": "BERS-sc-ce1d-2n-24-P1",
+    "matiere": "Sc CE1D",
     "niveau": "2e",
     "groupe": "2N",
     "profCode": "BERS",
     "jour": "2026-06-24",
-    "periode": "P1+P2",
+    "periode": "P1",
+    "local": "C226"
+  },
+  {
+    "id": "BERS-sc-1h-ce1d-2n-24-P2",
+    "matiere": "Sc 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2N",
+    "profCode": "BERS",
+    "jour": "2026-06-24",
+    "periode": "P2",
     "local": "C226"
   },
   {

@@ -153,15 +153,19 @@ function parseExcel() {
     }
   }
 
-    // Two matières can merge only if their annotation sets are comparable (one ⊆ other).
-  // "Lg1" (annots=[]) + "Lg1 Oral" (annots=[Oral]) → ok ([] ⊆ [Oral])
-  // "Lg CE1D" (annots=[CE1D]) + "Lg 1h" (annots=[1h]) → no (neither ⊆ other)
+  // Two matières can merge (P1+P2) only if:
+  // - identical, OR
+  // - one is base-only (no annotations) and the other adds annotations
+  //   e.g. "Lg1" + "Lg1 Oral" → ok
+  // Reject when both have non-empty but DIFFERENT annotation sets:
+  //   "Lg CE1D" + "Lg 1h CE1D" → different → keep P1 and P2 separate
   function canMerge(m1, m2) {
     if (m1 === m2) return true
     if (getBase(m1) !== getBase(m2)) return false
     const a1 = new Set(getAnnots(m1).map(a => a.toLowerCase()))
     const a2 = new Set(getAnnots(m2).map(a => a.toLowerCase()))
-    return [...a1].every(a => a2.has(a)) || [...a2].every(a => a1.has(a))
+    if (a1.size === 0 || a2.size === 0) return true
+    return a1.size === a2.size && [...a1].every(a => a2.has(a))
   }
 
   // Group by profCode|groupe|niveau|jour, then try to merge compatible entries
