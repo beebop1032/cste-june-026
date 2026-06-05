@@ -1,6 +1,6 @@
 'use client'
 import { useState, useMemo, useTransition } from 'react'
-import { setGroupeStatutSilent } from '@/actions/admin'
+import { setExamStatutSilent } from '@/actions/admin'
 
 function formatJour(iso) {
   const d = new Date(iso + 'T12:00:00')
@@ -18,9 +18,9 @@ const SEL = {
   border: '1px solid #CBD5E1', background: '#fff', width: '100%', cursor: 'pointer',
 }
 
-export default function VerrousJourTable({ exams, groupeStatuts: initial }) {
-  // Local copy of groupeStatuts — updated optimistically on button click
-  const [statuts, setStatuts] = useState(initial)
+export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: initialES }) {
+  // Per-exam statuts (exam-level overrides groupe-level)
+  const [examStatuts, setExamStatuts] = useState(initialES)
   const [isPending, startTransition] = useTransition()
 
   const [filterNiveau, setFilterNiveau] = useState('')
@@ -32,31 +32,33 @@ export default function VerrousJourTable({ exams, groupeStatuts: initial }) {
   const groupes = useMemo(() => [...new Set(exams.map(e => e.groupe))].sort(), [exams])
   const profs   = useMemo(() => [...new Set(exams.map(e => e.profCode))].sort(), [exams])
 
+  function effectif(examId, groupe) {
+    return examStatuts[examId] ?? groupeStatuts[groupe] ?? 'open'
+  }
+
   const rows = useMemo(() => {
     const sorted = [...exams].sort((a, b) =>
       a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode) || a.groupe.localeCompare(b.groupe)
     )
     return sorted.filter(ex => {
-      const gs = statuts[ex.groupe] ?? 'open'
+      const s = examStatuts[ex.id] ?? groupeStatuts[ex.groupe] ?? 'open'
       return (
         (!filterNiveau || ex.niveau   === filterNiveau) &&
         (!filterGroupe || ex.groupe   === filterGroupe) &&
         (!filterProf   || ex.profCode === filterProf)   &&
-        (!filterStatut || gs          === filterStatut)
+        (!filterStatut || s           === filterStatut)
       )
     })
-  }, [exams, statuts, filterNiveau, filterGroupe, filterProf, filterStatut])
+  }, [exams, examStatuts, groupeStatuts, filterNiveau, filterGroupe, filterProf, filterStatut])
 
-  function handleStatut(groupe, statut) {
-    // Optimistic update — UI responds instantly
-    setStatuts(prev => {
+  function handleStatut(examId, statut) {
+    setExamStatuts(prev => {
       const next = { ...prev }
-      if (statut === 'open') delete next[groupe]
-      else next[groupe] = statut
+      if (statut === 'open') delete next[examId]
+      else next[examId] = statut
       return next
     })
-    // Persist in background
-    startTransition(() => setGroupeStatutSilent(groupe, statut))
+    startTransition(() => setExamStatutSilent(examId, statut))
   }
 
   const hasFilter = filterNiveau || filterGroupe || filterProf || filterStatut
@@ -128,8 +130,10 @@ export default function VerrousJourTable({ exams, groupeStatuts: initial }) {
             </thead>
             <tbody>
               {rows.map(ex => {
-                const gs   = statuts[ex.groupe] ?? 'open'
-                const info = GS[gs]
+                const es         = effectif(ex.id, ex.groupe)
+                const info       = GS[es]
+                const hasOverride = !!examStatuts[ex.id]
+                const fromGroupe  = !hasOverride && !!(groupeStatuts[ex.groupe])
                 return (
                   <tr key={ex.id} style={{ background: info.bg, transition: 'background 0.15s' }}>
                     <td style={{ whiteSpace: 'nowrap', fontSize: 12 }}>{formatJour(ex.jour)}</td>
@@ -143,6 +147,11 @@ export default function VerrousJourTable({ exams, groupeStatuts: initial }) {
                       <span className={`badge ${info.badgeClass}`} style={{ fontSize: 11 }}>
                         {info.label}
                       </span>
+                      {fromGroupe && (
+                        <span style={{ fontSize: 9, color: 'var(--fg-muted)', marginLeft: 4, fontStyle: 'italic' }}>
+                          (classe)
+                        </span>
+                      )}
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: 3 }}>
@@ -154,10 +163,10 @@ export default function VerrousJourTable({ exams, groupeStatuts: initial }) {
                           <button
                             key={statut}
                             type="button"
-                            onClick={() => handleStatut(ex.groupe, statut)}
-                            disabled={gs === statut || isPending}
+                            onClick={() => handleStatut(ex.id, statut)}
+                            disabled={es === statut || isPending}
                             className="btn btn-xs"
-                            style={gs === statut
+                            style={es === statut
                               ? { background: GS[statut].text, color: '#fff', fontSize: 10, border: 'none', whiteSpace: 'nowrap', opacity: 1 }
                               : { background: '#fff', color: '#64748B', border: '1px solid #E2E8F0', fontSize: 10, whiteSpace: 'nowrap' }}
                           >
