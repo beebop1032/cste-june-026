@@ -20,14 +20,16 @@ const IconTrash = () => (
 )
 
 // groupeStatuts: { groupe: 'annule'|'maintenu' }  — open = absent
-export default function ProfForm({ profCode, examens, groupeStatuts, dejaRempli, isAdmin }) {
-  const allAdminDecided = examens.every(e => groupeStatuts[e.groupe])
+// examStatuts:   { examId: 'annule'|'maintenu' }  — per-exam override, takes priority
+export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts = {}, dejaRempli, isAdmin }) {
+  const effectiveStatutFor = (ex) => examStatuts[ex.id] ?? groupeStatuts[ex.groupe]
+  const allAdminDecided = examens.every(e => !!effectiveStatutFor(e))
 
   const [confirmed, setConfirmed] = useState(!dejaRempli)
   const [examState, setExamState] = useState(() =>
     Object.fromEntries(
       examens
-        .filter(e => !groupeStatuts[e.groupe]) // only open exams
+        .filter(e => !effectiveStatutFor(e)) // only open exams
         .map(e => [e.id, { eleves: [], surveilleParTitulaire: false, statut: null }])
     )
   )
@@ -81,7 +83,7 @@ export default function ProfForm({ profCode, examens, groupeStatuts, dejaRempli,
     return false
   }
 
-  const openExams = examens.filter(e => !groupeStatuts[e.groupe])
+  const openExams = examens.filter(e => !effectiveStatutFor(e))
   const unresolvedCount = openExams.filter(e => !isResolved(e.id)).length
 
   function handleSubmit(e) {
@@ -91,9 +93,9 @@ export default function ProfForm({ profCode, examens, groupeStatuts, dejaRempli,
 
     const payload = {
       examens: examens.map(ex => {
-        const gs = groupeStatuts[ex.groupe]
-        if (gs === 'annule')   return { id: ex.id, eleves: [], surveilleParTitulaire: false, statut: 'annule' }
-        if (gs === 'maintenu') return { id: ex.id, eleves: [], surveilleParTitulaire: false, statut: 'tous' }
+        const eff = effectiveStatutFor(ex)
+        if (eff === 'annule')   return { id: ex.id, eleves: [], surveilleParTitulaire: false, statut: 'annule' }
+        if (eff === 'maintenu') return { id: ex.id, eleves: [], surveilleParTitulaire: false, statut: 'tous' }
         const st = examState[ex.id]
         return {
           id: ex.id,
@@ -110,8 +112,8 @@ export default function ProfForm({ profCode, examens, groupeStatuts, dejaRempli,
   }
 
   if (allAdminDecided) {
-    const annules  = examens.filter(e => groupeStatuts[e.groupe] === 'annule')
-    const maintenus = examens.filter(e => groupeStatuts[e.groupe] === 'maintenu')
+    const annules  = examens.filter(e => effectiveStatutFor(e) === 'annule')
+    const maintenus = examens.filter(e => effectiveStatutFor(e) === 'maintenu')
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div className="card" style={{ padding: '28px 24px', textAlign: 'center', background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
@@ -194,8 +196,8 @@ export default function ProfForm({ profCode, examens, groupeStatuts, dejaRempli,
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {examens.map(ex => {
-        const gs = groupeStatuts[ex.groupe] // 'annule' | 'maintenu' | undefined
-        const isBlocked = !!gs
+        const eff = effectiveStatutFor(ex) // 'annule' | 'maintenu' | undefined
+        const isBlocked = !!eff
         const st = isBlocked ? null : examState[ex.id]
         const nEleves = st?.eleves.length ?? 0
         const choix = st?.statut ?? null
@@ -204,7 +206,7 @@ export default function ProfForm({ profCode, examens, groupeStatuts, dejaRempli,
 
         // Style per status
         const cardStyle = isBlocked
-          ? gs === 'annule'
+          ? eff === 'annule'
             ? { borderColor: '#FECACA', background: '#FEF2F2', opacity: 0.9 }
             : { borderColor: '#BFDBFE', background: '#EFF6FF', opacity: 0.9 }
           : showError
@@ -225,8 +227,8 @@ export default function ProfForm({ profCode, examens, groupeStatuts, dejaRempli,
                 <span className="badge badge-gray" style={{ fontSize: 12 }}>{formatJour(ex.jour)}</span>
                 <span className="badge badge-gray" style={{ fontSize: 12 }}>{ex.periode}</span>
 
-                {gs === 'annule'   && <span className="badge badge-red">Annulé par l'administration</span>}
-                {gs === 'maintenu' && <span className="badge badge-blue">Maintenu pour tous</span>}
+                {eff === 'annule'   && <span className="badge badge-red">Annulé par l'administration</span>}
+                {eff === 'maintenu' && <span className="badge badge-blue">Maintenu pour tous</span>}
                 {!isBlocked && choix === 'aucun' && <span className="badge badge-red">Aucun élève</span>}
                 {!isBlocked && choix === 'tous'  && <span className="badge badge-green">Tous les élèves</span>}
                 {!isBlocked && nEleves > 0        && <span className="badge badge-green">{nEleves} élève{nEleves > 1 ? 's' : ''}</span>}
@@ -235,12 +237,12 @@ export default function ProfForm({ profCode, examens, groupeStatuts, dejaRempli,
             </div>
 
             {/* Blocked messages */}
-            {gs === 'annule' && (
+            {eff === 'annule' && (
               <p style={{ margin: 0, fontSize: 13, color: '#991B1B', fontStyle: 'italic' }}>
                 Cet examen a été annulé par l'administration. Aucune action requise.
               </p>
             )}
-            {gs === 'maintenu' && (
+            {eff === 'maintenu' && (
               <p style={{ margin: 0, fontSize: 13, color: '#1E40AF', fontStyle: 'italic' }}>
                 Cet examen est maintenu pour tous les élèves. Aucune action requise.
               </p>

@@ -2,7 +2,7 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/auth'
-import { read, writeFileSafe, listFiles, deleteFile } from '@/lib/storage'
+import { read, write, listFiles, deleteFile } from '@/lib/storage'
 import exams from '@/lib/exams.json'
 
 function normalise(raw) {
@@ -14,7 +14,7 @@ function normalise(raw) {
 }
 
 async function save(groupeStatuts, examStatuts) {
-  await writeFileSafe('admin-locks.json', { groupeStatuts, examStatuts, updatedAt: new Date().toISOString() })
+  await write('admin-locks.json', { groupeStatuts, examStatuts, updatedAt: new Date().toISOString() })
 }
 
 // ── Groupe ──────────────────────────────────────────────────────────────────

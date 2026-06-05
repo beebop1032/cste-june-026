@@ -12,6 +12,7 @@ export default async function ProfPage({ params }) {
   const { dejaRempli } = await getProfStatus(code)
   const locksRaw = await read('admin-locks.json')
   const groupeStatuts = locksRaw?.groupeStatuts ?? {}
+  const examStatuts   = locksRaw?.examStatuts   ?? {}
   const profExams = exams.filter(e => e.profCode === code)
 
   if (profExams.length === 0) {
@@ -50,6 +51,7 @@ export default async function ProfPage({ params }) {
         profCode={code}
         examens={profExams}
         groupeStatuts={groupeStatuts}
+        examStatuts={examStatuts}
         dejaRempli={dejaRempli}
         isAdmin={isAdmin}
       />
