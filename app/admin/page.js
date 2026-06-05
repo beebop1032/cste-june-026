@@ -219,8 +219,8 @@ export default async function AdminPage({ searchParams }) {
                 <div key={n} style={{ display: 'flex', gap: 4 }}>
                   <form action={lockByNiveau}>
                     <input type="hidden" name="niveau" value={n} />
-                    <button type="submit" className="btn btn-sm" style={{ background: 'var(--fg)', color: '#fff' }}>
-                      Bloquer {n}
+                    <button type="submit" className="btn btn-sm" style={{ background: 'var(--primary)', color: '#fff' }}>
+                      Verrouiller {n}
                     </button>
                   </form>
                   <form action={unlockByNiveau}>
@@ -263,10 +263,10 @@ export default async function AdminPage({ searchParams }) {
                             <input type="hidden" name="examId" value={ex.id} />
                             <button
                               type="submit"
-                              className={`btn btn-xs ${locked.has(ex.id) ? '' : 'btn-secondary'}`}
-                              style={locked.has(ex.id) ? { background: 'var(--success)', color: '#fff' } : {}}
+                              className={`btn btn-xs ${locked.has(ex.id) ? 'btn-secondary' : ''}`}
+                              style={locked.has(ex.id) ? {} : { background: 'var(--primary)', color: '#fff' }}
                             >
-                              {locked.has(ex.id) ? 'Complet' : 'Ouvrir'}
+                              {locked.has(ex.id) ? 'Déverrouiller' : 'Verrouiller'}
                             </button>
                           </form>
                         </td>
