@@ -168,7 +168,47 @@ export default async function AdminPage({ searchParams }) {
             ))}
           </div>
 
-          {/* Par niveau */}
+          {/* ── Par jour (lecture seule) ── */}
+          {(() => {
+            const examsParJour = [...exams].sort((a, b) =>
+              a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode) || a.groupe.localeCompare(b.groupe)
+            )
+            return (
+              <div>
+                <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--fg)', margin: '0 0 10px' }}>Par examen — vue par jour</h2>
+                <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table className="table">
+                      <thead>
+                        <tr>{['Jour','Période','Matière','Niveau','Classe','Prof','Local','Statut classe'].map(h => <th key={h}>{h}</th>)}</tr>
+                      </thead>
+                      <tbody>
+                        {examsParJour.map(ex => {
+                          const gs   = groupeStatuts[ex.groupe] ?? 'open'
+                          const info = GS[gs]
+                          return (
+                            <tr key={ex.id} style={{ background: info.bg }}>
+                              <td style={{ whiteSpace: 'nowrap' }}>{formatJour(ex.jour)}</td>
+                              <td>{ex.periode}</td>
+                              <td style={{ fontWeight: 500 }}>{ex.matiere}</td>
+                              <td>{ex.niveau}</td>
+                              <td style={{ fontWeight: 600 }}>{ex.groupe}</td>
+                              <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{ex.profCode}</td>
+                              <td>{ex.local}</td>
+                              <td><span className={`badge ${info.badgeClass}`} style={{ fontSize: 11 }}>{info.label}</span></td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
+
+          {/* ── Par classe (éditable) ── */}
+          <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--fg)', margin: '4px 0 -8px' }}>Par classe</h2>
           {NIVEAUX.map(n => {
             const groupesNiveau = NIVEAUX_MAP[n] ?? []
             const allSameStatut = groupesNiveau.length > 0 && groupesNiveau.every(g => groupeStatuts[g] === groupeStatuts[groupesNiveau[0]])
