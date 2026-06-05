@@ -25,8 +25,21 @@ export async function GET(request) {
     try {
       const probe = { probe: true, ts: Date.now() }
       await writeFileSafe('debug-probe.json', probe)
-      const readback = await read('debug-probe.json')
-      writeReadTest = readback?.probe === true ? 'OK — écriture et lecture Blob fonctionnent' : `lecture échouée (readback=${JSON.stringify(readback)})`
+      const { list, get } = await import('@vercel/blob')
+      const { blobs } = await list({ prefix: 'debug-probe.json' })
+      const blob = blobs.find(b => b.pathname === 'debug-probe.json')
+      if (!blob) {
+        writeReadTest = `list OK (${blobs.length} blobs avec ce prefix) mais debug-probe.json introuvable`
+      } else {
+        const result = await get(blob.url, { access: 'private' })
+        if (!result) {
+          writeReadTest = `get() a retourné null (404?) pour url=${blob.url}`
+        } else {
+          const buf = await result.stream.arrayBuffer()
+          const parsed = JSON.parse(Buffer.from(buf).toString('utf8'))
+          writeReadTest = parsed?.probe === true ? 'OK — écriture et lecture Blob fonctionnent' : `lecture échouée (parsed=${JSON.stringify(parsed)})`
+        }
+      }
     } catch (e) {
       writeReadTest = `ERREUR: ${e?.message ?? String(e)}`
     }
