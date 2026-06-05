@@ -136,7 +136,9 @@ function parseExcel() {
               }
             }
           } else {
-            currentMatiere[niveau] = normalizedCell
+            // Annotation word(s) with no preceding base matière — skip silently.
+            // e.g. "Oral" appearing before "Géo" in a column would produce matière="Oral"
+            // which is never valid: "Géo Oral" must always come from "Géo" + "Oral" annotation.
           }
         } else {
           // New base matière: start a fresh block for this niveau

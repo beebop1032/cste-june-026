@@ -21,7 +21,7 @@ const IconTrash = () => (
 
 // groupeStatuts: { groupe: 'annule'|'maintenu' }  — open = absent
 // examStatuts:   { examId: 'annule'|'maintenu' }  — per-exam override, takes priority
-export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts = {}, dejaRempli, savedData, isAdmin }) {
+export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts = {}, dejaRempli, savedData, isAdmin, welcomeBack }) {
   const effectiveStatutFor = (ex) => examStatuts[ex.id] ?? groupeStatuts[ex.groupe]
   const allAdminDecided = examens.every(e => !!effectiveStatutFor(e))
 
@@ -37,7 +37,6 @@ export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts
   }
   function withLinked(examId) { return [examId, ...(linkedMap[examId] ?? [])] }
 
-  const [confirmed, setConfirmed] = useState(!dejaRempli)
   const [examState, setExamState] = useState(() =>
     Object.fromEntries(
       examens
@@ -209,30 +208,21 @@ export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts
     )
   }
 
-  if (!confirmed) {
-    return (
-      <div className="card" style={{ borderColor: 'var(--warning-border)', padding: '24px' }}>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 2 }}>
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-          <div>
-            <h2 style={{ color: 'var(--warning-fg)', margin: '0 0 8px', fontSize: 16, fontWeight: 600 }}>Formulaire déjà soumis</h2>
-            <p style={{ margin: '0 0 16px', color: 'var(--warning-fg)', fontSize: 14, lineHeight: 1.6 }}>
-              Vous avez déjà soumis vos réponses. En continuant, vous allez <strong>écraser les réponses existantes</strong>. L'ancienne version sera archivée.
-            </p>
-            <button onClick={() => setConfirmed(true)} className="btn btn-sm" style={{ background: 'var(--warning-fg)', color: '#fff', border: 'none' }}>
-              Je comprends — modifier mes réponses
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {dejaRempli && !result?.ok && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '9px 14px', borderRadius: 7,
+          background: '#F0FDF4', border: '1px solid #BBF7D0',
+          fontSize: 12.5, color: '#166534',
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          Formulaire déjà envoyé — vous pouvez le modifier ci-dessous, votre ancienne version sera archivée.
+        </div>
+      )}
       {examens.map(ex => {
         const eff = effectiveStatutFor(ex) // 'annule' | 'maintenu' | undefined
         const isBlocked = !!eff

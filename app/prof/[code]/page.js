@@ -1,18 +1,21 @@
 export const dynamic = 'force-dynamic'
 
 import { requireProf, verifySession } from '@/lib/auth'
-import { getProfStatus } from '@/actions/prof'
 import { read } from '@/lib/storage'
+import { cookies } from 'next/headers'
 import exams from '@/lib/exams.json'
 import ProfForm from './ProfForm'
 
-export default async function ProfPage({ params }) {
+export default async function ProfPage({ params, searchParams }) {
   const { code } = await params
+  const sp = await searchParams
   await requireProf()
   const isAdmin = await verifySession('admin')
 
-  const { dejaRempli } = await getProfStatus(code)
+  const jar = await cookies()
+  const dejaRempli = isAdmin ? !!(await read(`prof-${code}.json`)) : jar.get('prof_done')?.value === code
   const savedData  = dejaRempli ? await read(`prof-${code}.json`) : null
+  const welcomeBack = sp?.back === '1'
   const locksRaw = await read('admin-locks.json')
   const groupeStatuts = locksRaw?.groupeStatuts ?? {}
   const examStatuts   = locksRaw?.examStatuts   ?? {}
@@ -58,6 +61,7 @@ export default async function ProfPage({ params }) {
         dejaRempli={dejaRempli}
         savedData={savedData}
         isAdmin={isAdmin}
+        welcomeBack={welcomeBack}
       />
     </main>
   )

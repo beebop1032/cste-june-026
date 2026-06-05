@@ -1,6 +1,7 @@
 'use server'
 import { requireProf } from '@/lib/auth'
 import { read, writeFileSafe } from '@/lib/storage'
+import { cookies } from 'next/headers'
 
 export async function getProfStatus(profCode) {
   await requireProf()
@@ -37,5 +38,13 @@ export async function submitProf(profCode, payload) {
     return { error: 'Erreur de sauvegarde. Veuillez réessayer.' }
   }
 
+  const jar = await cookies()
+  jar.set('prof_done', profCode, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 30 * 24 * 3600,
+    path: '/',
+    sameSite: 'lax',
+  })
   return { ok: true }
 }
