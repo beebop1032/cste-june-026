@@ -1,4 +1,5 @@
 'use client'
+import Link from 'next/link'
 import { useState, useMemo, useCallback, useTransition } from 'react'
 import { saveFullStateSilent } from '@/actions/admin'
 
@@ -142,7 +143,11 @@ export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: in
                     <td style={{ fontWeight: 500 }}>{ex.matiere}</td>
                     <td>{ex.niveau}</td>
                     <td style={{ fontWeight: 600 }}>{ex.groupe}</td>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>{ex.profCode}</td>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>
+                      <Link href={`/prof/${ex.profCode}`} target="_blank" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 500 }}>
+                        {ex.profCode}
+                      </Link>
+                    </td>
                     <td>
                       <span className={`badge ${info.badgeClass}`} style={{ fontSize: 11 }}>
                         {info.label}
