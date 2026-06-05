@@ -4,6 +4,7 @@ import exams from '@/lib/exams.json'
 import HoraireTable from './HoraireTable'
 import ElevesTable from './ElevesTable'
 import ResetButton from './ResetButton'
+import VerrousJourTable from './VerrousJourTable'
 
 const NIVEAUX = ['1re', '2e', '3e', '4e', '5e', '6e']
 const ALL_PROF_CODES = [...new Set(exams.map(e => e.profCode))].sort()
@@ -28,6 +29,7 @@ export default async function AdminPage({ searchParams }) {
   await requireAdmin()
   const sp  = await searchParams
   const tab = sp?.tab ?? 'suivi'
+  const vue = sp?.vue ?? 'jour'
 
   const [responses, locksData] = await Promise.all([getAllResponses(), getLocksData()])
   const groupeStatuts = locksData.groupeStatuts ?? {}
@@ -153,154 +155,103 @@ export default async function AdminPage({ searchParams }) {
         <ElevesTable rows={elevesRows} groupes={elevesGroupes} profs={elevesProfs} />
       )}
 
-      {/* ── Statuts (verrous par classe) ───────────────────── */}
+      {/* ── Statuts ────────────────────────────────────────── */}
       {tab === 'verrous' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-          {/* Légende */}
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg)' }}>Statuts :</span>
-            {Object.entries(GS).map(([k, v]) => (
-              <span key={k} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13 }}>
-                <span style={{ width: 10, height: 10, borderRadius: 3, background: v.bg, border: `1.5px solid ${v.border}`, display: 'inline-block' }} />
-                <span style={{ color: v.text, fontWeight: 500 }}>{v.label}</span>
-              </span>
-            ))}
+          {/* Sous-onglets + légende */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+            <nav className="tab-bar">
+              <a href="/admin?tab=verrous&vue=jour"    className={`tab${vue === 'jour'    ? ' active' : ''}`}>Par jour</a>
+              <a href="/admin?tab=verrous&vue=classe"  className={`tab${vue === 'classe'  ? ' active' : ''}`}>Par classe</a>
+            </nav>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              {Object.entries(GS).map(([k, v]) => (
+                <span key={k} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
+                  <span style={{ width: 9, height: 9, borderRadius: 3, background: v.bg, border: `1.5px solid ${v.border}`, display: 'inline-block' }} />
+                  <span style={{ color: v.text, fontWeight: 500 }}>{v.label}</span>
+                </span>
+              ))}
+            </div>
           </div>
 
-          {/* ── Par jour (lecture seule) ── */}
-          {(() => {
-            const examsParJour = [...exams].sort((a, b) =>
-              a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode) || a.groupe.localeCompare(b.groupe)
-            )
-            return (
-              <div>
-                <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--fg)', margin: '0 0 10px' }}>Par examen — vue par jour</h2>
-                <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                  <div style={{ overflowX: 'auto' }}>
-                    <table className="table">
-                      <thead>
-                        <tr>{['Jour','Période','Matière','Niveau','Classe','Prof','Local','Statut','Action'].map(h => <th key={h}>{h}</th>)}</tr>
-                      </thead>
-                      <tbody>
-                        {examsParJour.map(ex => {
-                          const gs   = groupeStatuts[ex.groupe] ?? 'open'
-                          const info = GS[gs]
-                          return (
-                            <tr key={ex.id} style={{ background: info.bg }}>
-                              <td style={{ whiteSpace: 'nowrap' }}>{formatJour(ex.jour)}</td>
-                              <td>{ex.periode}</td>
-                              <td style={{ fontWeight: 500 }}>{ex.matiere}</td>
-                              <td>{ex.niveau}</td>
-                              <td style={{ fontWeight: 600 }}>{ex.groupe}</td>
-                              <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{ex.profCode}</td>
-                              <td>{ex.local}</td>
-                              <td><span className={`badge ${info.badgeClass}`} style={{ fontSize: 11 }}>{info.label}</span></td>
-                              <td>
-                                <form action={setGroupeStatut} style={{ display: 'flex', gap: 3 }}>
-                                  <input type="hidden" name="groupe" value={ex.groupe} />
-                                  {[
-                                    { statut: 'open',     label: 'À remplir' },
-                                    { statut: 'annule',   label: 'Annulé' },
-                                    { statut: 'maintenu', label: 'Maintenu' },
-                                  ].map(({ statut, label }) => (
-                                    <button key={statut} type="submit" name="statut" value={statut}
-                                      className="btn btn-xs"
-                                      style={gs === statut
-                                        ? { background: GS[statut].text, color: '#fff', fontSize: 11, border: 'none' }
-                                        : { background: '#fff', color: '#64748B', border: '1px solid #E2E8F0', fontSize: 11 }}>
-                                      {label}
-                                    </button>
-                                  ))}
-                                </form>
-                              </td>
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            )
-          })()}
+          {/* ── Vue par jour (client, filtrable) ── */}
+          {vue === 'jour' && (
+            <VerrousJourTable exams={exams} groupeStatuts={groupeStatuts} />
+          )}
 
-          {/* ── Par classe (éditable) ── */}
-          <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--fg)', margin: '4px 0 -8px' }}>Par classe</h2>
-          {NIVEAUX.map(n => {
-            const groupesNiveau = NIVEAUX_MAP[n] ?? []
-            const allSameStatut = groupesNiveau.length > 0 && groupesNiveau.every(g => groupeStatuts[g] === groupeStatuts[groupesNiveau[0]])
-            const niveauStatut  = allSameStatut ? (groupeStatuts[groupesNiveau[0]] ?? 'open') : null
-
-            return (
-              <div key={n}>
-                {/* Niveau header + mass actions */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                  <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--fg)', margin: 0 }}>{n}</h2>
-                  <span style={{ fontSize: 12, color: 'var(--fg-muted)' }}>{groupesNiveau.length} classe{groupesNiveau.length !== 1 ? 's' : ''}</span>
-                  <div style={{ display: 'flex', gap: 4, marginLeft: 8 }}>
-                    {[
-                      { statut: 'open',     label: 'Tout ouvrir' },
-                      { statut: 'annule',   label: 'Tout annuler' },
-                      { statut: 'maintenu', label: 'Tout maintenir' },
-                    ].map(({ statut, label }) => (
-                      <form key={statut} action={setNiveauStatut}>
-                        <input type="hidden" name="niveau" value={n} />
-                        <input type="hidden" name="statut" value={statut} />
-                        <button type="submit" className="btn btn-xs btn-secondary"
-                          style={niveauStatut === statut
-                            ? { background: GS[statut].bg, color: GS[statut].text, border: `1.5px solid ${GS[statut].border}`, fontSize: 11 }
-                            : { fontSize: 11 }}>
-                          {label}
-                        </button>
-                      </form>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Classe rows */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  {groupesNiveau.map(g => {
-                    const gs = groupeStatuts[g] ?? 'open'
-                    const info = GS[gs]
-                    const nExams = exams.filter(e => e.groupe === g).length
-                    return (
-                      <div key={g} style={{
-                        display: 'flex', alignItems: 'center', gap: 10,
-                        padding: '8px 14px', borderRadius: 8,
-                        background: info.bg, border: `1px solid ${info.border}`,
-                        transition: 'background 0.15s',
-                      }}>
-                        <span style={{ fontWeight: 600, fontSize: 14, color: info.text, minWidth: 60 }}>{g}</span>
-                        <span style={{ fontSize: 12, color: info.text, opacity: 0.7, flex: 1 }}>{nExams} exam{nExams !== 1 ? 's' : ''}</span>
-                        <span className={`badge ${info.badgeClass}`} style={{ fontSize: 11 }}>{info.label}</span>
-                        <div style={{ display: 'flex', gap: 3 }}>
-                          {[
-                            { statut: 'open',     label: 'À remplir' },
-                            { statut: 'annule',   label: 'Annulé' },
-                            { statut: 'maintenu', label: 'Maintenu' },
-                          ].map(({ statut, label }) => (
-                            <form key={statut} action={setGroupeStatut}>
-                              <input type="hidden" name="groupe" value={g} />
-                              <input type="hidden" name="statut" value={statut} />
-                              <button type="submit"
-                                className="btn btn-xs"
-                                style={gs === statut
-                                  ? { background: GS[statut].text, color: '#fff', fontSize: 11, border: 'none' }
-                                  : { background: '#fff', color: '#64748B', border: '1px solid #E2E8F0', fontSize: 11 }}
-                              >
-                                {label}
-                              </button>
-                            </form>
-                          ))}
-                        </div>
+          {/* ── Vue par classe ── */}
+          {vue === 'classe' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              {NIVEAUX.map(n => {
+                const groupesNiveau = NIVEAUX_MAP[n] ?? []
+                const allSameStatut = groupesNiveau.length > 0 && groupesNiveau.every(g => groupeStatuts[g] === groupeStatuts[groupesNiveau[0]])
+                const niveauStatut  = allSameStatut ? (groupeStatuts[groupesNiveau[0]] ?? 'open') : null
+                return (
+                  <div key={n}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                      <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--fg)', margin: 0 }}>{n}</h2>
+                      <span style={{ fontSize: 12, color: 'var(--fg-muted)' }}>{groupesNiveau.length} classe{groupesNiveau.length !== 1 ? 's' : ''}</span>
+                      <div style={{ display: 'flex', gap: 4, marginLeft: 8 }}>
+                        {[
+                          { statut: 'open',     label: 'Tout ouvrir' },
+                          { statut: 'annule',   label: 'Tout annuler' },
+                          { statut: 'maintenu', label: 'Tout maintenir' },
+                        ].map(({ statut, label }) => (
+                          <form key={statut} action={setNiveauStatut}>
+                            <input type="hidden" name="niveau" value={n} />
+                            <input type="hidden" name="statut" value={statut} />
+                            <button type="submit" className="btn btn-xs btn-secondary"
+                              style={niveauStatut === statut
+                                ? { background: GS[statut].bg, color: GS[statut].text, border: `1.5px solid ${GS[statut].border}`, fontSize: 11 }
+                                : { fontSize: 11 }}>
+                              {label}
+                            </button>
+                          </form>
+                        ))}
                       </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )
-          })}
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {groupesNiveau.map(g => {
+                        const gs   = groupeStatuts[g] ?? 'open'
+                        const info = GS[gs]
+                        const nEx  = exams.filter(e => e.groupe === g).length
+                        return (
+                          <div key={g} style={{
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            padding: '8px 14px', borderRadius: 8,
+                            background: info.bg, border: `1px solid ${info.border}`,
+                          }}>
+                            <span style={{ fontWeight: 600, fontSize: 14, color: info.text, minWidth: 60 }}>{g}</span>
+                            <span style={{ fontSize: 12, color: info.text, opacity: 0.7, flex: 1 }}>{nEx} exam{nEx !== 1 ? 's' : ''}</span>
+                            <span className={`badge ${info.badgeClass}`} style={{ fontSize: 11 }}>{info.label}</span>
+                            <div style={{ display: 'flex', gap: 3 }}>
+                              {[
+                                { statut: 'open',     label: 'À remplir' },
+                                { statut: 'annule',   label: 'Annulé' },
+                                { statut: 'maintenu', label: 'Maintenu' },
+                              ].map(({ statut, label }) => (
+                                <form key={statut} action={setGroupeStatut}>
+                                  <input type="hidden" name="groupe" value={g} />
+                                  <input type="hidden" name="statut" value={statut} />
+                                  <button type="submit" className="btn btn-xs"
+                                    style={gs === statut
+                                      ? { background: GS[statut].text, color: '#fff', fontSize: 11, border: 'none' }
+                                      : { background: '#fff', color: '#64748B', border: '1px solid #E2E8F0', fontSize: 11 }}>
+                                    {label}
+                                  </button>
+                                </form>
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       )}
     </main>
