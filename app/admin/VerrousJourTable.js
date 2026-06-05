@@ -141,7 +141,7 @@ export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: in
                     <td style={{ fontWeight: 500 }}>{ex.matiere}</td>
                     <td>{ex.niveau}</td>
                     <td style={{ fontWeight: 600 }}>{ex.groupe}</td>
-                    <td style={{ fontFamily: 'monospace', fontSize: 11 }}>{ex.profCode}</td>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>{ex.profCode}</td>
                     <td style={{ fontSize: 12 }}>{ex.local}</td>
                     <td>
                       <span className={`badge ${info.badgeClass}`} style={{ fontSize: 11 }}>

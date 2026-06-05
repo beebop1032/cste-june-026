@@ -169,7 +169,7 @@ export default function ClasseTable({ exams, niveaux, niveauxMap, groupeStatuts:
                               <span style={{ fontSize: 12, color: 'var(--fg-muted)', minWidth: 90 }}>{formatJour(ex.jour)}</span>
                               <span style={{ fontSize: 12, color: 'var(--fg-muted)', minWidth: 32 }}>{ex.periode}</span>
                               <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--fg)', flex: 1 }}>{ex.matiere}</span>
-                              <span style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--fg-muted)', minWidth: 40 }}>{ex.profCode}</span>
+                              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-muted)', minWidth: 40 }}>{ex.profCode}</span>
                               {hasOverride && (
                                 <span className={`badge ${einfo.badgeClass}`} style={{ fontSize: 10 }}>{einfo.label}</span>
                               )}

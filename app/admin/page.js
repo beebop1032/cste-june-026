@@ -87,47 +87,71 @@ export default async function AdminPage({ searchParams }) {
   const elevesProfs   = [...new Set(elevesRows.map(r => r.prof))].sort()
 
   return (
-    <main style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 16px 48px' }}>
-
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <h1 style={{ margin: '0 0 2px', fontSize: 18, fontWeight: 600, color: 'var(--fg)' }}>Dashboard admin</h1>
-          <p style={{ margin: 0, fontSize: 13, color: 'var(--fg-muted)' }}>Examens juin 2026 — Collège des Hayeffes</p>
+    <>
+    {/* ── Top bar ── */}
+    <div style={{ background: 'var(--primary)', boxShadow: '0 2px 8px rgba(0,0,0,.18)' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 16px', display: 'flex', alignItems: 'center', gap: 16, height: 52, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
+          <img src="/logo.png" alt="" width={90} height={36} style={{ height: 30, width: 'auto', filter: 'brightness(0) invert(1)', opacity: .9 }} />
+          <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,.2)' }} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#fff', letterSpacing: '-.1px' }}>Admin</span>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,.45)', marginLeft: 2 }}>— Examens juin 2026</span>
         </div>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          <nav className="tab-bar">
-            {[
-              { name: 'suivi',   label: `Suivi (${respondedCodes.size}/${ALL_PROF_CODES.length})` },
-              { name: 'horaire', label: 'Horaire' },
-              { name: 'eleves',  label: 'Élèves' },
-              { name: 'verrous', label: 'Statuts' },
-            ].map(t => (
-              <a key={t.name} href={`/admin?tab=${t.name}`} className={`tab${tab === t.name ? ' active' : ''}`}>
-                {t.label}
-              </a>
-            ))}
-          </nav>
-          <ResetButton />
-        </div>
+        <nav style={{ display: 'flex', gap: 2 }}>
+          {[
+            { name: 'suivi',   label: `Suivi ${respondedCodes.size}/${ALL_PROF_CODES.length}` },
+            { name: 'horaire', label: 'Horaire' },
+            { name: 'eleves',  label: 'Élèves' },
+            { name: 'verrous', label: 'Statuts' },
+          ].map(t => (
+            <a key={t.name} href={`/admin?tab=${t.name}`} style={{
+              padding: '6px 13px',
+              borderRadius: 6,
+              textDecoration: 'none',
+              fontSize: 13,
+              fontWeight: 500,
+              transition: 'background .15s, color .15s',
+              background: tab === t.name ? 'rgba(255,255,255,.18)' : 'transparent',
+              color: tab === t.name ? '#fff' : 'rgba(255,255,255,.6)',
+            }}>
+              {t.label}
+            </a>
+          ))}
+        </nav>
+        <ResetButton />
       </div>
+    </div>
 
-      {/* Exports */}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-        <a href="/api/export?format=briefing" className="btn btn-secondary" style={{ fontSize: 12 }}>
-          ⬇ Excel surveillance
+    <main style={{ maxWidth: 1200, margin: '0 auto', padding: '20px 16px 48px' }}>
+
+      {/* Exports bar */}
+      <div style={{
+        display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 18,
+        padding: '12px 16px', background: 'var(--bg-card)', borderRadius: 'var(--radius)',
+        border: '1px solid var(--border)', boxShadow: 'var(--shadow-xs)',
+        alignItems: 'center',
+      }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '.07em', marginRight: 6 }}>Exports</span>
+        <a href="/api/export?format=briefing" className="btn btn-secondary btn-sm">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Excel surveillance
         </a>
-        <a href="/api/export?format=print" target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ fontSize: 12 }}>
-          🖨 Vue globale
+        <a href="/api/export?format=xlsx" className="btn btn-secondary btn-sm">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Excel élèves
         </a>
-        <a href="/admin/print" target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ fontSize: 12 }}>
-          🖨 Vues par classe / prof / élève
+        <a href="/api/export?format=csv" className="btn btn-secondary btn-sm">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          CSV
         </a>
-        <a href="/api/export?format=xlsx" className="btn btn-secondary" style={{ fontSize: 12 }}>
-          ⬇ Excel liste élèves
+        <div style={{ width: 1, height: 18, background: 'var(--border)' }} />
+        <a href="/api/export?format=print" target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Vue globale
         </a>
-        <a href="/api/export?format=csv" className="btn btn-secondary" style={{ fontSize: 12 }}>
-          ⬇ CSV liste élèves
+        <a href="/admin/print" target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Vue par classe / prof / élève
         </a>
       </div>
 
@@ -139,46 +163,71 @@ export default async function AdminPage({ searchParams }) {
           Statuts mis à jour avec succès.
         </div>
       )}
-      <style>{`@keyframes fadeOut { to { opacity:0; height:0; padding:0; margin:0; overflow:hidden; } }`}</style>
 
       {/* ── Suivi ──────────────────────────────────────────── */}
       {tab === 'suivi' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div className="card" style={{ padding: '24px 28px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-              <span style={{ fontSize: 32, fontWeight: 700, color: 'var(--fg)' }}>
-                {effectiveDone.size} <span style={{ fontSize: 16, fontWeight: 400, color: 'var(--fg-muted)' }}>/ {ALL_PROF_CODES.length} profs</span>
-              </span>
-              <span style={{ fontSize: 20, fontWeight: 600, color: pct === 100 ? 'var(--success)' : 'var(--fg-muted)' }}>{pct}%</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+          {/* Progress card */}
+          <div className="card" style={{ padding: '20px 24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14, gap: 12 }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                  <span style={{ fontSize: 36, fontWeight: 700, color: 'var(--fg)', lineHeight: 1 }}>{effectiveDone.size}</span>
+                  <span style={{ fontSize: 15, color: 'var(--fg-muted)' }}>/ {ALL_PROF_CODES.length} profs</span>
+                </div>
+                <p style={{ margin: '4px 0 0', fontSize: 12.5, color: 'var(--fg-muted)' }}>
+                  {missing.length > 0 ? `${missing.length} encore en attente` : 'Tous les profs ont répondu'}
+                </p>
+              </div>
+              <div style={{
+                width: 56, height: 56, borderRadius: '50%',
+                background: pct === 100 ? 'var(--success-bg)' : 'var(--primary-light)',
+                border: `3px solid ${pct === 100 ? 'var(--success)' : 'var(--primary)'}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: pct === 100 ? 'var(--success)' : 'var(--primary)' }}>{pct}%</span>
+              </div>
             </div>
-            <div style={{ width: '100%', background: 'var(--border)', borderRadius: 999, height: 8, overflow: 'hidden' }}>
-              <div style={{ width: `${pct}%`, background: pct === 100 ? 'var(--success)' : 'var(--primary)', height: '100%', borderRadius: 999 }} />
+            <div style={{ width: '100%', background: 'var(--border)', borderRadius: 999, height: 7, overflow: 'hidden' }}>
+              <div style={{
+                width: `${pct}%`, height: '100%', borderRadius: 999,
+                background: pct === 100 ? 'var(--success)' : 'var(--primary)',
+                transition: 'width 0.4s ease',
+              }} />
             </div>
-            {pct === 100 && <p style={{ margin: '12px 0 0', color: 'var(--success)', fontWeight: 500, fontSize: 14 }}>✓ Tous les profs ont répondu</p>}
           </div>
+
           {missing.length > 0 && (
-            <div>
-              <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', margin: '0 0 10px' }}>En attente ({missing.length})</h2>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            <div className="card" style={{ padding: '16px 20px' }}>
+              <h2 style={{ fontSize: 12, fontWeight: 700, color: 'var(--fg-muted)', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '.06em' }}>
+                En attente — {missing.length}
+              </h2>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                 {missing.map(c => <span key={c} className="badge badge-amber">{c}</span>)}
               </div>
             </div>
           )}
+
           {respondedCodes.size > 0 && (
-            <div>
-              <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', margin: '0 0 10px' }}>Formulaire soumis ({respondedCodes.size})</h2>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            <div className="card" style={{ padding: '16px 20px' }}>
+              <h2 style={{ fontSize: 12, fontWeight: 700, color: 'var(--fg-muted)', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '.06em' }}>
+                Formulaire soumis — {respondedCodes.size}
+              </h2>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                 {[...respondedCodes].sort().map(c => <span key={c} className="badge badge-green">{c}</span>)}
               </div>
             </div>
           )}
+
           {adminDoneCodes.size > 0 && (
-            <div>
-              <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', margin: '0 0 10px' }}>
-                Traités par l'administration ({adminDoneCodes.size})
-                <span style={{ fontWeight: 400, fontSize: 12, color: 'var(--fg-muted)', marginLeft: 6 }}>tous leurs examens sont annulés ou maintenus</span>
+            <div className="card" style={{ padding: '16px 20px' }}>
+              <h2 style={{ fontSize: 12, fontWeight: 700, color: 'var(--fg-muted)', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '.06em' }}>
+                Traités par l'administration — {adminDoneCodes.size}
+                <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, marginLeft: 6 }}>tous leurs examens sont annulés ou maintenus</span>
               </h2>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                 {[...adminDoneCodes].sort().map(c => <span key={c} className="badge badge-blue">{c}</span>)}
               </div>
             </div>
@@ -234,5 +283,6 @@ export default async function AdminPage({ searchParams }) {
         </div>
       )}
     </main>
+    </>
   )
 }

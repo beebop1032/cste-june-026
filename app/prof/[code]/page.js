@@ -36,7 +36,7 @@ export default async function ProfPage({ params }) {
           Retour
         </a>
         <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: 'var(--fg)' }}>
-          Prof : <span style={{ fontFamily: 'monospace', color: 'var(--primary)' }}>{code}</span>
+          Prof : <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--primary)', fontSize: 17 }}>{code}</span>
         </h1>
       </div>
       <p style={{ color: 'var(--fg-muted)', marginBottom: 24, fontSize: 13, marginLeft: 2 }}>

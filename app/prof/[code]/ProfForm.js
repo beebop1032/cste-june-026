@@ -285,20 +285,30 @@ export default function ProfForm({ profCode, examens, groupeStatuts, dejaRempli 
                     onClick={() => setStatut(ex.id, choix === 'tous' ? null : 'tous')}
                     className="btn btn-sm"
                     style={choix === 'tous'
-                      ? { background: 'var(--success)', color: '#fff' }
-                      : { background: '#F0FDF4', color: 'var(--success)', border: '1.5px solid #BBF7D0' }}
+                      ? { background: 'var(--success)', color: '#fff', border: 'none', fontWeight: 600 }
+                      : { background: 'var(--success-bg)', color: 'var(--success)', border: '1.5px solid #BBF7D0' }}
                   >
-                    {choix === 'tous' ? '✓ ' : ''}Tous les élèves participent
+                    {choix === 'tous' && (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    )}
+                    Tous les élèves participent
                   </button>
                   <button
                     type="button"
                     onClick={() => setStatut(ex.id, choix === 'aucun' ? null : 'aucun')}
                     className="btn btn-sm"
                     style={choix === 'aucun'
-                      ? { background: 'var(--destructive)', color: '#fff' }
-                      : { background: '#FEF2F2', color: 'var(--destructive)', border: '1.5px solid #FECACA' }}
+                      ? { background: 'var(--destructive)', color: '#fff', border: 'none', fontWeight: 600 }
+                      : { background: 'var(--destructive-bg)', color: 'var(--destructive)', border: '1.5px solid var(--destructive-border)' }}
                   >
-                    {choix === 'aucun' ? '✓ ' : ''}Aucun élève ne doit participer
+                    {choix === 'aucun' && (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    )}
+                    Aucun élève ne participe
                   </button>
                 </div>
 
