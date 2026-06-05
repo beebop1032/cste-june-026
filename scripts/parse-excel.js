@@ -75,6 +75,13 @@ function parseExcel() {
   let currentPeriode = null
   const currentMatiere = Object.fromEntries(NIVEAU_OFFSETS.map(({ niveau }) => [niveau, '']))
 
+  // Track indices of exams emitted in the current matière block per niveau,
+  // so annotations on later rows can backfill earlier entries.
+  const blockIndices = Object.fromEntries(NIVEAU_OFFSETS.map(({ niveau }) => [niveau, []]))
+
+  function resetBlock(niveau) { blockIndices[niveau] = [] }
+  function resetAllBlocks() { NIVEAU_OFFSETS.forEach(({ niveau }) => resetBlock(niveau)) }
+
   for (let r = 0; r < rows.length; r++) {
     const row = rows[r]
     const col0 = String(row[0] || '').trim()
@@ -83,6 +90,7 @@ function parseExcel() {
     if (col0.includes('/')) {
       currentJour = parseDayToISO(col0)
       NIVEAU_OFFSETS.forEach(({ niveau }) => { currentMatiere[niveau] = '' })
+      resetAllBlocks()
       continue
     }
 
@@ -90,6 +98,7 @@ function parseExcel() {
     if (col0 === 'P1' || col0 === 'P2') {
       currentPeriode = col0
       NIVEAU_OFFSETS.forEach(({ niveau }) => { currentMatiere[niveau] = '' })
+      resetAllBlocks()
     }
 
     if (!currentJour || !currentPeriode) continue
@@ -111,17 +120,27 @@ function parseExcel() {
       if (normalizedCell) {
         const allAnnotations = normalizedCell.split(/\s+/).every(w => isAnnotation(w))
         if (allAnnotations) {
-          currentMatiere[niveau] = currentMatiere[niveau]
-            ? `${currentMatiere[niveau]} ${normalizedCell}`
-            : normalizedCell
+          if (currentMatiere[niveau]) {
+            const oldMatiere = currentMatiere[niveau]
+            currentMatiere[niveau] = `${oldMatiere} ${normalizedCell}`
+            // Backfill: exams already emitted in this block had the old matière — update them
+            for (const idx of blockIndices[niveau]) {
+              if (exams[idx].matiere === oldMatiere) exams[idx].matiere = currentMatiere[niveau]
+            }
+          } else {
+            currentMatiere[niveau] = normalizedCell
+          }
         } else {
+          // New base matière: start a fresh block for this niveau
           currentMatiere[niveau] = normalizedCell
+          resetBlock(niveau)
         }
       }
 
       // Emit exam only if we have prof and groupe
       if (!profCode || !groupe || !currentMatiere[niveau]) continue
 
+      blockIndices[niveau].push(exams.length)
       exams.push({
         matiere: currentMatiere[niveau],
         niveau,

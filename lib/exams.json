@@ -390,8 +390,8 @@
     "local": "C121"
   },
   {
-    "id": "LNB-lg1-a4-1-18-P2",
-    "matiere": "Lg1",
+    "id": "LNB-lg1-oral-a4-1-18-P2",
+    "matiere": "Lg1 oral",
     "niveau": "6e",
     "groupe": "A4-1",
     "profCode": "LNB",
@@ -550,8 +550,8 @@
     "local": "T02"
   },
   {
-    "id": "PEC-lg-2h-n-19-P1P2",
-    "matiere": "Lg",
+    "id": "PEC-lg-ce1d-1h-2h-n-19-P1P2",
+    "matiere": "Lg CE1D 1h",
     "niveau": "2e",
     "groupe": "2H-N",
     "profCode": "PEC",
@@ -590,8 +590,8 @@
     "local": "MAND"
   },
   {
-    "id": "DEBS-fr-6h-19-P1P2",
-    "matiere": "Fr",
+    "id": "DEBS-fr-cess-6h-19-P1P2",
+    "matiere": "Fr CESS",
     "niveau": "6e",
     "groupe": "6H",
     "profCode": "DEBS",
@@ -610,23 +610,13 @@
     "local": "T12"
   },
   {
-    "id": "VBG-lg-ce1d-2i-n-19-P1",
-    "matiere": "Lg CE1D",
+    "id": "VBG-lg-ce1d-1h-2i-n-19-P1P2",
+    "matiere": "Lg CE1D 1h",
     "niveau": "2e",
     "groupe": "2I-N",
     "profCode": "VBG",
     "jour": "2026-06-19",
-    "periode": "P1",
-    "local": "C320"
-  },
-  {
-    "id": "VBG-lg-1h-2i-n-19-P2",
-    "matiere": "Lg 1h",
-    "niveau": "2e",
-    "groupe": "2I-N",
-    "profCode": "VBG",
-    "jour": "2026-06-19",
-    "periode": "P2",
+    "periode": "P1+P2",
     "local": "C320"
   },
   {
@@ -980,8 +970,8 @@
     "local": "T02"
   },
   {
-    "id": "CARO-math-2h-22-P1P2",
-    "matiere": "Math",
+    "id": "CARO-math-ce1d-2h-22-P1P2",
+    "matiere": "Math CE1D",
     "niveau": "2e",
     "groupe": "2H",
     "profCode": "CARO",
@@ -990,8 +980,8 @@
     "local": "C217"
   },
   {
-    "id": "GOD-lg1-3j-n-22-P1P2",
-    "matiere": "Lg1",
+    "id": "GOD-lg1-oral-3j-n-22-P1P2",
+    "matiere": "Lg1 Oral",
     "niveau": "3e",
     "groupe": "3J-N",
     "profCode": "GOD",
@@ -1020,8 +1010,8 @@
     "local": "C001"
   },
   {
-    "id": "DEST-hist-6h-22-P1",
-    "matiere": "Hist",
+    "id": "DEST-hist-cess-6h-22-P1",
+    "matiere": "Hist CESS",
     "niveau": "6e",
     "groupe": "6H",
     "profCode": "DEST",
@@ -1400,8 +1390,8 @@
     "local": "T02"
   },
   {
-    "id": "HEK-fr-2h-23-P1P2",
-    "matiere": "Fr",
+    "id": "HEK-fr-ce1d-2h-23-P1P2",
+    "matiere": "Fr CE1D",
     "niveau": "2e",
     "groupe": "2H",
     "profCode": "HEK",
@@ -1750,8 +1740,8 @@
     "local": "C321"
   },
   {
-    "id": "IVE-latin-gr1-23-P2",
-    "matiere": "Latin",
+    "id": "IVE-latin-oral-gr1-23-P2",
+    "matiere": "Latin oral",
     "niveau": "6e",
     "groupe": "GR1",
     "profCode": "IVE",
@@ -1860,8 +1850,8 @@
     "local": "T02"
   },
   {
-    "id": "PIEJ-sc-2h-24-P1P2",
-    "matiere": "Sc",
+    "id": "PIEJ-sc-ce1d-1h-2h-24-P1P2",
+    "matiere": "Sc CE1D 1h",
     "niveau": "2e",
     "groupe": "2H",
     "profCode": "PIEJ",
@@ -1900,8 +1890,8 @@
     "local": "C034"
   },
   {
-    "id": "DEST-geo-6h-24-P1",
-    "matiere": "Géo",
+    "id": "DEST-geo-oral-6h-24-P1",
+    "matiere": "Géo Oral",
     "niveau": "6e",
     "groupe": "6H",
     "profCode": "DEST",
@@ -1920,23 +1910,13 @@
     "local": "T12"
   },
   {
-    "id": "DKS-sc-ce1d-2i-24-P1",
-    "matiere": "Sc CE1D",
+    "id": "DKS-sc-ce1d-1h-2i-24-P1P2",
+    "matiere": "Sc CE1D 1h",
     "niveau": "2e",
     "groupe": "2I",
     "profCode": "DKS",
     "jour": "2026-06-24",
-    "periode": "P1",
-    "local": "C320"
-  },
-  {
-    "id": "DKS-sc-1h-2i-24-P2",
-    "matiere": "Sc 1h",
-    "niveau": "2e",
-    "groupe": "2I",
-    "profCode": "DKS",
-    "jour": "2026-06-24",
-    "periode": "P2",
+    "periode": "P1+P2",
     "local": "C320"
   },
   {
