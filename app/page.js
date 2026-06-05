@@ -27,7 +27,7 @@ export default function HomePage() {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '24px 16px',
-      background: 'linear-gradient(160deg, #0f2035 0%, #1E3A8A 60%, #2563EB 100%)',
+      background: 'linear-gradient(160deg, #0d1f3c 0%, #1E3A8A 52%, #7c2d00 100%)',
     }}>
 
       {/* Card container */}
@@ -46,19 +46,18 @@ export default function HomePage() {
           gap: 16,
         }}>
           <div style={{
-            background: 'rgba(255,255,255,.12)',
+            background: '#fff',
             borderRadius: 12,
-            padding: '14px 28px',
+            padding: '16px 32px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            boxShadow: '0 2px 12px rgba(0,0,0,.18)',
           }}>
             <img
               src="/logo.png"
-              alt="Logo école des Hayeffes"
-              width={180}
-              height={72}
-              style={{ height: 'auto', maxWidth: 180, display: 'block', filter: 'brightness(0) invert(1)' }}
+              alt="Logo Collège des Hayeffes"
+              style={{ height: 'auto', maxWidth: 220, width: 220, display: 'block' }}
             />
           </div>
           <div style={{ textAlign: 'center' }}>

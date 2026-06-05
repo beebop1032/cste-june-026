@@ -6,7 +6,10 @@
   --primary-light:  #EFF6FF;
   --primary-ring:   rgba(30,58,138,.16);
   --secondary:      #3B82F6;
-  --accent:         #D97706;
+  --accent:         #F97316;
+  --accent-hover:   #EA580C;
+  --school-orange:  #F97316;
+  --school-yellow:  #FBBF24;
   --bg:             #EEF2F7;
   --bg-card:        #FFFFFF;
   --fg:             #0F172A;

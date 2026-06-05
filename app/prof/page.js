@@ -25,8 +25,8 @@ export default async function ProfSelectPage() {
     }}>
       <div style={{ width: '100%', maxWidth: 400, display: 'flex', flexDirection: 'column', gap: 24 }}>
         <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-          <div style={{ background: 'var(--primary)', borderRadius: 10, padding: '10px 24px' }}>
-            <img src="/logo.png" alt="Collège des Hayeffes" width={160} height={64} style={{ height: 36, width: 'auto', display: 'block', filter: 'brightness(0) invert(1)' }} />
+          <div style={{ background: '#fff', borderRadius: 10, padding: '12px 28px', boxShadow: '0 2px 10px rgba(0,0,0,.10)' }}>
+            <img src="/logo.png" alt="Collège des Hayeffes" style={{ height: 44, width: 'auto', display: 'block' }} />
           </div>
           <div>
             <h1 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 4px', color: 'var(--fg)' }}>

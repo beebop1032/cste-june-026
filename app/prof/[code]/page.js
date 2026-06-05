@@ -36,7 +36,9 @@ export default async function ProfPage({ params }) {
           </svg>
           Retour
         </a>
-        <img src="/logo.png" alt="Collège des Hayeffes" width={120} height={48} style={{ height: 26, width: 'auto', filter: 'brightness(0) invert(1)', opacity: .85 }} />
+        <div style={{ background: '#fff', borderRadius: 6, padding: '3px 10px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+          <img src="/logo.png" alt="Collège des Hayeffes" style={{ height: 36, width: 'auto', display: 'block' }} />
+        </div>
         <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,.2)' }} />
         <span style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>
           Prof <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13 }}>{code}</span>
