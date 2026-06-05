@@ -35,8 +35,17 @@ export default async function AdminPage({ searchParams }) {
   const groupeStatuts = locksData.groupeStatuts ?? {}
 
   const respondedCodes = new Set(Object.keys(responses))
-  const missing = ALL_PROF_CODES.filter(c => !respondedCodes.has(c))
-  const pct = Math.round((respondedCodes.size / ALL_PROF_CODES.length) * 100)
+
+  // Profs whose ALL exams are admin-decided (annulé/maintenu) count as "done" without submission
+  const adminDoneCodes = new Set(
+    ALL_PROF_CODES.filter(code => {
+      const profExams = exams.filter(e => e.profCode === code)
+      return profExams.length > 0 && profExams.every(e => groupeStatuts[e.groupe])
+    })
+  )
+  const effectiveDone = new Set([...respondedCodes, ...adminDoneCodes])
+  const missing = ALL_PROF_CODES.filter(c => !effectiveDone.has(c))
+  const pct = Math.round((effectiveDone.size / ALL_PROF_CODES.length) * 100)
   const showSuccess = sp?.ok === '1'
 
   // Build élèves rows (server-side, then pass to client for filter/sort)
@@ -117,7 +126,7 @@ export default async function AdminPage({ searchParams }) {
           <div className="card" style={{ padding: '24px 28px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
               <span style={{ fontSize: 32, fontWeight: 700, color: 'var(--fg)' }}>
-                {respondedCodes.size} <span style={{ fontSize: 16, fontWeight: 400, color: 'var(--fg-muted)' }}>/ {ALL_PROF_CODES.length} profs</span>
+                {effectiveDone.size} <span style={{ fontSize: 16, fontWeight: 400, color: 'var(--fg-muted)' }}>/ {ALL_PROF_CODES.length} profs</span>
               </span>
               <span style={{ fontSize: 20, fontWeight: 600, color: pct === 100 ? 'var(--success)' : 'var(--fg-muted)' }}>{pct}%</span>
             </div>
@@ -128,7 +137,7 @@ export default async function AdminPage({ searchParams }) {
           </div>
           {missing.length > 0 && (
             <div>
-              <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', margin: '0 0 10px' }}>Codes manquants ({missing.length})</h2>
+              <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', margin: '0 0 10px' }}>En attente ({missing.length})</h2>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {missing.map(c => <span key={c} className="badge badge-amber">{c}</span>)}
               </div>
@@ -136,9 +145,20 @@ export default async function AdminPage({ searchParams }) {
           )}
           {respondedCodes.size > 0 && (
             <div>
-              <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', margin: '0 0 10px' }}>Réponses reçues ({respondedCodes.size})</h2>
+              <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', margin: '0 0 10px' }}>Formulaire soumis ({respondedCodes.size})</h2>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {[...respondedCodes].sort().map(c => <span key={c} className="badge badge-green">{c}</span>)}
+              </div>
+            </div>
+          )}
+          {adminDoneCodes.size > 0 && (
+            <div>
+              <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', margin: '0 0 10px' }}>
+                Traités par l'administration ({adminDoneCodes.size})
+                <span style={{ fontWeight: 400, fontSize: 12, color: 'var(--fg-muted)', marginLeft: 6 }}>tous leurs examens sont annulés ou maintenus</span>
+              </h2>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {[...adminDoneCodes].sort().map(c => <span key={c} className="badge badge-blue">{c}</span>)}
               </div>
             </div>
           )}

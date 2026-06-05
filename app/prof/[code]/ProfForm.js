@@ -21,6 +21,8 @@ const IconTrash = () => (
 
 // groupeStatuts: { groupe: 'annule'|'maintenu' }  — open = absent
 export default function ProfForm({ profCode, examens, groupeStatuts, dejaRempli }) {
+  const allAdminDecided = examens.every(e => groupeStatuts[e.groupe])
+
   const [confirmed, setConfirmed] = useState(!dejaRempli)
   const [examState, setExamState] = useState(() =>
     Object.fromEntries(
@@ -100,6 +102,53 @@ export default function ProfForm({ profCode, examens, groupeStatuts, dejaRempli 
       const res = await submitProf(profCode, payload)
       setResult(res)
     })
+  }
+
+  if (allAdminDecided) {
+    const annules  = examens.filter(e => groupeStatuts[e.groupe] === 'annule')
+    const maintenus = examens.filter(e => groupeStatuts[e.groupe] === 'maintenu')
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="card" style={{ padding: '28px 24px', textAlign: 'center', background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#1E40AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 10 }}>
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          <h2 style={{ color: '#1E40AF', margin: '0 0 6px', fontSize: 17, fontWeight: 600 }}>Aucune action requise</h2>
+          <p style={{ margin: 0, color: '#1E3A8A', fontSize: 14, lineHeight: 1.6 }}>
+            Tous vos examens ont été traités par l'administration. Il n'y a rien à remplir.
+          </p>
+        </div>
+        {annules.length > 0 && (
+          <div className="card" style={{ padding: '14px 18px', borderColor: '#FECACA', background: '#FEF2F2' }}>
+            <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 600, color: '#991B1B' }}>Examens annulés ({annules.length})</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {annules.map(ex => (
+                <div key={ex.id} style={{ fontSize: 13, color: '#7F1D1D', display: 'flex', gap: 8 }}>
+                  <span style={{ fontWeight: 500 }}>{ex.matiere}</span>
+                  <span style={{ color: '#B91C1C' }}>{ex.groupe}</span>
+                  <span style={{ color: '#991B1B', opacity: 0.7 }}>{new Date(ex.jour + 'T12:00:00').toLocaleDateString('fr-BE', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {maintenus.length > 0 && (
+          <div className="card" style={{ padding: '14px 18px', borderColor: '#BFDBFE', background: '#EFF6FF' }}>
+            <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 600, color: '#1E40AF' }}>Examens maintenus pour tous les élèves ({maintenus.length})</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {maintenus.map(ex => (
+                <div key={ex.id} style={{ fontSize: 13, color: '#1E3A8A', display: 'flex', gap: 8 }}>
+                  <span style={{ fontWeight: 500 }}>{ex.matiere}</span>
+                  <span style={{ color: '#1D4ED8' }}>{ex.groupe}</span>
+                  <span style={{ opacity: 0.7 }}>{new Date(ex.jour + 'T12:00:00').toLocaleDateString('fr-BE', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    )
   }
 
   if (result?.ok) {
