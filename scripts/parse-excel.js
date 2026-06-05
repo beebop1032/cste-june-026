@@ -51,10 +51,10 @@ function slugify(str) {
     .replace(/^-|-$/g, '')
 }
 
-function makeId(profCode, matiere, groupe, jour, periode) {
+function makeId(profCode, matiere, groupe, niveau, jour, periode) {
   const day = jour.slice(8, 10)
   const per = periode.replace('+', '')
-  return `${profCode}-${slugify(matiere)}-${slugify(groupe)}-${day}-${per}`
+  return `${profCode}-${slugify(matiere)}-${slugify(groupe)}-${slugify(niveau)}-${day}-${per}`
 }
 
 function parseDayToISO(str) {
@@ -187,7 +187,7 @@ function parseExcel() {
   }
 
   const merged = [...byGroup.values()].flat().map(ex => ({
-    id: makeId(ex.profCode, ex.matiere, ex.groupe, ex.jour, ex.periode),
+    id: makeId(ex.profCode, ex.matiere, ex.groupe, ex.niveau, ex.jour, ex.periode),
     matiere: ex.matiere,
     niveau: ex.niveau,
     groupe: ex.groupe,
