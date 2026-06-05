@@ -30,9 +30,18 @@ export async function GET(request) {
     } catch (e) {
       writeReadTest = `ERREUR: ${e?.message ?? String(e)}`
     }
+    let rawBlobList = []
+    try {
+      const { list } = await import('@vercel/blob')
+      const { blobs } = await list({})
+      rawBlobList = blobs.map(b => ({ pathname: b.pathname, url: b.url }))
+    } catch (e) {
+      rawBlobList = [`ERREUR list: ${e?.message}`]
+    }
     return Response.json({
       useBlob: !!process.env.BLOB_READ_WRITE_TOKEN,
       writeReadTest,
+      rawBlobList,
       adminLocksContent: locksRaw,
       groupeStatuts,
       allFiles,
