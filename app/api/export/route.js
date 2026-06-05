@@ -148,75 +148,165 @@ export async function GET(request) {
   if (format === 'print') {
     const partMap = await buildPartMap()
 
-    function partCell(ex) {
+    function partBadge(ex) {
       const p = partMap.get(ex.id)
-      if (!p) return `<td class="ns">?</td>`
-      const cls = p.type === 'annule' ? 'an' : p.type === 'tous' ? 'to' : 'li'
-      return `<td class="${cls}">${p.label}</td>`
+      if (!p) return `<td class="p-ns"><span class="badge b-ns">–</span></td>`
+      if (p.type === 'annule')  return `<td class="p-an"><span class="badge b-an">✕ Annulé</span></td>`
+      if (p.type === 'tous')    return `<td class="p-to"><span class="badge b-to">✓ Tous</span></td>`
+      return `<td class="p-li"><span class="badge b-li">${p.label}</span></td>`
     }
 
+    const NIV_COLORS = ['#1a3254','#1e4976','#1d5fa8','#1a6b8a','#1a7a6e','#236b3e']
+
+    const css = `
+      @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Playfair+Display:wght@700&family=JetBrains+Mono:wght@500&display=swap');
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
+      :root { --navy:#1a3254; --gold:#b8893a; --bg:#f4f3ef; --white:#ffffff; --text:#1c1c1c; --muted:#6b7280; --border:#d6d2c8 }
+      body { font-family:'Source Sans 3','Helvetica Neue',sans-serif; font-size:11px; background:var(--bg); color:var(--text); line-height:1.4 }
+
+      /* ── Screen chrome ── */
+      .topbar { background:var(--navy); color:#fff; padding:20px 32px; display:flex; align-items:center; justify-content:space-between; gap:16px }
+      .topbar-left h1 { font-family:'Playfair Display',Georgia,serif; font-size:20px; font-weight:700; letter-spacing:-0.3px }
+      .topbar-left p  { font-size:11px; color:rgba(255,255,255,.55); margin-top:3px }
+      .topbar-right   { display:flex; align-items:center; gap:12px }
+      .print-btn { background:var(--gold); color:#fff; border:none; padding:9px 20px; font-family:inherit; font-size:12px; font-weight:700; cursor:pointer; border-radius:4px; letter-spacing:.4px }
+      .print-btn:hover { opacity:.88 }
+      .legend { display:flex; gap:14px; align-items:center; padding:8px 32px; background:#fff; border-bottom:1px solid var(--border); font-size:10.5px; color:var(--muted) }
+      .leg { display:flex; align-items:center; gap:5px }
+      .leg-dot { width:10px; height:10px; border-radius:2px; flex-shrink:0 }
+
+      /* ── Content ── */
+      .content { max-width:1440px; margin:0 auto; padding:20px 24px 40px }
+
+      /* ── Day card ── */
+      .day { background:var(--white); border:1px solid var(--border); border-radius:6px; overflow:hidden; margin-bottom:14px; box-shadow:0 1px 6px rgba(0,0,0,.06) }
+      .day-hdr { background:var(--navy); color:#fff; padding:9px 16px; display:flex; align-items:center; justify-content:space-between }
+      .day-name { font-weight:700; font-size:12.5px; letter-spacing:.6px; text-transform:uppercase }
+      .day-res  { font-size:10px; color:rgba(255,255,255,.55) }
+      .res-field { display:inline-block; min-width:55px; border-bottom:1px solid rgba(255,255,255,.4); margin-left:5px }
+
+      /* ── Period block ── */
+      .per { padding:10px 16px 12px; border-top:1px solid var(--border) }
+      .per:first-of-type { border-top:none }
+      .per-label { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:var(--navy); margin-bottom:7px; display:flex; align-items:center; gap:7px }
+      .per-label::after { content:''; flex:1; height:1px; background:var(--border) }
+
+      /* ── Table ── */
+      table { width:100%; border-collapse:collapse }
+      thead tr.niv-row th { padding:3px 4px; font-size:10px; font-weight:700; color:#fff; letter-spacing:.4px; text-align:center; border:1px solid rgba(255,255,255,.2) }
+      thead tr.col-row th { background:#f0ede6; color:var(--navy); font-size:8.5px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; padding:2px 3px; border:1px solid var(--border); text-align:center }
+      thead tr.col-row th.tc { background:#e8e4db }
+      tbody td { border:1px solid #e2dfd8; padding:2px 3px; text-align:center; vertical-align:middle; white-space:nowrap }
+      tbody tr:nth-child(even) td { background:#faf9f6 }
+      .tc { background:#f8f6f1 !important; font-weight:700; font-size:9px; color:var(--navy) }
+      .tm { font-weight:600; color:var(--text) }
+      .tg { font-weight:700; color:var(--navy) }
+      .tp { font-family:'JetBrains Mono','Courier New',monospace; font-size:8.5px; color:var(--muted) }
+      .te { background:#faf9f7 !important }
+
+      /* ── Participation badges ── */
+      .badge { display:inline-block; padding:1px 5px; border-radius:3px; font-weight:700; font-size:8px; letter-spacing:.15px }
+      .b-an  { background:#fde8e8; color:#991b1b; border:1px solid #fca5a5 }
+      .b-to  { background:#d1fae5; color:#065f46; border:1px solid #6ee7b7 }
+      .b-li  { background:#dbeafe; color:#1e40af; border:1px solid #93c5fd }
+      .b-ns  { color:#9ca3af; font-style:italic; font-weight:400; font-size:8.5px }
+      .p-an td, td.p-an { background:#fff5f5 }
+      .p-to td, td.p-to { background:#f0fff4 }
+      .p-li td, td.p-li { background:#eff6ff }
+
+      /* ── Print ── */
+      .print-hdr { display:none }
+      @media print {
+        @page { size: A4 landscape; margin: 8mm 10mm }
+        body { background:#fff; font-size:8px }
+        .topbar, .legend, .print-btn { display:none }
+        .print-hdr { display:block; text-align:center; margin-bottom:8px; padding-bottom:6px; border-bottom:2px solid var(--navy) }
+        .print-hdr h1 { font-family:'Playfair Display',Georgia,serif; font-size:14px; font-weight:700; color:var(--navy) }
+        .print-hdr p  { font-size:9px; color:var(--muted); margin-top:2px }
+        .content { padding:0; max-width:none }
+        .day { box-shadow:none; border-radius:0; border:1px solid #bbb; margin-bottom:7px }
+        .day-hdr { padding:5px 8px }
+        .day-name { font-size:9.5px }
+        .per { padding:4px 8px 6px }
+        table { font-size:7px }
+        thead tr.niv-row th { font-size:8px; padding:2px 3px }
+        thead tr.col-row th { font-size:6.5px; padding:1px 2px }
+        tbody td { padding:1px 2px }
+        .badge { font-size:6.5px; padding:0 3px }
+      }
+    `
+
     let html = `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="UTF-8">
-<title>Surveillance examens juin 2026</title>
-<style>
-  *{box-sizing:border-box}
-  body{font-family:Arial,sans-serif;font-size:10px;margin:10mm}
-  h1{font-size:14px;text-align:center;margin:0 0 8px}
-  .print-btn{display:block;margin:8px auto 16px;padding:6px 18px;font-size:13px;cursor:pointer;border:1px solid #888;border-radius:4px;background:#f0f0f0}
-  .day{margin-bottom:14px;page-break-inside:avoid}
-  .day-hdr{font-size:11px;font-weight:bold;background:#E2E8F0;padding:3px 6px;margin-bottom:3px}
-  .per-hdr{font-size:10px;font-weight:bold;color:#555;margin:3px 0 1px}
-  table{width:100%;border-collapse:collapse;margin-bottom:6px;font-size:9px}
-  th,td{border:1px solid #CBD5E0;padding:1px 3px;text-align:center;white-space:nowrap}
-  th{background:#F7FAFC;font-size:9px}
-  .niv{background:#EDF2F7;font-weight:bold}
-  .an{background:#FED7D7}
-  .to{background:#C6F6D5}
-  .li{background:#BEE3F8}
-  .ns{color:#aaa}
-  @media print{
-    .print-btn{display:none}
-    .day{page-break-inside:avoid}
-    body{margin:5mm}
-  }
-</style></head><body>
-<button class="print-btn" onclick="window.print()">🖨️ Imprimer / Enregistrer en PDF</button>
-<h1>Surveillance examens — juin 2026</h1>
+<html lang="fr"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Surveillance — Examens juin 2026</title>
+<style>${css}</style>
+</head><body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>Surveillance des examens</h1>
+    <p>Collège des Hayeffes &nbsp;·&nbsp; Juin 2026</p>
+  </div>
+  <div class="topbar-right">
+    <div class="legend">
+      <span class="leg"><span class="leg-dot" style="background:#fde8e8;border:1px solid #fca5a5"></span>Annulé</span>
+      <span class="leg"><span class="leg-dot" style="background:#d1fae5;border:1px solid #6ee7b7"></span>Tous les élèves</span>
+      <span class="leg"><span class="leg-dot" style="background:#dbeafe;border:1px solid #93c5fd"></span>Liste nominative</span>
+      <span class="leg"><span class="leg-dot" style="background:#f0ede6;border:1px solid #d6d2c8"></span>Non renseigné</span>
+    </div>
+    <button class="print-btn" onclick="window.print()">Imprimer / PDF</button>
+  </div>
+</div>
+
+<div class="print-hdr">
+  <h1>Surveillance des examens — Juin 2026</h1>
+  <p>Collège des Hayeffes · Imprimé le ${new Date().toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+</div>
+
+<div class="content">
 `
     for (const jour of JOURS) {
-      html += `<div class="day"><div class="day-hdr">${labelJour(jour)} &nbsp;&nbsp; Réservistes P1 : _____ &nbsp; P2 : _____</div>`
+      html += `<div class="day">
+  <div class="day-hdr">
+    <span class="day-name">${labelJour(jour)}</span>
+    <span class="day-res">Réservistes &nbsp; P1 :<span class="res-field">&nbsp;</span>&nbsp; P2 :<span class="res-field">&nbsp;</span></span>
+  </div>`
 
       for (const periode of ['P1', 'P2']) {
         const bloc = examsForBloc(jour, periode)
         if (!bloc.length) continue
         const { byNiveau, maxRows } = buildBlocRows(bloc)
 
-        html += `<div class="per-hdr">${periode}</div><table><thead>`
-        html += `<tr><th></th>`
+        html += `<div class="per"><div class="per-label">${periode}</div>
+<table>
+<thead>
+<tr class="niv-row"><th class="tc"></th>`
         NIVEAUX.forEach((_, i) => {
-          html += `<th class="niv" colspan="4">${NIVEAU_LABELS[i]}</th>`
+          html += `<th colspan="4" style="background:${NIV_COLORS[i]}">${NIVEAU_LABELS[i]}</th>`
         })
-        html += `</tr><tr><th></th>`
-        for (let i = 0; i < NIVEAUX.length; i++) {
-          html += `<th>Mat.</th><th>Gr.</th><th>Prof</th><th>Él.</th>`
-        }
+        html += `</tr>
+<tr class="col-row"><th class="tc">Pér.</th>`
+        NIVEAUX.forEach(() => {
+          html += `<th>Matière</th><th>Classe</th><th>Prof</th><th>Élèves</th>`
+        })
         html += `</tr></thead><tbody>`
 
         for (let i = 0; i < maxRows; i++) {
-          html += `<tr><td>${i === 0 ? periode : ''}</td>`
+          html += `<tr><td class="tc">${i === 0 ? periode : ''}</td>`
           NIVEAUX.forEach(n => {
             const ex = byNiveau[n][i]
-            if (!ex) { html += `<td></td><td></td><td></td><td></td>`; return }
-            html += `<td>${ex.matiere}</td><td>${ex.groupe}</td><td>${ex.profCode}</td>${partCell(ex)}`
+            if (!ex) { html += `<td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td>`; return }
+            html += `<td class="tm">${ex.matiere}</td><td class="tg">${ex.groupe}</td><td class="tp">${ex.profCode}</td>${partBadge(ex)}`
           })
           html += `</tr>`
         }
-        html += `</tbody></table>`
+        html += `</tbody></table></div>`
       }
       html += `</div>`
     }
 
-    html += `</body></html>`
+    html += `</div></body></html>`
     return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
   }
 
