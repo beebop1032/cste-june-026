@@ -32,11 +32,11 @@ export async function GET(request) {
         writeReadTest = `list OK (${blobs.length} blobs avec ce prefix) mais debug-probe.json introuvable`
       } else {
         const result = await get(blob.url, { access: 'private' })
-        if (!result) {
-          writeReadTest = `get() a retourné null (404?) pour url=${blob.url}`
+        if (!result || result.statusCode !== 200) {
+          writeReadTest = `get() a retourné null/304 pour url=${blob.url}`
         } else {
-          const buf = await result.stream.arrayBuffer()
-          const parsed = JSON.parse(Buffer.from(buf).toString('utf8'))
+          const text = await new Response(result.stream).text()
+          const parsed = JSON.parse(text)
           writeReadTest = parsed?.probe === true ? 'OK — écriture et lecture Blob fonctionnent' : `lecture échouée (parsed=${JSON.stringify(parsed)})`
         }
       }
