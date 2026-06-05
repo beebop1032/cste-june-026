@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo, useTransition } from 'react'
+import { useState, useMemo, useCallback, useTransition } from 'react'
 import { saveFullStateSilent } from '@/actions/admin'
 
 function formatJour(iso) {
@@ -8,9 +8,10 @@ function formatJour(iso) {
 }
 
 const GS = {
-  open:     { label: 'À remplir',          bg: '#F8FAFC', border: '#E2E8F0', text: '#475569', badgeClass: 'badge-gray' },
-  annule:   { label: 'Annulé',             bg: '#FEF2F2', border: '#FECACA', text: '#991B1B', badgeClass: 'badge-red'  },
-  maintenu: { label: 'Maintenu pour tous', bg: '#EFF6FF', border: '#BFDBFE', text: '#1E40AF', badgeClass: 'badge-blue' },
+  open:     { label: 'À remplir',          bg: '#F8FAFC', border: '#E2E8F0', text: '#475569', badgeClass: 'badge-gray'  },
+  rempli:   { label: 'Rempli par prof',    bg: '#F0FDF4', border: '#BBF7D0', text: '#15803D', badgeClass: 'badge-green' },
+  annule:   { label: 'Annulé',             bg: '#FEF2F2', border: '#FECACA', text: '#991B1B', badgeClass: 'badge-red'   },
+  maintenu: { label: 'Maintenu pour tous', bg: '#EFF6FF', border: '#BFDBFE', text: '#1E40AF', badgeClass: 'badge-blue'  },
 }
 
 const SEL = {
@@ -18,7 +19,7 @@ const SEL = {
   border: '1px solid #CBD5E1', background: '#fff', width: '100%', cursor: 'pointer',
 }
 
-export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: initialES }) {
+export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: initialES, responses = {} }) {
   const [examStatuts, setExamStatuts] = useState(initialES)
   const [isPending, startTransition] = useTransition()
 
@@ -31,16 +32,20 @@ export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: in
   const groupes = useMemo(() => [...new Set(exams.map(e => e.groupe))].sort(), [exams])
   const profs   = useMemo(() => [...new Set(exams.map(e => e.profCode))].sort(), [exams])
 
-  function effectif(examId, groupe) {
-    return examStatuts[examId] ?? groupeStatuts[groupe] ?? 'open'
-  }
+  // Effective statut: exam-level > groupe-level > prof submitted > open
+  const effectif = useCallback((examId, groupe, profCode) => {
+    const locked = examStatuts[examId] ?? groupeStatuts[groupe]
+    if (locked) return locked
+    if (responses[profCode]?.examens?.some(e => e.id === examId)) return 'rempli'
+    return 'open'
+  }, [examStatuts, groupeStatuts, responses])
 
   const rows = useMemo(() => {
     const sorted = [...exams].sort((a, b) =>
       a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode) || a.groupe.localeCompare(b.groupe)
     )
     return sorted.filter(ex => {
-      const s = examStatuts[ex.id] ?? groupeStatuts[ex.groupe] ?? 'open'
+      const s = effectif(ex.id, ex.groupe, ex.profCode)
       return (
         (!filterNiveau || ex.niveau   === filterNiveau) &&
         (!filterGroupe || ex.groupe   === filterGroupe) &&
@@ -48,7 +53,7 @@ export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: in
         (!filterStatut || s           === filterStatut)
       )
     })
-  }, [exams, examStatuts, groupeStatuts, filterNiveau, filterGroupe, filterProf, filterStatut])
+  }, [exams, effectif, filterNiveau, filterGroupe, filterProf, filterStatut])
 
   function handleStatut(examId, statut) {
     const newES = { ...examStatuts }
@@ -116,6 +121,7 @@ export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: in
                   <select value={filterStatut} onChange={e => setFilterStatut(e.target.value)} style={SEL}>
                     <option value="">Tous</option>
                     <option value="open">À remplir</option>
+                    <option value="rempli">Rempli par prof</option>
                     <option value="annule">Annulé</option>
                     <option value="maintenu">Maintenu</option>
                   </select>
@@ -125,8 +131,8 @@ export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: in
             </thead>
             <tbody>
               {rows.map(ex => {
-                const es         = effectif(ex.id, ex.groupe)
-                const info       = GS[es]
+                const es          = effectif(ex.id, ex.groupe, ex.profCode)
+                const info        = GS[es]
                 const hasOverride = !!examStatuts[ex.id]
                 const fromGroupe  = !hasOverride && !!(groupeStatuts[ex.groupe])
                 return (

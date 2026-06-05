@@ -263,7 +263,7 @@ export default async function AdminPage({ searchParams }) {
 
           {/* ── Vue par jour (client, filtrable) ── */}
           {vue === 'jour' && (
-            <VerrousJourTable exams={exams} groupeStatuts={groupeStatuts} examStatuts={examStatuts} />
+            <VerrousJourTable exams={exams} groupeStatuts={groupeStatuts} examStatuts={examStatuts} responses={responses} />
           )}
 
           {/* ── Vue par classe ── */}
