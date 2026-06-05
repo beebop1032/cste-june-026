@@ -1,5 +1,5 @@
 'use client'
-import { useState, useTransition } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { saveFullStateSilent } from '@/actions/admin'
 
 function formatJour(iso) {
@@ -29,7 +29,20 @@ export default function ClasseTable({ exams, niveaux, niveauxMap, groupeStatuts:
   const [groupeStatuts, setGroupeStatuts] = useState(initGS)
   const [examStatuts,   setExamStatuts]   = useState(initES)
   const [expanded,  setExpanded]  = useState({})
-  const [isPending, startTransition] = useTransition()
+  const [saving, setSaving] = useState(false)
+  const saveTimer = useRef(null)
+  const isMount  = useRef(true)
+
+  useEffect(() => {
+    if (isMount.current) { isMount.current = false; return }
+    setSaving(true)
+    clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(async () => {
+      await saveFullStateSilent(groupeStatuts, examStatuts)
+      setSaving(false)
+    }, 500)
+    return () => clearTimeout(saveTimer.current)
+  }, [groupeStatuts, examStatuts])
 
   // Effective statut: exam-level overrides groupe-level
   function effectif(examId, groupe) {
@@ -44,7 +57,6 @@ export default function ClasseTable({ exams, niveaux, niveauxMap, groupeStatuts:
     for (const ex of exams.filter(e => e.groupe === groupe)) delete newES[ex.id]
     setGroupeStatuts(newGS)
     setExamStatuts(newES)
-    startTransition(() => saveFullStateSilent(newGS, newES))
   }
 
   function handleNiveau(niveau, statut) {
@@ -57,7 +69,6 @@ export default function ClasseTable({ exams, niveaux, niveauxMap, groupeStatuts:
     for (const ex of exams.filter(e => e.niveau === niveau)) delete newES[ex.id]
     setGroupeStatuts(newGS)
     setExamStatuts(newES)
-    startTransition(() => saveFullStateSilent(newGS, newES))
   }
 
   function handleExam(examId, statut) {
@@ -65,12 +76,11 @@ export default function ClasseTable({ exams, niveaux, niveauxMap, groupeStatuts:
     if (statut === 'open') delete newES[examId]
     else newES[examId] = statut
     setExamStatuts(newES)
-    startTransition(() => saveFullStateSilent(groupeStatuts, newES))
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {isPending && <span style={{ fontSize: 12, color: 'var(--primary)', fontStyle: 'italic' }}>Sauvegarde…</span>}
+      {saving && <span style={{ fontSize: 12, color: 'var(--primary)', fontStyle: 'italic' }}>Sauvegarde…</span>}
 
       {niveaux.map(n => {
         const groupesNiveau = niveauxMap[n] ?? []
@@ -92,7 +102,7 @@ export default function ClasseTable({ exams, niveaux, niveauxMap, groupeStatuts:
                   { statut: 'annule',   label: 'Tout annuler'   },
                   { statut: 'maintenu', label: 'Tout maintenir' },
                 ].map(({ statut, label }) => (
-                  <button key={statut} type="button" disabled={isPending}
+                  <button key={statut} type="button" disabled={false}
                     onClick={() => handleNiveau(n, statut)}
                     className="btn btn-xs btn-secondary"
                     style={niveauStatut === statut
@@ -129,7 +139,7 @@ export default function ClasseTable({ exams, niveaux, niveauxMap, groupeStatuts:
                       <span className={`badge ${info.badgeClass}`} style={{ fontSize: 11 }}>{info.label}</span>
                       <div style={{ display: 'flex', gap: 3 }} onClick={e => e.stopPropagation()}>
                         {ACTIONS.map(({ statut, label }) => (
-                          <button key={statut} type="button" disabled={gs === statut || isPending}
+                          <button key={statut} type="button" disabled={gs === statut}
                             onClick={() => handleGroupe(g, statut)}
                             className="btn btn-xs"
                             style={btnStyle(gs === statut, statut)}>
@@ -163,7 +173,7 @@ export default function ClasseTable({ exams, niveaux, niveauxMap, groupeStatuts:
                               )}
                               <div style={{ display: 'flex', gap: 3 }}>
                                 {ACTIONS.map(({ statut, label }) => (
-                                  <button key={statut} type="button" disabled={es === statut || isPending}
+                                  <button key={statut} type="button" disabled={es === statut}
                                     onClick={() => handleExam(ex.id, statut)}
                                     className="btn btn-xs"
                                     style={btnStyle(es === statut, statut)}>

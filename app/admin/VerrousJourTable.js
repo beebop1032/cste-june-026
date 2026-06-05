@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo, useTransition } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { saveFullStateSilent } from '@/actions/admin'
 
 function formatJour(iso) {
@@ -19,9 +19,21 @@ const SEL = {
 }
 
 export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: initialES }) {
-  // Per-exam statuts (exam-level overrides groupe-level)
   const [examStatuts, setExamStatuts] = useState(initialES)
-  const [isPending, startTransition] = useTransition()
+  const [saving, setSaving] = useState(false)
+  const saveTimer = useRef(null)
+  const isMount  = useRef(true)
+
+  useEffect(() => {
+    if (isMount.current) { isMount.current = false; return }
+    setSaving(true)
+    clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(async () => {
+      await saveFullStateSilent(groupeStatuts, examStatuts)
+      setSaving(false)
+    }, 500)
+    return () => clearTimeout(saveTimer.current)
+  }, [examStatuts])
 
   const [filterNiveau, setFilterNiveau] = useState('')
   const [filterGroupe, setFilterGroupe] = useState('')
@@ -56,7 +68,6 @@ export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: in
     if (statut === 'open') delete newES[examId]
     else newES[examId] = statut
     setExamStatuts(newES)
-    startTransition(() => saveFullStateSilent(groupeStatuts, newES))
   }
 
   const hasFilter = filterNiveau || filterGroupe || filterProf || filterStatut
@@ -67,7 +78,7 @@ export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: in
         <span style={{ fontSize: 12, color: 'var(--fg-muted)' }}>
           {rows.length} examen{rows.length !== 1 ? 's' : ''}
           {hasFilter ? ` (filtré sur ${exams.length})` : ''}
-          {isPending && <span style={{ marginLeft: 8, color: 'var(--primary)', fontStyle: 'italic' }}>Sauvegarde…</span>}
+          {saving && <span style={{ marginLeft: 8, color: 'var(--primary)', fontStyle: 'italic' }}>Sauvegarde…</span>}
         </span>
         {hasFilter && (
           <button
@@ -159,7 +170,7 @@ export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: in
                             key={statut}
                             type="button"
                             onClick={() => handleStatut(ex.id, statut)}
-                            disabled={es === statut || isPending}
+                            disabled={es === statut}
                             className="btn btn-xs"
                             style={es === statut
                               ? { background: GS[statut].text, color: '#fff', fontSize: 10, border: 'none', whiteSpace: 'nowrap', opacity: 1 }

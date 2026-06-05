@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { requireAdmin } from '@/lib/auth'
 import { getAllResponses, getLocksData } from '@/actions/admin'
 import exams from '@/lib/exams.json'

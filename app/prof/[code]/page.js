@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { requireProf, verifySession } from '@/lib/auth'
 import { getProfStatus } from '@/actions/prof'
 import { read } from '@/lib/storage'
