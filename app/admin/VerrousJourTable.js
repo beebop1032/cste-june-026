@@ -1,6 +1,6 @@
 'use client'
-import { useState, useMemo } from 'react'
-import { setGroupeStatut } from '@/actions/admin'
+import { useState, useMemo, useTransition } from 'react'
+import { setGroupeStatutSilent } from '@/actions/admin'
 
 function formatJour(iso) {
   const d = new Date(iso + 'T12:00:00')
@@ -13,9 +13,16 @@ const GS = {
   maintenu: { label: 'Maintenu pour tous', bg: '#EFF6FF', border: '#BFDBFE', text: '#1E40AF', badgeClass: 'badge-blue' },
 }
 
-const SEL = { fontSize: 11, padding: '3px 4px', borderRadius: 4, border: '1px solid #CBD5E1', background: '#fff', width: '100%', cursor: 'pointer' }
+const SEL = {
+  fontSize: 11, padding: '3px 4px', borderRadius: 4,
+  border: '1px solid #CBD5E1', background: '#fff', width: '100%', cursor: 'pointer',
+}
 
-export default function VerrousJourTable({ exams, groupeStatuts }) {
+export default function VerrousJourTable({ exams, groupeStatuts: initial }) {
+  // Local copy of groupeStatuts — updated optimistically on button click
+  const [statuts, setStatuts] = useState(initial)
+  const [isPending, startTransition] = useTransition()
+
   const [filterNiveau, setFilterNiveau] = useState('')
   const [filterGroupe, setFilterGroupe] = useState('')
   const [filterProf,   setFilterProf]   = useState('')
@@ -30,15 +37,27 @@ export default function VerrousJourTable({ exams, groupeStatuts }) {
       a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode) || a.groupe.localeCompare(b.groupe)
     )
     return sorted.filter(ex => {
-      const gs = groupeStatuts[ex.groupe] ?? 'open'
+      const gs = statuts[ex.groupe] ?? 'open'
       return (
-        (!filterNiveau || ex.niveau  === filterNiveau) &&
-        (!filterGroupe || ex.groupe  === filterGroupe) &&
-        (!filterProf   || ex.profCode === filterProf) &&
-        (!filterStatut || gs === filterStatut)
+        (!filterNiveau || ex.niveau   === filterNiveau) &&
+        (!filterGroupe || ex.groupe   === filterGroupe) &&
+        (!filterProf   || ex.profCode === filterProf)   &&
+        (!filterStatut || gs          === filterStatut)
       )
     })
-  }, [exams, groupeStatuts, filterNiveau, filterGroupe, filterProf, filterStatut])
+  }, [exams, statuts, filterNiveau, filterGroupe, filterProf, filterStatut])
+
+  function handleStatut(groupe, statut) {
+    // Optimistic update — UI responds instantly
+    setStatuts(prev => {
+      const next = { ...prev }
+      if (statut === 'open') delete next[groupe]
+      else next[groupe] = statut
+      return next
+    })
+    // Persist in background
+    startTransition(() => setGroupeStatutSilent(groupe, statut))
+  }
 
   const hasFilter = filterNiveau || filterGroupe || filterProf || filterStatut
 
@@ -48,9 +67,11 @@ export default function VerrousJourTable({ exams, groupeStatuts }) {
         <span style={{ fontSize: 12, color: 'var(--fg-muted)' }}>
           {rows.length} examen{rows.length !== 1 ? 's' : ''}
           {hasFilter ? ` (filtré sur ${exams.length})` : ''}
+          {isPending && <span style={{ marginLeft: 8, color: 'var(--primary)', fontStyle: 'italic' }}>Sauvegarde…</span>}
         </span>
         {hasFilter && (
-          <button onClick={() => { setFilterNiveau(''); setFilterGroupe(''); setFilterProf(''); setFilterStatut('') }}
+          <button
+            onClick={() => { setFilterNiveau(''); setFilterGroupe(''); setFilterProf(''); setFilterStatut('') }}
             className="btn btn-ghost btn-xs" style={{ fontSize: 11 }}>
             Effacer les filtres
           </button>
@@ -61,7 +82,6 @@ export default function VerrousJourTable({ exams, groupeStatuts }) {
         <div style={{ overflowX: 'auto' }}>
           <table className="table">
             <thead>
-              {/* Column headers */}
               <tr>
                 <th>Jour</th>
                 <th>Pér.</th>
@@ -75,8 +95,7 @@ export default function VerrousJourTable({ exams, groupeStatuts }) {
               </tr>
               {/* Filter row */}
               <tr style={{ background: '#F1F5F9' }}>
-                <th colSpan={2} />
-                <th />
+                <th colSpan={3} />
                 <th style={{ padding: '4px 6px' }}>
                   <select value={filterNiveau} onChange={e => setFilterNiveau(e.target.value)} style={SEL}>
                     <option value="">Tous</option>
@@ -109,10 +128,10 @@ export default function VerrousJourTable({ exams, groupeStatuts }) {
             </thead>
             <tbody>
               {rows.map(ex => {
-                const gs   = groupeStatuts[ex.groupe] ?? 'open'
+                const gs   = statuts[ex.groupe] ?? 'open'
                 const info = GS[gs]
                 return (
-                  <tr key={ex.id} style={{ background: info.bg }}>
+                  <tr key={ex.id} style={{ background: info.bg, transition: 'background 0.15s' }}>
                     <td style={{ whiteSpace: 'nowrap', fontSize: 12 }}>{formatJour(ex.jour)}</td>
                     <td style={{ fontSize: 12 }}>{ex.periode}</td>
                     <td style={{ fontWeight: 500 }}>{ex.matiere}</td>
@@ -120,30 +139,42 @@ export default function VerrousJourTable({ exams, groupeStatuts }) {
                     <td style={{ fontWeight: 600 }}>{ex.groupe}</td>
                     <td style={{ fontFamily: 'monospace', fontSize: 11 }}>{ex.profCode}</td>
                     <td style={{ fontSize: 12 }}>{ex.local}</td>
-                    <td><span className={`badge ${info.badgeClass}`} style={{ fontSize: 11 }}>{info.label}</span></td>
                     <td>
-                      <form action={setGroupeStatut} style={{ display: 'flex', gap: 3 }}>
-                        <input type="hidden" name="groupe" value={ex.groupe} />
+                      <span className={`badge ${info.badgeClass}`} style={{ fontSize: 11 }}>
+                        {info.label}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 3 }}>
                         {[
                           { statut: 'open',     label: 'À remplir' },
                           { statut: 'annule',   label: 'Annulé' },
                           { statut: 'maintenu', label: 'Maintenu' },
                         ].map(({ statut, label }) => (
-                          <button key={statut} type="submit" name="statut" value={statut}
+                          <button
+                            key={statut}
+                            type="button"
+                            onClick={() => handleStatut(ex.groupe, statut)}
+                            disabled={gs === statut || isPending}
                             className="btn btn-xs"
                             style={gs === statut
-                              ? { background: GS[statut].text, color: '#fff', fontSize: 10, border: 'none', whiteSpace: 'nowrap' }
-                              : { background: '#fff', color: '#64748B', border: '1px solid #E2E8F0', fontSize: 10, whiteSpace: 'nowrap' }}>
+                              ? { background: GS[statut].text, color: '#fff', fontSize: 10, border: 'none', whiteSpace: 'nowrap', opacity: 1 }
+                              : { background: '#fff', color: '#64748B', border: '1px solid #E2E8F0', fontSize: 10, whiteSpace: 'nowrap' }}
+                          >
                             {label}
                           </button>
                         ))}
-                      </form>
+                      </div>
                     </td>
                   </tr>
                 )
               })}
               {rows.length === 0 && (
-                <tr><td colSpan={9} style={{ textAlign: 'center', color: 'var(--fg-muted)', padding: '20px', fontStyle: 'italic' }}>Aucun résultat pour ces filtres</td></tr>
+                <tr>
+                  <td colSpan={9} style={{ textAlign: 'center', color: 'var(--fg-muted)', padding: '20px', fontStyle: 'italic' }}>
+                    Aucun résultat pour ces filtres
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>

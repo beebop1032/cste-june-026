@@ -26,7 +26,24 @@ export async function setGroupeStatut(formData) {
   } catch (err) {
     console.error('setGroupeStatut write failed:', err)
   }
-  redirect('/admin?tab=verrous&ok=1')
+  redirect('/admin?tab=verrous&vue=classe&ok=1')
+}
+
+// Variante sans redirect — utilisée par les composants client pour éviter le rechargement
+export async function setGroupeStatutSilent(groupe, statut) {
+  await requireAdmin()
+  if (!groupe || !['open', 'annule', 'maintenu'].includes(statut)) return { error: 'Invalide' }
+  const current = normalise(await read('admin-locks.json'))
+  const groupeStatuts = { ...current.groupeStatuts }
+  if (statut === 'open') delete groupeStatuts[groupe]
+  else groupeStatuts[groupe] = statut
+  try {
+    await writeFileSafe('admin-locks.json', { groupeStatuts, updatedAt: new Date().toISOString() })
+    return { ok: true }
+  } catch (err) {
+    console.error('setGroupeStatutSilent write failed:', err)
+    return { error: 'Erreur de sauvegarde' }
+  }
 }
 
 export async function setNiveauStatut(formData) {
