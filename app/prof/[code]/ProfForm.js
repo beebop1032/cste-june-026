@@ -172,7 +172,6 @@ export default function ProfForm({ profCode, examens, statuts, dejaRempli }) {
                 {isBlocked && <span className={`badge ${STATUT_BADGE[adminStatut] ?? 'badge-gray'}`}>{STATUT_LABELS[adminStatut] ?? adminStatut}</span>}
                 {!isBlocked && choix === 'aucun' && <span className="badge badge-red">Aucun élève</span>}
                 {!isBlocked && choix === 'tous' && <span className="badge badge-green">Tous les élèves</span>}
-                {!isBlocked && choix === 'maintenu' && <span className="badge badge-blue">Examen maintenu</span>}
                 {!isBlocked && nEleves > 0 && <span className="badge badge-green">{nEleves} élève{nEleves > 1 ? 's' : ''}</span>}
                 {!isBlocked && !resolved && showError && <span className="badge badge-red">À compléter</span>}
               </div>
@@ -247,16 +246,6 @@ export default function ProfForm({ profCode, examens, statuts, dejaRempli }) {
                       : { background: '#FEF2F2', color: 'var(--destructive)', border: '1.5px solid #FECACA' }}
                   >
                     {choix === 'aucun' ? '✓ ' : ''}Aucun élève ne participe
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStatut(ex.id, choix === 'maintenu' ? null : 'maintenu')}
-                    className="btn btn-sm"
-                    style={choix === 'maintenu'
-                      ? { background: 'var(--primary)', color: '#fff' }
-                      : { background: 'var(--primary-light)', color: 'var(--primary)', border: '1.5px solid #BFDBFE' }}
-                  >
-                    {choix === 'maintenu' ? '✓ ' : ''}Examen maintenu
                   </button>
                 </div>
 
