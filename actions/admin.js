@@ -1,5 +1,6 @@
 'use server'
 import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/auth'
 import { read, writeFileSafe, listFiles, deleteFile } from '@/lib/storage'
 import exams from '@/lib/exams.json'
@@ -103,6 +104,7 @@ export async function resetAllData() {
   const files = await listFiles('prof-')
   await Promise.all(files.map(f => deleteFile(f)))
   try { await save({}, {}) } catch (err) { console.error(err) }
+  revalidatePath('/admin', 'layout')
   redirect('/admin?tab=suivi')
 }
 
