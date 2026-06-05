@@ -14,9 +14,9 @@ const NIVEAUX_MAP    = Object.fromEntries(
 
 // Status display config
 const GS = {
-  open:     { label: 'À remplir',         bg: '#FEFCE8', border: '#FDE68A', text: '#92400E', badgeClass: 'badge-amber' },
-  annule:   { label: 'Annulé',            bg: '#FEF2F2', border: '#FECACA', text: '#991B1B', badgeClass: 'badge-red'   },
-  maintenu: { label: 'Maintenu pour tous', bg: '#EFF6FF', border: '#BFDBFE', text: '#1E40AF', badgeClass: 'badge-blue'  },
+  open:     { label: 'À remplir',          bg: '#F8FAFC', border: '#E2E8F0', text: '#475569', badgeClass: 'badge-gray' },
+  annule:   { label: 'Annulé',             bg: '#FEF2F2', border: '#FECACA', text: '#991B1B', badgeClass: 'badge-red'  },
+  maintenu: { label: 'Maintenu pour tous', bg: '#EFF6FF', border: '#BFDBFE', text: '#1E40AF', badgeClass: 'badge-blue' },
 }
 
 function formatJour(iso) {
@@ -180,7 +180,7 @@ export default async function AdminPage({ searchParams }) {
                   <div style={{ overflowX: 'auto' }}>
                     <table className="table">
                       <thead>
-                        <tr>{['Jour','Période','Matière','Niveau','Classe','Prof','Local','Statut classe'].map(h => <th key={h}>{h}</th>)}</tr>
+                        <tr>{['Jour','Période','Matière','Niveau','Classe','Prof','Local','Statut','Action'].map(h => <th key={h}>{h}</th>)}</tr>
                       </thead>
                       <tbody>
                         {examsParJour.map(ex => {
@@ -196,6 +196,24 @@ export default async function AdminPage({ searchParams }) {
                               <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{ex.profCode}</td>
                               <td>{ex.local}</td>
                               <td><span className={`badge ${info.badgeClass}`} style={{ fontSize: 11 }}>{info.label}</span></td>
+                              <td>
+                                <form action={setGroupeStatut} style={{ display: 'flex', gap: 3 }}>
+                                  <input type="hidden" name="groupe" value={ex.groupe} />
+                                  {[
+                                    { statut: 'open',     label: 'À remplir' },
+                                    { statut: 'annule',   label: 'Annulé' },
+                                    { statut: 'maintenu', label: 'Maintenu' },
+                                  ].map(({ statut, label }) => (
+                                    <button key={statut} type="submit" name="statut" value={statut}
+                                      className="btn btn-xs"
+                                      style={gs === statut
+                                        ? { background: GS[statut].text, color: '#fff', fontSize: 11, border: 'none' }
+                                        : { background: '#fff', color: '#64748B', border: '1px solid #E2E8F0', fontSize: 11 }}>
+                                      {label}
+                                    </button>
+                                  ))}
+                                </form>
+                              </td>
                             </tr>
                           )
                         })}
