@@ -1,6 +1,6 @@
 'use client'
 import { useState, useTransition } from 'react'
-import { setGroupeStatutSilent, setNiveauStatutSilent, setExamStatutSilent } from '@/actions/admin'
+import { saveFullStateSilent } from '@/actions/admin'
 
 function formatJour(iso) {
   const d = new Date(iso + 'T12:00:00')
@@ -37,47 +37,35 @@ export default function ClasseTable({ exams, niveaux, niveauxMap, groupeStatuts:
   }
 
   function handleGroupe(groupe, statut) {
-    setGroupeStatuts(prev => {
-      const next = { ...prev }
-      if (statut === 'open') delete next[groupe]
-      else next[groupe] = statut
-      return next
-    })
-    // Clear per-exam overrides for this groupe
-    setExamStatuts(prev => {
-      const next = { ...prev }
-      for (const ex of exams.filter(e => e.groupe === groupe)) delete next[ex.id]
-      return next
-    })
-    startTransition(() => setGroupeStatutSilent(groupe, statut))
+    const newGS = { ...groupeStatuts }
+    if (statut === 'open') delete newGS[groupe]
+    else newGS[groupe] = statut
+    const newES = { ...examStatuts }
+    for (const ex of exams.filter(e => e.groupe === groupe)) delete newES[ex.id]
+    setGroupeStatuts(newGS)
+    setExamStatuts(newES)
+    startTransition(() => saveFullStateSilent(newGS, newES))
   }
 
   function handleNiveau(niveau, statut) {
-    const groupes = niveauxMap[niveau] ?? []
-    setGroupeStatuts(prev => {
-      const next = { ...prev }
-      for (const g of groupes) {
-        if (statut === 'open') delete next[g]
-        else next[g] = statut
-      }
-      return next
-    })
-    setExamStatuts(prev => {
-      const next = { ...prev }
-      for (const ex of exams.filter(e => e.niveau === niveau)) delete next[ex.id]
-      return next
-    })
-    startTransition(() => setNiveauStatutSilent(niveau, statut))
+    const newGS = { ...groupeStatuts }
+    for (const g of niveauxMap[niveau] ?? []) {
+      if (statut === 'open') delete newGS[g]
+      else newGS[g] = statut
+    }
+    const newES = { ...examStatuts }
+    for (const ex of exams.filter(e => e.niveau === niveau)) delete newES[ex.id]
+    setGroupeStatuts(newGS)
+    setExamStatuts(newES)
+    startTransition(() => saveFullStateSilent(newGS, newES))
   }
 
   function handleExam(examId, statut) {
-    setExamStatuts(prev => {
-      const next = { ...prev }
-      if (statut === 'open') delete next[examId]
-      else next[examId] = statut
-      return next
-    })
-    startTransition(() => setExamStatutSilent(examId, statut))
+    const newES = { ...examStatuts }
+    if (statut === 'open') delete newES[examId]
+    else newES[examId] = statut
+    setExamStatuts(newES)
+    startTransition(() => saveFullStateSilent(groupeStatuts, newES))
   }
 
   return (

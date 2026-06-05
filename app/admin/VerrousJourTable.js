@@ -1,6 +1,6 @@
 'use client'
 import { useState, useMemo, useTransition } from 'react'
-import { setExamStatutSilent } from '@/actions/admin'
+import { saveFullStateSilent } from '@/actions/admin'
 
 function formatJour(iso) {
   const d = new Date(iso + 'T12:00:00')
@@ -52,13 +52,11 @@ export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: in
   }, [exams, examStatuts, groupeStatuts, filterNiveau, filterGroupe, filterProf, filterStatut])
 
   function handleStatut(examId, statut) {
-    setExamStatuts(prev => {
-      const next = { ...prev }
-      if (statut === 'open') delete next[examId]
-      else next[examId] = statut
-      return next
-    })
-    startTransition(() => setExamStatutSilent(examId, statut))
+    const newES = { ...examStatuts }
+    if (statut === 'open') delete newES[examId]
+    else newES[examId] = statut
+    setExamStatuts(newES)
+    startTransition(() => saveFullStateSilent(groupeStatuts, newES))
   }
 
   const hasFilter = filterNiveau || filterGroupe || filterProf || filterStatut

@@ -17,6 +17,21 @@ async function save(groupeStatuts, examStatuts) {
   await write('admin-locks.json', { groupeStatuts, examStatuts, updatedAt: new Date().toISOString() })
 }
 
+// ── Full-state save (no read, eliminates race condition) ─────────────────────
+
+export async function saveFullStateSilent(groupeStatuts, examStatuts) {
+  await requireAdmin()
+  if (!groupeStatuts || typeof groupeStatuts !== 'object') return { error: 'Invalide' }
+  if (!examStatuts   || typeof examStatuts   !== 'object') return { error: 'Invalide' }
+  try {
+    await write('admin-locks.json', { groupeStatuts, examStatuts, updatedAt: new Date().toISOString() })
+    return { ok: true }
+  } catch (err) {
+    console.error(err)
+    return { error: 'Erreur' }
+  }
+}
+
 // ── Groupe ──────────────────────────────────────────────────────────────────
 
 export async function setGroupeStatut(formData) {
