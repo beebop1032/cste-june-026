@@ -1,0 +1,2892 @@
+[
+  {
+    "id": "JAQ-rel-1h-18-P1",
+    "matiere": "Rel",
+    "niveau": "1re",
+    "groupe": "1H",
+    "profCode": "JAQ",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "T02"
+  },
+  {
+    "id": "DELF-edm-2h-18-P1",
+    "matiere": "EDM",
+    "niveau": "2e",
+    "groupe": "2H",
+    "profCode": "DELF",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C217"
+  },
+  {
+    "id": "ENS-fr-3h-18-P1",
+    "matiere": "Fr",
+    "niveau": "3e",
+    "groupe": "3H",
+    "profCode": "ENS",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C116"
+  },
+  {
+    "id": "ORF-geo-4h-18-P1",
+    "matiere": "Geo",
+    "niveau": "4e",
+    "groupe": "4H",
+    "profCode": "ORF",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C218"
+  },
+  {
+    "id": "DT-lg1-a4-1-18-P1",
+    "matiere": "Lg1",
+    "niveau": "5e",
+    "groupe": "A4-1",
+    "profCode": "DT",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C119"
+  },
+  {
+    "id": "DEMN-sc3-6i-18-P1",
+    "matiere": "Sc3",
+    "niveau": "6e",
+    "groupe": "6I",
+    "profCode": "DEMN",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "MAND"
+  },
+  {
+    "id": "JAQ-rel-1i-18-P1",
+    "matiere": "Rel",
+    "niveau": "1re",
+    "groupe": "1I",
+    "profCode": "JAQ",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "T12"
+  },
+  {
+    "id": "DELF-segec-2i-18-P1",
+    "matiere": "Segec",
+    "niveau": "2e",
+    "groupe": "2I",
+    "profCode": "DELF",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C320"
+  },
+  {
+    "id": "ENS-fr-3i-18-P1",
+    "matiere": "Fr",
+    "niveau": "3e",
+    "groupe": "3I",
+    "profCode": "ENS",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C117"
+  },
+  {
+    "id": "ORF-geo-4i-18-P1",
+    "matiere": "Geo",
+    "niveau": "4e",
+    "groupe": "4I",
+    "profCode": "ORF",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C219"
+  },
+  {
+    "id": "PHM-lg1-a4-2-18-P1",
+    "matiere": "Lg1",
+    "niveau": "5e",
+    "groupe": "A4-2",
+    "profCode": "PHM",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C120"
+  },
+  {
+    "id": "DEMN-sc3-gr1-18-P1",
+    "matiere": "Sc3",
+    "niveau": "6e",
+    "groupe": "GR1",
+    "profCode": "DEMN",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "T05"
+  },
+  {
+    "id": "PERS-rel-1j-18-P1",
+    "matiere": "Rel",
+    "niveau": "1re",
+    "groupe": "1J",
+    "profCode": "PERS",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "T03"
+  },
+  {
+    "id": "DESI-segec-2j-18-P1",
+    "matiere": "Segec",
+    "niveau": "2e",
+    "groupe": "2J",
+    "profCode": "DESI",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C216"
+  },
+  {
+    "id": "BAU-fr-3j-18-P1",
+    "matiere": "Fr",
+    "niveau": "3e",
+    "groupe": "3J",
+    "profCode": "BAU",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C118"
+  },
+  {
+    "id": "ORF-geo-4j-18-P1",
+    "matiere": "Geo",
+    "niveau": "4e",
+    "groupe": "4J",
+    "profCode": "ORF",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C220"
+  },
+  {
+    "id": "TAC-lg1-n4-1-18-P1",
+    "matiere": "Lg1",
+    "niveau": "5e",
+    "groupe": "N4-1",
+    "profCode": "TAC",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C210"
+  },
+  {
+    "id": "PIEJ-sc3-gr2-18-P1",
+    "matiere": "Sc3",
+    "niveau": "6e",
+    "groupe": "GR2",
+    "profCode": "PIEJ",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "T15"
+  },
+  {
+    "id": "JAQ-rel-1k-18-P1",
+    "matiere": "Rel",
+    "niveau": "1re",
+    "groupe": "1K",
+    "profCode": "JAQ",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "T08"
+  },
+  {
+    "id": "FOF-segec-2k-18-P1",
+    "matiere": "Segec",
+    "niveau": "2e",
+    "groupe": "2K",
+    "profCode": "FOF",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C223"
+  },
+  {
+    "id": "BAU-fr-3k-18-P1",
+    "matiere": "Fr",
+    "niveau": "3e",
+    "groupe": "3K",
+    "profCode": "BAU",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C121"
+  },
+  {
+    "id": "ORF-geo-4k-18-P1",
+    "matiere": "Geo",
+    "niveau": "4e",
+    "groupe": "4K",
+    "profCode": "ORF",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C221"
+  },
+  {
+    "id": "LNB-lg1-n4-2-18-P1",
+    "matiere": "Lg1",
+    "niveau": "5e",
+    "groupe": "N4-2",
+    "profCode": "LNB",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C232"
+  },
+  {
+    "id": "PERS-rel-1l-18-P1",
+    "matiere": "Rel",
+    "niveau": "1re",
+    "groupe": "1L",
+    "profCode": "PERS",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "T16"
+  },
+  {
+    "id": "FOF-segec-2l-18-P1",
+    "matiere": "Segec",
+    "niveau": "2e",
+    "groupe": "2L",
+    "profCode": "FOF",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C225"
+  },
+  {
+    "id": "KOT-fr-3l-18-P1",
+    "matiere": "Fr",
+    "niveau": "3e",
+    "groupe": "3L",
+    "profCode": "KOT",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C122"
+  },
+  {
+    "id": "ORF-geo-4l-18-P1",
+    "matiere": "Geo",
+    "niveau": "4e",
+    "groupe": "4L",
+    "profCode": "ORF",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C222"
+  },
+  {
+    "id": "VDS-lg1-n4-3-18-P1",
+    "matiere": "Lg1",
+    "niveau": "5e",
+    "groupe": "N4-3",
+    "profCode": "VDS",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C321"
+  },
+  {
+    "id": "VERM-sc6-gr1-18-P1",
+    "matiere": "Sc6",
+    "niveau": "6e",
+    "groupe": "GR1",
+    "profCode": "VERM",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C001"
+  },
+  {
+    "id": "PERS-rel-1m-18-P1",
+    "matiere": "Rel",
+    "niveau": "1re",
+    "groupe": "1M",
+    "profCode": "PERS",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "T17"
+  },
+  {
+    "id": "FOF-segec-2m-18-P1",
+    "matiere": "Segec",
+    "niveau": "2e",
+    "groupe": "2M",
+    "profCode": "FOF",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C319"
+  },
+  {
+    "id": "KOT-fr-3m-18-P1",
+    "matiere": "Fr",
+    "niveau": "3e",
+    "groupe": "3M",
+    "profCode": "KOT",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C123"
+  },
+  {
+    "id": "HE-sc6-gr2-18-P1",
+    "matiere": "Sc6",
+    "niveau": "6e",
+    "groupe": "GR2",
+    "profCode": "HE",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C034"
+  },
+  {
+    "id": "PERS-rel-1n-18-P1",
+    "matiere": "Rel",
+    "niveau": "1re",
+    "groupe": "1N",
+    "profCode": "PERS",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "T18"
+  },
+  {
+    "id": "ORF-segec-2n-18-P1",
+    "matiere": "Segec",
+    "niveau": "2e",
+    "groupe": "2N",
+    "profCode": "ORF",
+    "jour": "2026-06-18",
+    "periode": "P1",
+    "local": "C226"
+  },
+  {
+    "id": "PAY-latin-1h-18-P2",
+    "matiere": "Latin",
+    "niveau": "1re",
+    "groupe": "1H",
+    "profCode": "PAY",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "T02"
+  },
+  {
+    "id": "IVE-latin-gr1-18-P2",
+    "matiere": "Latin",
+    "niveau": "3e",
+    "groupe": "GR1",
+    "profCode": "IVE",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "C201"
+  },
+  {
+    "id": "PAY-grec-gr1-18-P2",
+    "matiere": "Grec",
+    "niveau": "4e",
+    "groupe": "GR1",
+    "profCode": "PAY",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "C218"
+  },
+  {
+    "id": "IVE-latin-gr1-18-P2",
+    "matiere": "Latin",
+    "niveau": "5e",
+    "groupe": "GR1",
+    "profCode": "IVE",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "C121"
+  },
+  {
+    "id": "LNB-lg1-a4-1-18-P2",
+    "matiere": "Lg1",
+    "niveau": "6e",
+    "groupe": "A4-1",
+    "profCode": "LNB",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "C001"
+  },
+  {
+    "id": "PAY-latin-1i-18-P2",
+    "matiere": "Latin",
+    "niveau": "1re",
+    "groupe": "1I",
+    "profCode": "PAY",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "T12"
+  },
+  {
+    "id": "TAIL-lg1-oral-a4-2-18-P2",
+    "matiere": "Lg1 oral",
+    "niveau": "6e",
+    "groupe": "A4-2",
+    "profCode": "TAIL",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "C034"
+  },
+  {
+    "id": "PAY-latin-1j-18-P2",
+    "matiere": "Latin",
+    "niveau": "1re",
+    "groupe": "1J",
+    "profCode": "PAY",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "T03"
+  },
+  {
+    "id": "VERM-sc5-4k-18-P2",
+    "matiere": "Sc5",
+    "niveau": "4e",
+    "groupe": "4K",
+    "profCode": "VERM",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "C221"
+  },
+  {
+    "id": "VERM-sc6-gr1-18-P2",
+    "matiere": "Sc6",
+    "niveau": "5e",
+    "groupe": "GR1",
+    "profCode": "VERM",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "C119"
+  },
+  {
+    "id": "MEL-lg1-oral-n4-1-18-P2",
+    "matiere": "Lg1 oral",
+    "niveau": "6e",
+    "groupe": "N4-1",
+    "profCode": "MEL",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "C321"
+  },
+  {
+    "id": "PAY-latin-1k-18-P2",
+    "matiere": "Latin",
+    "niveau": "1re",
+    "groupe": "1K",
+    "profCode": "PAY",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "T08"
+  },
+  {
+    "id": "DEMN-sc5-gr1-18-P2",
+    "matiere": "Sc5",
+    "niveau": "4e",
+    "groupe": "GR1",
+    "profCode": "DEMN",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "C222"
+  },
+  {
+    "id": "HE-sc6-gr2-18-P2",
+    "matiere": "Sc6",
+    "niveau": "5e",
+    "groupe": "GR2",
+    "profCode": "HE",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "C120"
+  },
+  {
+    "id": "VDS-lg1-oral-n4-2-18-P2",
+    "matiere": "Lg1 oral",
+    "niveau": "6e",
+    "groupe": "N4-2",
+    "profCode": "VDS",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "C210"
+  },
+  {
+    "id": "PAY-latin-1l-18-P2",
+    "matiere": "Latin",
+    "niveau": "1re",
+    "groupe": "1L",
+    "profCode": "PAY",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "T16"
+  },
+  {
+    "id": "MEL-lg1-oral-6j-n4-18-P2",
+    "matiere": "Lg1 oral",
+    "niveau": "6e",
+    "groupe": "6J-N4",
+    "profCode": "MEL",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "C321"
+  },
+  {
+    "id": "PAY-latin-1m-18-P2",
+    "matiere": "Latin",
+    "niveau": "1re",
+    "groupe": "1M",
+    "profCode": "PAY",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "T17"
+  },
+  {
+    "id": "PAY-latin-1n-18-P2",
+    "matiere": "Latin",
+    "niveau": "1re",
+    "groupe": "1N",
+    "profCode": "PAY",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "T18"
+  },
+  {
+    "id": "DELF-edm-1h-19-P1",
+    "matiere": "EDM",
+    "niveau": "1re",
+    "groupe": "1H",
+    "profCode": "DELF",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "T02"
+  },
+  {
+    "id": "PEC-lg-2h-n-19-P1P2",
+    "matiere": "Lg",
+    "niveau": "2e",
+    "groupe": "2H-N",
+    "profCode": "PEC",
+    "jour": "2026-06-19",
+    "periode": "P1+P2",
+    "local": "C217"
+  },
+  {
+    "id": "DKS-sc3-3h-19-P1",
+    "matiere": "Sc3",
+    "niveau": "3e",
+    "groupe": "3H",
+    "profCode": "DKS",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "C116"
+  },
+  {
+    "id": "PHM-lg1-4j-n4-19-P1",
+    "matiere": "Lg1",
+    "niveau": "4e",
+    "groupe": "4J-N4",
+    "profCode": "PHM",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "C220"
+  },
+  {
+    "id": "EVR-math-4-5h-19-P1",
+    "matiere": "Math 4",
+    "niveau": "5e",
+    "groupe": "5H",
+    "profCode": "EVR",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "MAND"
+  },
+  {
+    "id": "DEBS-fr-6h-19-P1P2",
+    "matiere": "Fr",
+    "niveau": "6e",
+    "groupe": "6H",
+    "profCode": "DEBS",
+    "jour": "2026-06-19",
+    "periode": "P1+P2",
+    "local": "C001"
+  },
+  {
+    "id": "DELF-edm-1i-19-P1",
+    "matiere": "EDM",
+    "niveau": "1re",
+    "groupe": "1I",
+    "profCode": "DELF",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "T12"
+  },
+  {
+    "id": "VBG-lg-ce1d-2i-n-19-P1",
+    "matiere": "Lg CE1D",
+    "niveau": "2e",
+    "groupe": "2I-N",
+    "profCode": "VBG",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "C320"
+  },
+  {
+    "id": "BERS-sc3-gr1-19-P1",
+    "matiere": "Sc3",
+    "niveau": "3e",
+    "groupe": "GR1",
+    "profCode": "BERS",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "C117"
+  },
+  {
+    "id": "MEL-lg1-a4-1-19-P1",
+    "matiere": "Lg1",
+    "niveau": "4e",
+    "groupe": "A4-1",
+    "profCode": "MEL",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "C221"
+  },
+  {
+    "id": "BLOA-math-4-gr1-19-P1",
+    "matiere": "Math 4",
+    "niveau": "5e",
+    "groupe": "GR1",
+    "profCode": "BLOA",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "C321"
+  },
+  {
+    "id": "LMC-fr-cess-6i-19-P1P2",
+    "matiere": "Fr CESS",
+    "niveau": "6e",
+    "groupe": "6I",
+    "profCode": "LMC",
+    "jour": "2026-06-19",
+    "periode": "P1+P2",
+    "local": "C034"
+  },
+  {
+    "id": "DESI-edm-1j-19-P1",
+    "matiere": "EDM",
+    "niveau": "1re",
+    "groupe": "1J",
+    "profCode": "DESI",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "T03"
+  },
+  {
+    "id": "BAL-lg-ce1d-2j-n-19-P1",
+    "matiere": "Lg CE1D",
+    "niveau": "2e",
+    "groupe": "2J-N",
+    "profCode": "BAL",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "C216"
+  },
+  {
+    "id": "DKS-sc3-gr2-19-P1",
+    "matiere": "Sc3",
+    "niveau": "3e",
+    "groupe": "GR2",
+    "profCode": "DKS",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "C118"
+  },
+  {
+    "id": "DT-lg1-a4-2-19-P1",
+    "matiere": "Lg1",
+    "niveau": "4e",
+    "groupe": "A4-2",
+    "profCode": "DT",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "C219"
+  },
+  {
+    "id": "EVR-math-4-gr2-19-P1",
+    "matiere": "Math 4",
+    "niveau": "5e",
+    "groupe": "GR2",
+    "profCode": "EVR",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "T15"
+  },
+  {
+    "id": "LMC-fr-cess-6j-19-P1P2",
+    "matiere": "Fr CESS",
+    "niveau": "6e",
+    "groupe": "6J",
+    "profCode": "LMC",
+    "jour": "2026-06-19",
+    "periode": "P1+P2",
+    "local": "C232"
+  },
+  {
+    "id": "DELF-edm-1k-19-P1",
+    "matiere": "EDM",
+    "niveau": "1re",
+    "groupe": "1K",
+    "profCode": "DELF",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "T08"
+  },
+  {
+    "id": "VBG-lg-ce1d-2k-n-19-P1",
+    "matiere": "Lg CE1D",
+    "niveau": "2e",
+    "groupe": "2K-N",
+    "profCode": "VBG",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "C223"
+  },
+  {
+    "id": "SAR-sc5-3k-19-P1P2",
+    "matiere": "Sc5",
+    "niveau": "3e",
+    "groupe": "3K",
+    "profCode": "SAR",
+    "jour": "2026-06-19",
+    "periode": "P1+P2",
+    "local": "C121"
+  },
+  {
+    "id": "TAIL-lg1-a4-3-19-P1",
+    "matiere": "Lg1",
+    "niveau": "4e",
+    "groupe": "A4-3",
+    "profCode": "TAIL",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "C218"
+  },
+  {
+    "id": "DVT-fr-cess-6k-19-P1P2",
+    "matiere": "Fr CESS",
+    "niveau": "6e",
+    "groupe": "6K",
+    "profCode": "DVT",
+    "jour": "2026-06-19",
+    "periode": "P1+P2",
+    "local": "C210"
+  },
+  {
+    "id": "DESI-edm-1l-19-P1",
+    "matiere": "EDM",
+    "niveau": "1re",
+    "groupe": "1L",
+    "profCode": "DESI",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "T16"
+  },
+  {
+    "id": "PEC-lg-ce1d-2l-a-19-P1",
+    "matiere": "Lg CE1D",
+    "niveau": "2e",
+    "groupe": "2L-A",
+    "profCode": "PEC",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "C225"
+  },
+  {
+    "id": "SAR-sc5-gr1-19-P1P2",
+    "matiere": "Sc5",
+    "niveau": "3e",
+    "groupe": "GR1",
+    "profCode": "SAR",
+    "jour": "2026-06-19",
+    "periode": "P1+P2",
+    "local": "C122"
+  },
+  {
+    "id": "VDS-lg1-n4-1-19-P1",
+    "matiere": "Lg1",
+    "niveau": "4e",
+    "groupe": "N4-1",
+    "profCode": "VDS",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "C201"
+  },
+  {
+    "id": "ANM-math-6-gr1-19-P1P2",
+    "matiere": "Math 6",
+    "niveau": "5e",
+    "groupe": "GR1",
+    "profCode": "ANM",
+    "jour": "2026-06-19",
+    "periode": "P1+P2",
+    "local": "C119"
+  },
+  {
+    "id": "DESI-edm-1m-19-P1",
+    "matiere": "EDM",
+    "niveau": "1re",
+    "groupe": "1M",
+    "profCode": "DESI",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "T17"
+  },
+  {
+    "id": "BAL-lg-ce1d-2m-a-19-P1",
+    "matiere": "Lg CE1D",
+    "niveau": "2e",
+    "groupe": "2M-A",
+    "profCode": "BAL",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "C319"
+  },
+  {
+    "id": "ROD-sc5-gr2-19-P1P2",
+    "matiere": "Sc5",
+    "niveau": "3e",
+    "groupe": "GR2",
+    "profCode": "ROD",
+    "jour": "2026-06-19",
+    "periode": "P1+P2",
+    "local": "C123"
+  },
+  {
+    "id": "PHM-lg1-n4-2-19-P1",
+    "matiere": "Lg1",
+    "niveau": "4e",
+    "groupe": "N4-2",
+    "profCode": "PHM",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "C222"
+  },
+  {
+    "id": "DANB-math-6-gr2-19-P1P2",
+    "matiere": "Math 6",
+    "niveau": "5e",
+    "groupe": "GR2",
+    "profCode": "DANB",
+    "jour": "2026-06-19",
+    "periode": "P1+P2",
+    "local": "C120"
+  },
+  {
+    "id": "DESI-edm-1n-19-P1",
+    "matiere": "EDM",
+    "niveau": "1re",
+    "groupe": "1N",
+    "profCode": "DESI",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "T18"
+  },
+  {
+    "id": "PEC-lg-ce1d-2n-a-19-P1",
+    "matiere": "Lg CE1D",
+    "niveau": "2e",
+    "groupe": "2N-A",
+    "profCode": "PEC",
+    "jour": "2026-06-19",
+    "periode": "P1",
+    "local": "C226"
+  },
+  {
+    "id": "PIEJ-sc5-gr3-19-P1P2",
+    "matiere": "Sc5",
+    "niveau": "3e",
+    "groupe": "GR3",
+    "profCode": "PIEJ",
+    "jour": "2026-06-19",
+    "periode": "P1+P2",
+    "local": "T05"
+  },
+  {
+    "id": "JY-rel-4h-19-P2",
+    "matiere": "Rel",
+    "niveau": "4e",
+    "groupe": "4H",
+    "profCode": "JY",
+    "jour": "2026-06-19",
+    "periode": "P2",
+    "local": "C218"
+  },
+  {
+    "id": "VBG-lg-1h-2i-n-19-P2",
+    "matiere": "Lg 1h",
+    "niveau": "2e",
+    "groupe": "2I-N",
+    "profCode": "VBG",
+    "jour": "2026-06-19",
+    "periode": "P2",
+    "local": "C320"
+  },
+  {
+    "id": "JY-rel-4i-19-P2",
+    "matiere": "Rel",
+    "niveau": "4e",
+    "groupe": "4I",
+    "profCode": "JY",
+    "jour": "2026-06-19",
+    "periode": "P2",
+    "local": "C219"
+  },
+  {
+    "id": "BAL-lg-1h-ce1d-2j-n-19-P2",
+    "matiere": "Lg 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2J-N",
+    "profCode": "BAL",
+    "jour": "2026-06-19",
+    "periode": "P2",
+    "local": "C216"
+  },
+  {
+    "id": "JY-rel-4j-19-P2",
+    "matiere": "Rel",
+    "niveau": "4e",
+    "groupe": "4J",
+    "profCode": "JY",
+    "jour": "2026-06-19",
+    "periode": "P2",
+    "local": "C220"
+  },
+  {
+    "id": "VBG-lg-1h-ce1d-2k-n-19-P2",
+    "matiere": "Lg 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2K-N",
+    "profCode": "VBG",
+    "jour": "2026-06-19",
+    "periode": "P2",
+    "local": "C223"
+  },
+  {
+    "id": "JY-rel-4k-19-P2",
+    "matiere": "Rel",
+    "niveau": "4e",
+    "groupe": "4K",
+    "profCode": "JY",
+    "jour": "2026-06-19",
+    "periode": "P2",
+    "local": "C221"
+  },
+  {
+    "id": "PEC-lg-1h-ce1d-2l-a-19-P2",
+    "matiere": "Lg 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2L-A",
+    "profCode": "PEC",
+    "jour": "2026-06-19",
+    "periode": "P2",
+    "local": "C225"
+  },
+  {
+    "id": "JY-rel-4l-19-P2",
+    "matiere": "Rel",
+    "niveau": "4e",
+    "groupe": "4L",
+    "profCode": "JY",
+    "jour": "2026-06-19",
+    "periode": "P2",
+    "local": "C222"
+  },
+  {
+    "id": "BAL-lg-1h-ce1d-2m-a-19-P2",
+    "matiere": "Lg 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2M-A",
+    "profCode": "BAL",
+    "jour": "2026-06-19",
+    "periode": "P2",
+    "local": "C319"
+  },
+  {
+    "id": "PAY-grec-gr1-19-P2",
+    "matiere": "Grec",
+    "niveau": "3e",
+    "groupe": "GR1",
+    "profCode": "PAY",
+    "jour": "2026-06-19",
+    "periode": "P2",
+    "local": "C201"
+  },
+  {
+    "id": "PEC-lg-1h-ce1d-2n-a-19-P2",
+    "matiere": "Lg 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2N-A",
+    "profCode": "PEC",
+    "jour": "2026-06-19",
+    "periode": "P2",
+    "local": "C226"
+  },
+  {
+    "id": "JOR-fr-1h-22-P1",
+    "matiere": "Fr",
+    "niveau": "1re",
+    "groupe": "1H",
+    "profCode": "JOR",
+    "jour": "2026-06-22",
+    "periode": "P1",
+    "local": "T02"
+  },
+  {
+    "id": "CARO-math-2h-22-P1P2",
+    "matiere": "Math",
+    "niveau": "2e",
+    "groupe": "2H",
+    "profCode": "CARO",
+    "jour": "2026-06-22",
+    "periode": "P1+P2",
+    "local": "C217"
+  },
+  {
+    "id": "GOD-lg1-3j-n-22-P1P2",
+    "matiere": "Lg1",
+    "niveau": "3e",
+    "groupe": "3J-N",
+    "profCode": "GOD",
+    "jour": "2026-06-22",
+    "periode": "P1+P2",
+    "local": "C118"
+  },
+  {
+    "id": "EVR-math-4h-22-P1P2",
+    "matiere": "Math",
+    "niveau": "4e",
+    "groupe": "4H",
+    "profCode": "EVR",
+    "jour": "2026-06-22",
+    "periode": "P1+P2",
+    "local": "C218"
+  },
+  {
+    "id": "DVT-fr-5h-22-P1",
+    "matiere": "Fr",
+    "niveau": "5e",
+    "groupe": "5H",
+    "profCode": "DVT",
+    "jour": "2026-06-22",
+    "periode": "P1",
+    "local": "C001"
+  },
+  {
+    "id": "DEST-hist-6h-22-P1",
+    "matiere": "Hist",
+    "niveau": "6e",
+    "groupe": "6H",
+    "profCode": "DEST",
+    "jour": "2026-06-22",
+    "periode": "P1",
+    "local": "MAND"
+  },
+  {
+    "id": "CP-fr-1i-22-P1",
+    "matiere": "Fr",
+    "niveau": "1re",
+    "groupe": "1I",
+    "profCode": "CP",
+    "jour": "2026-06-22",
+    "periode": "P1",
+    "local": "T12"
+  },
+  {
+    "id": "CAR-math-ce1d-2i-22-P1P2",
+    "matiere": "Math CE1D",
+    "niveau": "2e",
+    "groupe": "2I",
+    "profCode": "CAR",
+    "jour": "2026-06-22",
+    "periode": "P1+P2",
+    "local": "C320"
+  },
+  {
+    "id": "DOM-lg1-a4-1-22-P1",
+    "matiere": "Lg1",
+    "niveau": "3e",
+    "groupe": "A4-1",
+    "profCode": "DOM",
+    "jour": "2026-06-22",
+    "periode": "P1",
+    "local": "C116"
+  },
+  {
+    "id": "DANB-math-4i-22-P1P2",
+    "matiere": "Math",
+    "niveau": "4e",
+    "groupe": "4I",
+    "profCode": "DANB",
+    "jour": "2026-06-22",
+    "periode": "P1+P2",
+    "local": "C219"
+  },
+  {
+    "id": "DVT-fr-5i-22-P1",
+    "matiere": "Fr",
+    "niveau": "5e",
+    "groupe": "5I",
+    "profCode": "DVT",
+    "jour": "2026-06-22",
+    "periode": "P1",
+    "local": "C034"
+  },
+  {
+    "id": "DEST-hist-cess-6i-22-P1",
+    "matiere": "Hist CESS",
+    "niveau": "6e",
+    "groupe": "6I",
+    "profCode": "DEST",
+    "jour": "2026-06-22",
+    "periode": "P1",
+    "local": "MAND"
+  },
+  {
+    "id": "CP-fr-1j-22-P1",
+    "matiere": "Fr",
+    "niveau": "1re",
+    "groupe": "1J",
+    "profCode": "CP",
+    "jour": "2026-06-22",
+    "periode": "P1",
+    "local": "T03"
+  },
+  {
+    "id": "DRAY-math-ce1d-2j-22-P1P2",
+    "matiere": "Math CE1D",
+    "niveau": "2e",
+    "groupe": "2J",
+    "profCode": "DRAY",
+    "jour": "2026-06-22",
+    "periode": "P1+P2",
+    "local": "C216"
+  },
+  {
+    "id": "GOD-lg1-a4-2-22-P1",
+    "matiere": "Lg1",
+    "niveau": "3e",
+    "groupe": "A4-2",
+    "profCode": "GOD",
+    "jour": "2026-06-22",
+    "periode": "P1",
+    "local": "C122"
+  },
+  {
+    "id": "EVR-math-4j-22-P1P2",
+    "matiere": "Math",
+    "niveau": "4e",
+    "groupe": "4J",
+    "profCode": "EVR",
+    "jour": "2026-06-22",
+    "periode": "P1+P2",
+    "local": "C220"
+  },
+  {
+    "id": "DEBS-fr-5j-22-P1",
+    "matiere": "Fr",
+    "niveau": "5e",
+    "groupe": "5J",
+    "profCode": "DEBS",
+    "jour": "2026-06-22",
+    "periode": "P1",
+    "local": "C119"
+  },
+  {
+    "id": "SMO-hist-cess-6j-22-P1",
+    "matiere": "Hist CESS",
+    "niveau": "6e",
+    "groupe": "6J",
+    "profCode": "SMO",
+    "jour": "2026-06-22",
+    "periode": "P1",
+    "local": "C232"
+  },
+  {
+    "id": "CP-fr-1k-22-P1",
+    "matiere": "Fr",
+    "niveau": "1re",
+    "groupe": "1K",
+    "profCode": "CP",
+    "jour": "2026-06-22",
+    "periode": "P1",
+    "local": "T08"
+  },
+  {
+    "id": "DRAY-math-ce1d-2k-22-P1P2",
+    "matiere": "Math CE1D",
+    "niveau": "2e",
+    "groupe": "2K",
+    "profCode": "DRAY",
+    "jour": "2026-06-22",
+    "periode": "P1+P2",
+    "local": "C223"
+  },
+  {
+    "id": "BAL-lg1-a4-3-22-P1",
+    "matiere": "Lg1",
+    "niveau": "3e",
+    "groupe": "A4-3",
+    "profCode": "BAL",
+    "jour": "2026-06-22",
+    "periode": "P1",
+    "local": "C117"
+  },
+  {
+    "id": "BLOA-math-4k-22-P1P2",
+    "matiere": "Math",
+    "niveau": "4e",
+    "groupe": "4K",
+    "profCode": "BLOA",
+    "jour": "2026-06-22",
+    "periode": "P1+P2",
+    "local": "C221"
+  },
+  {
+    "id": "DEBS-fr-5k-22-P1",
+    "matiere": "Fr",
+    "niveau": "5e",
+    "groupe": "5K",
+    "profCode": "DEBS",
+    "jour": "2026-06-22",
+    "periode": "P1",
+    "local": "C120"
+  },
+  {
+    "id": "SMO-hist-cess-6k-22-P1",
+    "matiere": "Hist CESS",
+    "niveau": "6e",
+    "groupe": "6K",
+    "profCode": "SMO",
+    "jour": "2026-06-22",
+    "periode": "P1",
+    "local": "C210"
+  },
+  {
+    "id": "JOR-fr-1l-22-P1",
+    "matiere": "Fr",
+    "niveau": "1re",
+    "groupe": "1L",
+    "profCode": "JOR",
+    "jour": "2026-06-22",
+    "periode": "P1",
+    "local": "T16"
+  },
+  {
+    "id": "CAR-math-ce1d-2l-22-P1P2",
+    "matiere": "Math CE1D",
+    "niveau": "2e",
+    "groupe": "2L",
+    "profCode": "CAR",
+    "jour": "2026-06-22",
+    "periode": "P1+P2",
+    "local": "C225"
+  },
+  {
+    "id": "GAU-lg1-n4-1-22-P1",
+    "matiere": "Lg1",
+    "niveau": "3e",
+    "groupe": "N4-1",
+    "profCode": "GAU",
+    "jour": "2026-06-22",
+    "periode": "P1",
+    "local": "C121"
+  },
+  {
+    "id": "BLOA-math-4l-22-P1P2",
+    "matiere": "Math",
+    "niveau": "4e",
+    "groupe": "4L",
+    "profCode": "BLOA",
+    "jour": "2026-06-22",
+    "periode": "P1+P2",
+    "local": "C222"
+  },
+  {
+    "id": "JOR-fr-1m-22-P1",
+    "matiere": "Fr",
+    "niveau": "1re",
+    "groupe": "1M",
+    "profCode": "JOR",
+    "jour": "2026-06-22",
+    "periode": "P1",
+    "local": "T17"
+  },
+  {
+    "id": "DMI-math-ce1d-2m-22-P1P2",
+    "matiere": "Math CE1D",
+    "niveau": "2e",
+    "groupe": "2M",
+    "profCode": "DMI",
+    "jour": "2026-06-22",
+    "periode": "P1+P2",
+    "local": "C319"
+  },
+  {
+    "id": "PEC-lg1-n4-2-22-P1",
+    "matiere": "Lg1",
+    "niveau": "3e",
+    "groupe": "N4-2",
+    "profCode": "PEC",
+    "jour": "2026-06-22",
+    "periode": "P1",
+    "local": "C201"
+  },
+  {
+    "id": "KOT-fr-1n-22-P1",
+    "matiere": "Fr",
+    "niveau": "1re",
+    "groupe": "1N",
+    "profCode": "KOT",
+    "jour": "2026-06-22",
+    "periode": "P1",
+    "local": "T18"
+  },
+  {
+    "id": "DRAY-math-ce1d-2n-22-P1P2",
+    "matiere": "Math CE1D",
+    "niveau": "2e",
+    "groupe": "2N",
+    "profCode": "DRAY",
+    "jour": "2026-06-22",
+    "periode": "P1+P2",
+    "local": "C226"
+  },
+  {
+    "id": "VBG-lg1-n4-3-22-P1",
+    "matiere": "Lg1",
+    "niveau": "3e",
+    "groupe": "N4-3",
+    "profCode": "VBG",
+    "jour": "2026-06-22",
+    "periode": "P1",
+    "local": "C123"
+  },
+  {
+    "id": "DEST-hist-5h-22-P2",
+    "matiere": "Hist",
+    "niveau": "5e",
+    "groupe": "5H",
+    "profCode": "DEST",
+    "jour": "2026-06-22",
+    "periode": "P2",
+    "local": "MAND"
+  },
+  {
+    "id": "JAQ-rel-6h-22-P2",
+    "matiere": "Rel",
+    "niveau": "6e",
+    "groupe": "6H",
+    "profCode": "JAQ",
+    "jour": "2026-06-22",
+    "periode": "P2",
+    "local": "C001"
+  },
+  {
+    "id": "DOM-oral-a4-1-22-P2",
+    "matiere": "Oral",
+    "niveau": "3e",
+    "groupe": "A4-1",
+    "profCode": "DOM",
+    "jour": "2026-06-22",
+    "periode": "P2",
+    "local": "C116"
+  },
+  {
+    "id": "DEST-hist-5i-22-P2",
+    "matiere": "Hist",
+    "niveau": "5e",
+    "groupe": "5I",
+    "profCode": "DEST",
+    "jour": "2026-06-22",
+    "periode": "P2",
+    "local": "MAND"
+  },
+  {
+    "id": "JAQ-rel-6i-22-P2",
+    "matiere": "Rel",
+    "niveau": "6e",
+    "groupe": "6I",
+    "profCode": "JAQ",
+    "jour": "2026-06-22",
+    "periode": "P2",
+    "local": "C034"
+  },
+  {
+    "id": "GOD-oral-a4-2-22-P2",
+    "matiere": "Oral",
+    "niveau": "3e",
+    "groupe": "A4-2",
+    "profCode": "GOD",
+    "jour": "2026-06-22",
+    "periode": "P2",
+    "local": "C122"
+  },
+  {
+    "id": "SMO-hist-5j-22-P2",
+    "matiere": "Hist",
+    "niveau": "5e",
+    "groupe": "5J",
+    "profCode": "SMO",
+    "jour": "2026-06-22",
+    "periode": "P2",
+    "local": "C119"
+  },
+  {
+    "id": "JAQ-rel-6j-22-P2",
+    "matiere": "Rel",
+    "niveau": "6e",
+    "groupe": "6J",
+    "profCode": "JAQ",
+    "jour": "2026-06-22",
+    "periode": "P2",
+    "local": "C232"
+  },
+  {
+    "id": "BAL-oral-a4-3-22-P2",
+    "matiere": "Oral",
+    "niveau": "3e",
+    "groupe": "A4-3",
+    "profCode": "BAL",
+    "jour": "2026-06-22",
+    "periode": "P2",
+    "local": "C117"
+  },
+  {
+    "id": "SMO-hist-5k-22-P2",
+    "matiere": "Hist",
+    "niveau": "5e",
+    "groupe": "5K",
+    "profCode": "SMO",
+    "jour": "2026-06-22",
+    "periode": "P2",
+    "local": "C120"
+  },
+  {
+    "id": "JAQ-rel-6k-22-P2",
+    "matiere": "Rel",
+    "niveau": "6e",
+    "groupe": "6K",
+    "profCode": "JAQ",
+    "jour": "2026-06-22",
+    "periode": "P2",
+    "local": "C210"
+  },
+  {
+    "id": "GAU-oral-n4-1-22-P2",
+    "matiere": "Oral",
+    "niveau": "3e",
+    "groupe": "N4-1",
+    "profCode": "GAU",
+    "jour": "2026-06-22",
+    "periode": "P2",
+    "local": "C121"
+  },
+  {
+    "id": "PEC-oral-n4-2-22-P2",
+    "matiere": "Oral",
+    "niveau": "3e",
+    "groupe": "N4-2",
+    "profCode": "PEC",
+    "jour": "2026-06-22",
+    "periode": "P2",
+    "local": "C201"
+  },
+  {
+    "id": "VBG-oral-n4-3-22-P2",
+    "matiere": "Oral",
+    "niveau": "3e",
+    "groupe": "N4-3",
+    "profCode": "VBG",
+    "jour": "2026-06-22",
+    "periode": "P2",
+    "local": "C123"
+  },
+  {
+    "id": "CLO-lg-1h-n-23-P1",
+    "matiere": "Lg",
+    "niveau": "1re",
+    "groupe": "1H-N",
+    "profCode": "CLO",
+    "jour": "2026-06-23",
+    "periode": "P1",
+    "local": "T02"
+  },
+  {
+    "id": "HEK-fr-2h-23-P1P2",
+    "matiere": "Fr",
+    "niveau": "2e",
+    "groupe": "2H",
+    "profCode": "HEK",
+    "jour": "2026-06-23",
+    "periode": "P1+P2",
+    "local": "C217"
+  },
+  {
+    "id": "BALJ-math-3h-23-P1",
+    "matiere": "Math",
+    "niveau": "3e",
+    "groupe": "3H",
+    "profCode": "BALJ",
+    "jour": "2026-06-23",
+    "periode": "P1",
+    "local": "C116"
+  },
+  {
+    "id": "DVT-fr-4h-23-P1P2",
+    "matiere": "Fr",
+    "niveau": "4e",
+    "groupe": "4H",
+    "profCode": "DVT",
+    "jour": "2026-06-23",
+    "periode": "P1+P2",
+    "local": "C218"
+  },
+  {
+    "id": "JAQ-rel-5h-23-P1",
+    "matiere": "Rel",
+    "niveau": "5e",
+    "groupe": "5H",
+    "profCode": "JAQ",
+    "jour": "2026-06-23",
+    "periode": "P1",
+    "local": "T05"
+  },
+  {
+    "id": "ANM-math-4-6h-23-P1",
+    "matiere": "Math 4",
+    "niveau": "6e",
+    "groupe": "6H",
+    "profCode": "ANM",
+    "jour": "2026-06-23",
+    "periode": "P1",
+    "local": "C001"
+  },
+  {
+    "id": "CLO-lg-1i-n-23-P1",
+    "matiere": "Lg",
+    "niveau": "1re",
+    "groupe": "1I-N",
+    "profCode": "CLO",
+    "jour": "2026-06-23",
+    "periode": "P1",
+    "local": "T12"
+  },
+  {
+    "id": "HEK-fr-ce1d-2i-23-P1P2",
+    "matiere": "Fr CE1D",
+    "niveau": "2e",
+    "groupe": "2I",
+    "profCode": "HEK",
+    "jour": "2026-06-23",
+    "periode": "P1+P2",
+    "local": "C320"
+  },
+  {
+    "id": "CARO-math-3i-23-P1",
+    "matiere": "Math",
+    "niveau": "3e",
+    "groupe": "3I",
+    "profCode": "CARO",
+    "jour": "2026-06-23",
+    "periode": "P1",
+    "local": "C117"
+  },
+  {
+    "id": "LMC-fr-4i-23-P1P2",
+    "matiere": "Fr",
+    "niveau": "4e",
+    "groupe": "4I",
+    "profCode": "LMC",
+    "jour": "2026-06-23",
+    "periode": "P1+P2",
+    "local": "C219"
+  },
+  {
+    "id": "JAQ-rel-5i-23-P1",
+    "matiere": "Rel",
+    "niveau": "5e",
+    "groupe": "5I",
+    "profCode": "JAQ",
+    "jour": "2026-06-23",
+    "periode": "P1",
+    "local": "C321"
+  },
+  {
+    "id": "EVR-math-4-gr1-23-P1",
+    "matiere": "Math 4",
+    "niveau": "6e",
+    "groupe": "GR1",
+    "profCode": "EVR",
+    "jour": "2026-06-23",
+    "periode": "P1",
+    "local": "C034"
+  },
+  {
+    "id": "DOM-lg-1j-a-23-P1",
+    "matiere": "Lg",
+    "niveau": "1re",
+    "groupe": "1J-A",
+    "profCode": "DOM",
+    "jour": "2026-06-23",
+    "periode": "P1",
+    "local": "T03"
+  },
+  {
+    "id": "ENS-fr-ce1d-2j-23-P1P2",
+    "matiere": "Fr CE1D",
+    "niveau": "2e",
+    "groupe": "2J",
+    "profCode": "ENS",
+    "jour": "2026-06-23",
+    "periode": "P1+P2",
+    "local": "C216"
+  },
+  {
+    "id": "CARO-math-3j-23-P1",
+    "matiere": "Math",
+    "niveau": "3e",
+    "groupe": "3J",
+    "profCode": "CARO",
+    "jour": "2026-06-23",
+    "periode": "P1",
+    "local": "C118"
+  },
+  {
+    "id": "LMC-fr-4j-23-P1P2",
+    "matiere": "Fr",
+    "niveau": "4e",
+    "groupe": "4J",
+    "profCode": "LMC",
+    "jour": "2026-06-23",
+    "periode": "P1+P2",
+    "local": "C220"
+  },
+  {
+    "id": "JAQ-rel-5j-23-P1",
+    "matiere": "Rel",
+    "niveau": "5e",
+    "groupe": "5J",
+    "profCode": "JAQ",
+    "jour": "2026-06-23",
+    "periode": "P1",
+    "local": "C119"
+  },
+  {
+    "id": "BLOA-math-4-gr2-23-P1",
+    "matiere": "Math 4",
+    "niveau": "6e",
+    "groupe": "GR2",
+    "profCode": "BLOA",
+    "jour": "2026-06-23",
+    "periode": "P1",
+    "local": "C201"
+  },
+  {
+    "id": "GOD-lg-a4-1-23-P1",
+    "matiere": "Lg",
+    "niveau": "1re",
+    "groupe": "A4-1",
+    "profCode": "GOD",
+    "jour": "2026-06-23",
+    "periode": "P1",
+    "local": "T08"
+  },
+  {
+    "id": "ENS-fr-ce1d-2k-23-P1P2",
+    "matiere": "Fr CE1D",
+    "niveau": "2e",
+    "groupe": "2K",
+    "profCode": "ENS",
+    "jour": "2026-06-23",
+    "periode": "P1+P2",
+    "local": "C223"
+  },
+  {
+    "id": "BALJ-math-3k-23-P1",
+    "matiere": "Math",
+    "niveau": "3e",
+    "groupe": "3K",
+    "profCode": "BALJ",
+    "jour": "2026-06-23",
+    "periode": "P1",
+    "local": "C121"
+  },
+  {
+    "id": "DEBS-fr-4k-23-P1P2",
+    "matiere": "Fr",
+    "niveau": "4e",
+    "groupe": "4K",
+    "profCode": "DEBS",
+    "jour": "2026-06-23",
+    "periode": "P1+P2",
+    "local": "C221"
+  },
+  {
+    "id": "JAQ-rel-5k-23-P1",
+    "matiere": "Rel",
+    "niveau": "5e",
+    "groupe": "5K",
+    "profCode": "JAQ",
+    "jour": "2026-06-23",
+    "periode": "P1",
+    "local": "C120"
+  },
+  {
+    "id": "DOM-lg-a4-2-23-P1",
+    "matiere": "Lg",
+    "niveau": "1re",
+    "groupe": "A4-2",
+    "profCode": "DOM",
+    "jour": "2026-06-23",
+    "periode": "P1",
+    "local": "T16"
+  },
+  {
+    "id": "PERS-fr-ce1d-2l-23-P1P2",
+    "matiere": "Fr CE1D",
+    "niveau": "2e",
+    "groupe": "2L",
+    "profCode": "PERS",
+    "jour": "2026-06-23",
+    "periode": "P1+P2",
+    "local": "C225"
+  },
+  {
+    "id": "CAR-math-3l-23-P1",
+    "matiere": "Math",
+    "niveau": "3e",
+    "groupe": "3L",
+    "profCode": "CAR",
+    "jour": "2026-06-23",
+    "periode": "P1",
+    "local": "C122"
+  },
+  {
+    "id": "DEBS-fr-4l-23-P1P2",
+    "matiere": "Fr",
+    "niveau": "4e",
+    "groupe": "4L",
+    "profCode": "DEBS",
+    "jour": "2026-06-23",
+    "periode": "P1+P2",
+    "local": "C222"
+  },
+  {
+    "id": "ANM-math-6-gr1-23-P1",
+    "matiere": "Math 6",
+    "niveau": "6e",
+    "groupe": "GR1",
+    "profCode": "ANM",
+    "jour": "2026-06-23",
+    "periode": "P1",
+    "local": "C232"
+  },
+  {
+    "id": "VBG-lg-n4-1-23-P1",
+    "matiere": "Lg",
+    "niveau": "1re",
+    "groupe": "N4-1",
+    "profCode": "VBG",
+    "jour": "2026-06-23",
+    "periode": "P1",
+    "local": "T17"
+  },
+  {
+    "id": "KOT-fr-ce1d-2m-23-P1P2",
+    "matiere": "Fr CE1D",
+    "niveau": "2e",
+    "groupe": "2M",
+    "profCode": "KOT",
+    "jour": "2026-06-23",
+    "periode": "P1+P2",
+    "local": "C319"
+  },
+  {
+    "id": "DRAY-math-3m-23-P1",
+    "matiere": "Math",
+    "niveau": "3e",
+    "groupe": "3M",
+    "profCode": "DRAY",
+    "jour": "2026-06-23",
+    "periode": "P1",
+    "local": "C123"
+  },
+  {
+    "id": "DANB-math-6-gr2-23-P1",
+    "matiere": "Math 6",
+    "niveau": "6e",
+    "groupe": "GR2",
+    "profCode": "DANB",
+    "jour": "2026-06-23",
+    "periode": "P1",
+    "local": "C210"
+  },
+  {
+    "id": "BAL-lg-n4-2-23-P1",
+    "matiere": "Lg",
+    "niveau": "1re",
+    "groupe": "N4-2",
+    "profCode": "BAL",
+    "jour": "2026-06-23",
+    "periode": "P1",
+    "local": "T18"
+  },
+  {
+    "id": "JOR-fr-ce1d-2n-23-P1P2",
+    "matiere": "Fr CE1D",
+    "niveau": "2e",
+    "groupe": "2N",
+    "profCode": "JOR",
+    "jour": "2026-06-23",
+    "periode": "P1+P2",
+    "local": "C226"
+  },
+  {
+    "id": "PERS-rel-3h-23-P2",
+    "matiere": "Rel",
+    "niveau": "3e",
+    "groupe": "3H",
+    "profCode": "PERS",
+    "jour": "2026-06-23",
+    "periode": "P2",
+    "local": "C116"
+  },
+  {
+    "id": "DEMN-sc3-5i-23-P2",
+    "matiere": "Sc3",
+    "niveau": "5e",
+    "groupe": "5I",
+    "profCode": "DEMN",
+    "jour": "2026-06-23",
+    "periode": "P2",
+    "local": "C321"
+  },
+  {
+    "id": "IVE-latin-gr1-23-P2",
+    "matiere": "Latin",
+    "niveau": "6e",
+    "groupe": "GR1",
+    "profCode": "IVE",
+    "jour": "2026-06-23",
+    "periode": "P2",
+    "local": "C201"
+  },
+  {
+    "id": "PERS-rel-3i-23-P2",
+    "matiere": "Rel",
+    "niveau": "3e",
+    "groupe": "3I",
+    "profCode": "PERS",
+    "jour": "2026-06-23",
+    "periode": "P2",
+    "local": "C117"
+  },
+  {
+    "id": "DEMN-sc3-gr1-23-P2",
+    "matiere": "Sc3",
+    "niveau": "5e",
+    "groupe": "GR1",
+    "profCode": "DEMN",
+    "jour": "2026-06-23",
+    "periode": "P2",
+    "local": "C210"
+  },
+  {
+    "id": "MRS-rel-3j-23-P2",
+    "matiere": "Rel",
+    "niveau": "3e",
+    "groupe": "3J",
+    "profCode": "MRS",
+    "jour": "2026-06-23",
+    "periode": "P2",
+    "local": "C118"
+  },
+  {
+    "id": "PIEJ-sc3-gr2-23-P2",
+    "matiere": "Sc3",
+    "niveau": "5e",
+    "groupe": "GR2",
+    "profCode": "PIEJ",
+    "jour": "2026-06-23",
+    "periode": "P2",
+    "local": "C232"
+  },
+  {
+    "id": "MRS-rel-3k-23-P2",
+    "matiere": "Rel",
+    "niveau": "3e",
+    "groupe": "3K",
+    "profCode": "MRS",
+    "jour": "2026-06-23",
+    "periode": "P2",
+    "local": "C118"
+  },
+  {
+    "id": "MRS-rel-3l-23-P2",
+    "matiere": "Rel",
+    "niveau": "3e",
+    "groupe": "3L",
+    "profCode": "MRS",
+    "jour": "2026-06-23",
+    "periode": "P2",
+    "local": "C118"
+  },
+  {
+    "id": "MRS-rel-3m-23-P2",
+    "matiere": "Rel",
+    "niveau": "3e",
+    "groupe": "3M",
+    "profCode": "MRS",
+    "jour": "2026-06-23",
+    "periode": "P2",
+    "local": "C118"
+  },
+  {
+    "id": "VERM-sc6-gr1-23-P2",
+    "matiere": "Sc6",
+    "niveau": "5e",
+    "groupe": "GR1",
+    "profCode": "VERM",
+    "jour": "2026-06-23",
+    "periode": "P2",
+    "local": "C119"
+  },
+  {
+    "id": "HE-sc6-gr2-23-P2",
+    "matiere": "Sc6",
+    "niveau": "5e",
+    "groupe": "GR2",
+    "profCode": "HE",
+    "jour": "2026-06-23",
+    "periode": "P2",
+    "local": "C120"
+  },
+  {
+    "id": "DMI-math-1h-24-P1",
+    "matiere": "Math",
+    "niveau": "1re",
+    "groupe": "1H",
+    "profCode": "DMI",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "T02"
+  },
+  {
+    "id": "PIEJ-sc-2h-24-P1P2",
+    "matiere": "Sc",
+    "niveau": "2e",
+    "groupe": "2H",
+    "profCode": "PIEJ",
+    "jour": "2026-06-24",
+    "periode": "P1+P2",
+    "local": "C217"
+  },
+  {
+    "id": "DELF-geo-3h-24-P1",
+    "matiere": "Geo",
+    "niveau": "3e",
+    "groupe": "3H",
+    "profCode": "DELF",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C116"
+  },
+  {
+    "id": "DEMN-sc3-4h-24-P1",
+    "matiere": "Sc3",
+    "niveau": "4e",
+    "groupe": "4H",
+    "profCode": "DEMN",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C218"
+  },
+  {
+    "id": "MEL-lg2-a2-1-24-P1",
+    "matiere": "Lg2",
+    "niveau": "5e",
+    "groupe": "A2-1",
+    "profCode": "MEL",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C034"
+  },
+  {
+    "id": "DEST-geo-6h-24-P1",
+    "matiere": "Géo",
+    "niveau": "6e",
+    "groupe": "6H",
+    "profCode": "DEST",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "MAND"
+  },
+  {
+    "id": "BALJ-math-1i-24-P1",
+    "matiere": "Math",
+    "niveau": "1re",
+    "groupe": "1I",
+    "profCode": "BALJ",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "T12"
+  },
+  {
+    "id": "DKS-sc-ce1d-2i-24-P1",
+    "matiere": "Sc CE1D",
+    "niveau": "2e",
+    "groupe": "2I",
+    "profCode": "DKS",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C320"
+  },
+  {
+    "id": "FOF-geo-3i-24-P1",
+    "matiere": "Geo",
+    "niveau": "3e",
+    "groupe": "3I",
+    "profCode": "FOF",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C117"
+  },
+  {
+    "id": "VERM-sc3-gr1-24-P1",
+    "matiere": "Sc3",
+    "niveau": "4e",
+    "groupe": "GR1",
+    "profCode": "VERM",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C222"
+  },
+  {
+    "id": "DT-lg2-a4-1-24-P1",
+    "matiere": "Lg2",
+    "niveau": "5e",
+    "groupe": "A4-1",
+    "profCode": "DT",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C001"
+  },
+  {
+    "id": "DEST-oral-6i-24-P1",
+    "matiere": "Oral",
+    "niveau": "6e",
+    "groupe": "6I",
+    "profCode": "DEST",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "MAND"
+  },
+  {
+    "id": "BALJ-math-1j-24-P1",
+    "matiere": "Math",
+    "niveau": "1re",
+    "groupe": "1J",
+    "profCode": "BALJ",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "T03"
+  },
+  {
+    "id": "DKS-sc-ce1d-2j-24-P1",
+    "matiere": "Sc CE1D",
+    "niveau": "2e",
+    "groupe": "2J",
+    "profCode": "DKS",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C216"
+  },
+  {
+    "id": "FOF-geo-3j-24-P1",
+    "matiere": "Geo",
+    "niveau": "3e",
+    "groupe": "3J",
+    "profCode": "FOF",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C118"
+  },
+  {
+    "id": "HE-sc3-gr2-24-P1",
+    "matiere": "Sc3",
+    "niveau": "4e",
+    "groupe": "GR2",
+    "profCode": "HE",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C219"
+  },
+  {
+    "id": "VDS-lg2-n4-1-24-P1",
+    "matiere": "Lg2",
+    "niveau": "5e",
+    "groupe": "N4-1",
+    "profCode": "VDS",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C201"
+  },
+  {
+    "id": "SMO-oral-6j-24-P1",
+    "matiere": "Oral",
+    "niveau": "6e",
+    "groupe": "6J",
+    "profCode": "SMO",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C232"
+  },
+  {
+    "id": "CARO-math-1k-24-P1",
+    "matiere": "Math",
+    "niveau": "1re",
+    "groupe": "1K",
+    "profCode": "CARO",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "T08"
+  },
+  {
+    "id": "DKS-sc-ce1d-2k-24-P1",
+    "matiere": "Sc CE1D",
+    "niveau": "2e",
+    "groupe": "2K",
+    "profCode": "DKS",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C223"
+  },
+  {
+    "id": "FOF-geo-3k-24-P1",
+    "matiere": "Geo",
+    "niveau": "3e",
+    "groupe": "3K",
+    "profCode": "FOF",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C121"
+  },
+  {
+    "id": "PIEJ-sc3-gr3-24-P1",
+    "matiere": "Sc3",
+    "niveau": "4e",
+    "groupe": "GR3",
+    "profCode": "PIEJ",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C220"
+  },
+  {
+    "id": "TAC-lg2-n2-1-24-P1",
+    "matiere": "Lg2",
+    "niveau": "5e",
+    "groupe": "N2-1",
+    "profCode": "TAC",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C321"
+  },
+  {
+    "id": "SMO-oral-6k-24-P1",
+    "matiere": "Oral",
+    "niveau": "6e",
+    "groupe": "6K",
+    "profCode": "SMO",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C210"
+  },
+  {
+    "id": "DMI-math-1l-24-P1",
+    "matiere": "Math",
+    "niveau": "1re",
+    "groupe": "1L",
+    "profCode": "DMI",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "T16"
+  },
+  {
+    "id": "DKS-sc-ce1d-2l-24-P1",
+    "matiere": "Sc CE1D",
+    "niveau": "2e",
+    "groupe": "2L",
+    "profCode": "DKS",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C225"
+  },
+  {
+    "id": "FOF-geo-3l-24-P1",
+    "matiere": "Geo",
+    "niveau": "3e",
+    "groupe": "3L",
+    "profCode": "FOF",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C122"
+  },
+  {
+    "id": "VERM-sc5-4k-24-P1",
+    "matiere": "Sc5",
+    "niveau": "4e",
+    "groupe": "4K",
+    "profCode": "VERM",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C221"
+  },
+  {
+    "id": "PHM-lg2-n2-2-24-P1",
+    "matiere": "Lg2",
+    "niveau": "5e",
+    "groupe": "N2-2",
+    "profCode": "PHM",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C120"
+  },
+  {
+    "id": "DMI-math-1m-24-P1",
+    "matiere": "Math",
+    "niveau": "1re",
+    "groupe": "1M",
+    "profCode": "DMI",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "T17"
+  },
+  {
+    "id": "PIEJ-sc-ce1d-2m-24-P1",
+    "matiere": "Sc CE1D",
+    "niveau": "2e",
+    "groupe": "2M",
+    "profCode": "PIEJ",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C319"
+  },
+  {
+    "id": "FOF-geo-3m-24-P1",
+    "matiere": "Geo",
+    "niveau": "3e",
+    "groupe": "3M",
+    "profCode": "FOF",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C123"
+  },
+  {
+    "id": "DEMN-sc5-gr1-24-P1",
+    "matiere": "Sc5",
+    "niveau": "4e",
+    "groupe": "GR1",
+    "profCode": "DEMN",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "T05"
+  },
+  {
+    "id": "PHM-lg2-5j-a4-24-P1",
+    "matiere": "Lg2",
+    "niveau": "5e",
+    "groupe": "5J-A4",
+    "profCode": "PHM",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C119"
+  },
+  {
+    "id": "CAR-math-1n-24-P1",
+    "matiere": "Math",
+    "niveau": "1re",
+    "groupe": "1N",
+    "profCode": "CAR",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "T18"
+  },
+  {
+    "id": "BERS-sc-ce1d-2n-24-P1",
+    "matiere": "Sc CE1D",
+    "niveau": "2e",
+    "groupe": "2N",
+    "profCode": "BERS",
+    "jour": "2026-06-24",
+    "periode": "P1",
+    "local": "C226"
+  },
+  {
+    "id": "VERS-lg2-a2-1-24-P2",
+    "matiere": "Lg2",
+    "niveau": "3e",
+    "groupe": "A2-1",
+    "profCode": "VERS",
+    "jour": "2026-06-24",
+    "periode": "P2",
+    "local": "C119"
+  },
+  {
+    "id": "IVE-latin-gr1-24-P2",
+    "matiere": "Latin",
+    "niveau": "4e",
+    "groupe": "GR1",
+    "profCode": "IVE",
+    "jour": "2026-06-24",
+    "periode": "P2",
+    "local": "C201"
+  },
+  {
+    "id": "IVE-grec-gr1-24-P2",
+    "matiere": "Grec",
+    "niveau": "5e",
+    "groupe": "GR1",
+    "profCode": "IVE",
+    "jour": "2026-06-24",
+    "periode": "P2",
+    "local": "C201"
+  },
+  {
+    "id": "ANM-math-6-gr1-24-P2",
+    "matiere": "Math 6",
+    "niveau": "6e",
+    "groupe": "GR1",
+    "profCode": "ANM",
+    "jour": "2026-06-24",
+    "periode": "P2",
+    "local": "C232"
+  },
+  {
+    "id": "DKS-sc-1h-2i-24-P2",
+    "matiere": "Sc 1h",
+    "niveau": "2e",
+    "groupe": "2I",
+    "profCode": "DKS",
+    "jour": "2026-06-24",
+    "periode": "P2",
+    "local": "C320"
+  },
+  {
+    "id": "DOM-lg2-a4-1-24-P2",
+    "matiere": "Lg2",
+    "niveau": "3e",
+    "groupe": "A4-1",
+    "profCode": "DOM",
+    "jour": "2026-06-24",
+    "periode": "P2",
+    "local": "C116"
+  },
+  {
+    "id": "DANB-math-6-gr2-24-P2",
+    "matiere": "Math 6",
+    "niveau": "6e",
+    "groupe": "GR2",
+    "profCode": "DANB",
+    "jour": "2026-06-24",
+    "periode": "P2",
+    "local": "C210"
+  },
+  {
+    "id": "DKS-sc-1h-ce1d-2j-24-P2",
+    "matiere": "Sc 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2J",
+    "profCode": "DKS",
+    "jour": "2026-06-24",
+    "periode": "P2",
+    "local": "C216"
+  },
+  {
+    "id": "BAL-lg2-n2-1-24-P2",
+    "matiere": "Lg2",
+    "niveau": "3e",
+    "groupe": "N2-1",
+    "profCode": "BAL",
+    "jour": "2026-06-24",
+    "periode": "P2",
+    "local": "C117"
+  },
+  {
+    "id": "DKS-sc-1h-ce1d-2k-24-P2",
+    "matiere": "Sc 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2K",
+    "profCode": "DKS",
+    "jour": "2026-06-24",
+    "periode": "P2",
+    "local": "C223"
+  },
+  {
+    "id": "VBG-lg2-n2-2-24-P2",
+    "matiere": "Lg2",
+    "niveau": "3e",
+    "groupe": "N2-2",
+    "profCode": "VBG",
+    "jour": "2026-06-24",
+    "periode": "P2",
+    "local": "C122"
+  },
+  {
+    "id": "LNB-all-gr1-24-P2",
+    "matiere": "All",
+    "niveau": "6e",
+    "groupe": "GR1",
+    "profCode": "LNB",
+    "jour": "2026-06-24",
+    "periode": "P2",
+    "local": "C001"
+  },
+  {
+    "id": "DKS-sc-1h-ce1d-2l-24-P2",
+    "matiere": "Sc 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2L",
+    "profCode": "DKS",
+    "jour": "2026-06-24",
+    "periode": "P2",
+    "local": "C225"
+  },
+  {
+    "id": "GAU-lg2-n4-1-24-P2",
+    "matiere": "Lg2",
+    "niveau": "3e",
+    "groupe": "N4-1",
+    "profCode": "GAU",
+    "jour": "2026-06-24",
+    "periode": "P2",
+    "local": "C121"
+  },
+  {
+    "id": "PIEJ-sc-1h-ce1d-2m-24-P2",
+    "matiere": "Sc 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2M",
+    "profCode": "PIEJ",
+    "jour": "2026-06-24",
+    "periode": "P2",
+    "local": "C319"
+  },
+  {
+    "id": "GAU-lg2-3j-a4-24-P2",
+    "matiere": "Lg2",
+    "niveau": "3e",
+    "groupe": "3J-A4",
+    "profCode": "GAU",
+    "jour": "2026-06-24",
+    "periode": "P2",
+    "local": "C118"
+  },
+  {
+    "id": "BERS-sc-1h-ce1d-2n-24-P2",
+    "matiere": "Sc 1h CE1D",
+    "niveau": "2e",
+    "groupe": "2N",
+    "profCode": "BERS",
+    "jour": "2026-06-24",
+    "periode": "P2",
+    "local": "C226"
+  },
+  {
+    "id": "GOD-lg2-3m-a4-24-P2",
+    "matiere": "Lg2",
+    "niveau": "3e",
+    "groupe": "3M-A4",
+    "profCode": "GOD",
+    "jour": "2026-06-24",
+    "periode": "P2",
+    "local": "C123"
+  },
+  {
+    "id": "BERS-sc-1h-25-P1",
+    "matiere": "Sc",
+    "niveau": "1re",
+    "groupe": "1H",
+    "profCode": "BERS",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "T02"
+  },
+  {
+    "id": "MYN-hist-3h-25-P1",
+    "matiere": "Hist",
+    "niveau": "3e",
+    "groupe": "3H",
+    "profCode": "MYN",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "C116"
+  },
+  {
+    "id": "DEST-hist-4h-25-P1",
+    "matiere": "Hist",
+    "niveau": "4e",
+    "groupe": "4H",
+    "profCode": "DEST",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "C218"
+  },
+  {
+    "id": "DEST-geo-5h-25-P1",
+    "matiere": "Géo",
+    "niveau": "5e",
+    "groupe": "5H",
+    "profCode": "DEST",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "C216"
+  },
+  {
+    "id": "TAIL-lg2-a4-1-25-P1",
+    "matiere": "Lg2",
+    "niveau": "6e",
+    "groupe": "A4-1",
+    "profCode": "TAIL",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "C001"
+  },
+  {
+    "id": "ROD-sc-1i-25-P1",
+    "matiere": "Sc",
+    "niveau": "1re",
+    "groupe": "1I",
+    "profCode": "ROD",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "T12"
+  },
+  {
+    "id": "PAY-latin-gr1-25-P1",
+    "matiere": "Latin",
+    "niveau": "2e",
+    "groupe": "GR1",
+    "profCode": "PAY",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "C223"
+  },
+  {
+    "id": "MYN-hist-3i-25-P1",
+    "matiere": "Hist",
+    "niveau": "3e",
+    "groupe": "3I",
+    "profCode": "MYN",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "C117"
+  },
+  {
+    "id": "DEST-hist-4i-25-P1",
+    "matiere": "Hist",
+    "niveau": "4e",
+    "groupe": "4I",
+    "profCode": "DEST",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "C219"
+  },
+  {
+    "id": "DEST-geo-5i-25-P1",
+    "matiere": "Géo",
+    "niveau": "5e",
+    "groupe": "5I",
+    "profCode": "DEST",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "C217"
+  },
+  {
+    "id": "VERS-lg2-a4-2-25-P1",
+    "matiere": "Lg2",
+    "niveau": "6e",
+    "groupe": "A4-2",
+    "profCode": "VERS",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "C034"
+  },
+  {
+    "id": "ROD-sc-1j-25-P1",
+    "matiere": "Sc",
+    "niveau": "1re",
+    "groupe": "1J",
+    "profCode": "ROD",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "T03"
+  },
+  {
+    "id": "IVE-latin-gr2-25-P1",
+    "matiere": "Latin",
+    "niveau": "2e",
+    "groupe": "GR2",
+    "profCode": "IVE",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "C201"
+  },
+  {
+    "id": "MYN-hist-3j-25-P1",
+    "matiere": "Hist",
+    "niveau": "3e",
+    "groupe": "3J",
+    "profCode": "MYN",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "C118"
+  },
+  {
+    "id": "MYN-hist-4j-25-P1",
+    "matiere": "Hist",
+    "niveau": "4e",
+    "groupe": "4J",
+    "profCode": "MYN",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "C220"
+  },
+  {
+    "id": "SMO-geo-5j-25-P1",
+    "matiere": "Géo",
+    "niveau": "5e",
+    "groupe": "5J",
+    "profCode": "SMO",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "C119"
+  },
+  {
+    "id": "LNB-lg2-n4-1-25-P1",
+    "matiere": "Lg2",
+    "niveau": "6e",
+    "groupe": "N4-1",
+    "profCode": "LNB",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "C225"
+  },
+  {
+    "id": "ROD-sc-1k-25-P1",
+    "matiere": "Sc",
+    "niveau": "1re",
+    "groupe": "1K",
+    "profCode": "ROD",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "T08"
+  },
+  {
+    "id": "MYN-hist-3k-25-P1",
+    "matiere": "Hist",
+    "niveau": "3e",
+    "groupe": "3K",
+    "profCode": "MYN",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "C121"
+  },
+  {
+    "id": "SMO-hist-4k-25-P1",
+    "matiere": "Hist",
+    "niveau": "4e",
+    "groupe": "4K",
+    "profCode": "SMO",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "C221"
+  },
+  {
+    "id": "SMO-geo-5k-25-P1",
+    "matiere": "Géo",
+    "niveau": "5e",
+    "groupe": "5K",
+    "profCode": "SMO",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "C120"
+  },
+  {
+    "id": "MEL-lg2-n2-1-25-P1",
+    "matiere": "Lg2",
+    "niveau": "6e",
+    "groupe": "N2-1",
+    "profCode": "MEL",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "C210"
+  },
+  {
+    "id": "ROD-sc-1l-25-P1",
+    "matiere": "Sc",
+    "niveau": "1re",
+    "groupe": "1L",
+    "profCode": "ROD",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "T16"
+  },
+  {
+    "id": "ORF-hist-3l-25-P1",
+    "matiere": "Hist",
+    "niveau": "3e",
+    "groupe": "3L",
+    "profCode": "ORF",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "C122"
+  },
+  {
+    "id": "SMO-hist-4l-25-P1",
+    "matiere": "Hist",
+    "niveau": "4e",
+    "groupe": "4L",
+    "profCode": "SMO",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "C222"
+  },
+  {
+    "id": "TAIL-lg2-6j-a4-25-P1",
+    "matiere": "Lg2",
+    "niveau": "6e",
+    "groupe": "6J-A4",
+    "profCode": "TAIL",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "C232"
+  },
+  {
+    "id": "SAR-sc-1m-25-P1",
+    "matiere": "Sc",
+    "niveau": "1re",
+    "groupe": "1M",
+    "profCode": "SAR",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "T17"
+  },
+  {
+    "id": "ORF-hist-3m-25-P1",
+    "matiere": "Hist",
+    "niveau": "3e",
+    "groupe": "3M",
+    "profCode": "ORF",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "C123"
+  },
+  {
+    "id": "ROD-sc-1n-25-P1",
+    "matiere": "Sc",
+    "niveau": "1re",
+    "groupe": "1N",
+    "profCode": "ROD",
+    "jour": "2026-06-25",
+    "periode": "P1",
+    "local": "T18"
+  },
+  {
+    "id": "IVE-version-gr1-25-P2",
+    "matiere": "Version",
+    "niveau": "3e",
+    "groupe": "GR1",
+    "profCode": "IVE",
+    "jour": "2026-06-25",
+    "periode": "P2",
+    "local": "C201"
+  },
+  {
+    "id": "DT-lg2-4j-a4-25-P2",
+    "matiere": "Lg2",
+    "niveau": "4e",
+    "groupe": "4J-A4",
+    "profCode": "DT",
+    "jour": "2026-06-25",
+    "periode": "P2",
+    "local": "C220"
+  },
+  {
+    "id": "LNB-all-gr1-25-P2",
+    "matiere": "All",
+    "niveau": "5e",
+    "groupe": "GR1",
+    "profCode": "LNB",
+    "jour": "2026-06-25",
+    "periode": "P2",
+    "local": "C232"
+  },
+  {
+    "id": "VERM-sc6-gr1-25-P2",
+    "matiere": "Sc6",
+    "niveau": "6e",
+    "groupe": "GR1",
+    "profCode": "VERM",
+    "jour": "2026-06-25",
+    "periode": "P2",
+    "local": "C001"
+  },
+  {
+    "id": "MEL-lg2-n2-1-25-P2",
+    "matiere": "Lg2",
+    "niveau": "4e",
+    "groupe": "N2-1",
+    "profCode": "MEL",
+    "jour": "2026-06-25",
+    "periode": "P2",
+    "local": "C219"
+  },
+  {
+    "id": "HE-sc6-gr2-25-P2",
+    "matiere": "Sc6",
+    "niveau": "6e",
+    "groupe": "GR2",
+    "profCode": "HE",
+    "jour": "2026-06-25",
+    "periode": "P2",
+    "local": "C034"
+  },
+  {
+    "id": "PHM-lg2-n2-2-25-P2",
+    "matiere": "Lg2",
+    "niveau": "4e",
+    "groupe": "N2-2",
+    "profCode": "PHM",
+    "jour": "2026-06-25",
+    "periode": "P2",
+    "local": "C221"
+  },
+  {
+    "id": "VDS-lg2-n4-1-25-P2",
+    "matiere": "Lg2",
+    "niveau": "4e",
+    "groupe": "N4-1",
+    "profCode": "VDS",
+    "jour": "2026-06-25",
+    "periode": "P2",
+    "local": "C222"
+  },
+  {
+    "id": "VERS-lg2-a2-1-25-P2",
+    "matiere": "Lg2",
+    "niveau": "4e",
+    "groupe": "A2-1",
+    "profCode": "VERS",
+    "jour": "2026-06-25",
+    "periode": "P2",
+    "local": "C223"
+  },
+  {
+    "id": "DT-lg2-a4-1-25-P2",
+    "matiere": "Lg2",
+    "niveau": "4e",
+    "groupe": "A4-1",
+    "profCode": "DT",
+    "jour": "2026-06-25",
+    "periode": "P2",
+    "local": "C218"
+  }
+]
