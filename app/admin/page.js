@@ -118,7 +118,10 @@ export default async function AdminPage({ searchParams }) {
           ⬇ Excel surveillance
         </a>
         <a href="/api/export?format=print" target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ fontSize: 12 }}>
-          🖨 Vue imprimable
+          🖨 Vue globale
+        </a>
+        <a href="/admin/print" target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ fontSize: 12 }}>
+          🖨 Vues par classe / prof / élève
         </a>
         <a href="/api/export?format=xlsx" className="btn btn-secondary" style={{ fontSize: 12 }}>
           ⬇ Excel liste élèves
