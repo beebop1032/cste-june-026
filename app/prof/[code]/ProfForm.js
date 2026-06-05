@@ -53,8 +53,7 @@ export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts
     const ex = examens.find(e => e.id === examId)
     // Standard class like "6H" or "3J" → pre-fill; "3J-N" → "3J"; group codes (GR2, A4-1) → empty
     const g = ex?.groupe ?? ''
-    const niveauYear = (ex?.niveau ?? '').match(/^(\d+)/)?.[1] ?? ''
-    const defaultClasse = /^\d[A-Z]$/.test(g) ? g : (g.match(/^(\d[A-Z])-/) ?? [])[1] ?? niveauYear
+    const defaultClasse = /^\d[A-Z]$/.test(g) ? g : (g.match(/^(\d[A-Z])-/) ?? [])[1] ?? ''
     setExamState(s => {
       const next = { ...s }
       for (const id of withLinked(examId)) {
