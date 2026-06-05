@@ -86,15 +86,15 @@ export default function ElevesTable({ rows, groupes, profs }) {
           onChange={e => setSearch(e.target.value)}
           className="input" style={{ fontSize: 13, padding: '6px 10px', width: 180 }}
         />
-        <select value={filterGroupe} onChange={e => setFilterGroupe(e.target.value)} className="select" style={{ fontSize: 13, padding: '6px 10px' }}>
+        <select value={filterGroupe} onChange={e => setFilterGroupe(e.target.value)} className="select" style={{ fontSize: 13, paddingTop: '6px', paddingBottom: '6px', paddingLeft: '10px', width: 'auto', minWidth: 150 }}>
           <option value="">Toutes les classes</option>
           {groupes.map(g => <option key={g} value={g}>{g}</option>)}
         </select>
-        <select value={filterProf} onChange={e => setFilterProf(e.target.value)} className="select" style={{ fontSize: 13, padding: '6px 10px' }}>
+        <select value={filterProf} onChange={e => setFilterProf(e.target.value)} className="select" style={{ fontSize: 13, paddingTop: '6px', paddingBottom: '6px', paddingLeft: '10px', width: 'auto', minWidth: 150 }}>
           <option value="">Tous les profs</option>
           {profs.map(p => <option key={p} value={p}>{p}</option>)}
         </select>
-        <select value={filterPart} onChange={e => setFilterPart(e.target.value)} className="select" style={{ fontSize: 13, padding: '6px 10px' }}>
+        <select value={filterPart} onChange={e => setFilterPart(e.target.value)} className="select" style={{ fontSize: 13, paddingTop: '6px', paddingBottom: '6px', paddingLeft: '10px', width: 'auto', minWidth: 150 }}>
           <option value="">Tous types</option>
           {participations.map(p => <option key={p} value={p}>{p}</option>)}
         </select>

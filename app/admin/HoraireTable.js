@@ -74,19 +74,19 @@ export default function HoraireTable({ exams, responses, groupeStatuts }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {/* Filters */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-        <select value={filterNiveau} onChange={e => setFilterNiveau(e.target.value)} className="select" style={{ fontSize: 13, padding: '6px 10px' }}>
+        <select value={filterNiveau} onChange={e => setFilterNiveau(e.target.value)} className="select" style={{ fontSize: 13, paddingTop: '6px', paddingBottom: '6px', paddingLeft: '10px', width: 'auto', minWidth: 150 }}>
           <option value="">Tous les niveaux</option>
           {niveaux.map(n => <option key={n} value={n}>{n}</option>)}
         </select>
-        <select value={filterGroupe} onChange={e => setFilterGroupe(e.target.value)} className="select" style={{ fontSize: 13, padding: '6px 10px' }}>
+        <select value={filterGroupe} onChange={e => setFilterGroupe(e.target.value)} className="select" style={{ fontSize: 13, paddingTop: '6px', paddingBottom: '6px', paddingLeft: '10px', width: 'auto', minWidth: 150 }}>
           <option value="">Toutes les classes</option>
           {groupes.map(g => <option key={g} value={g}>{g}</option>)}
         </select>
-        <select value={filterProf} onChange={e => setFilterProf(e.target.value)} className="select" style={{ fontSize: 13, padding: '6px 10px' }}>
+        <select value={filterProf} onChange={e => setFilterProf(e.target.value)} className="select" style={{ fontSize: 13, paddingTop: '6px', paddingBottom: '6px', paddingLeft: '10px', width: 'auto', minWidth: 150 }}>
           <option value="">Tous les profs</option>
           {profs.map(p => <option key={p} value={p}>{p}</option>)}
         </select>
-        <select value={filterStatut} onChange={e => setFilterStatut(e.target.value)} className="select" style={{ fontSize: 13, padding: '6px 10px' }}>
+        <select value={filterStatut} onChange={e => setFilterStatut(e.target.value)} className="select" style={{ fontSize: 13, paddingTop: '6px', paddingBottom: '6px', paddingLeft: '10px', width: 'auto', minWidth: 150 }}>
           <option value="">Tous les statuts</option>
           <option value="annule_admin">Annulé (admin)</option>
           <option value="maintenu_admin">Maintenu (admin)</option>
@@ -117,7 +117,6 @@ export default function HoraireTable({ exams, responses, groupeStatuts }) {
                   { label: 'Niveau',  field: 'niveau' },
                   { label: 'Classe',  field: 'groupe' },
                   { label: 'Prof',    field: 'profCode' },
-                  { label: 'Local',   field: 'local' },
                   { label: 'Statut',  field: 'statut' },
                 ].map(({ label, field }) => (
                   <th key={field} onClick={() => toggleSort(field)}
@@ -136,12 +135,11 @@ export default function HoraireTable({ exams, responses, groupeStatuts }) {
                   <td>{r.niveau}</td>
                   <td>{r.groupe}</td>
                   <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{r.profCode}</td>
-                  <td>{r.local}</td>
                   <td><span className={`badge ${r.badgeClass}`}>{r.badgeLabel}</span></td>
                 </tr>
               ))}
               {rows.length === 0 && (
-                <tr><td colSpan={8} style={{ textAlign: 'center', color: 'var(--fg-muted)', padding: '20px' }}>Aucun résultat</td></tr>
+                <tr><td colSpan={7} style={{ textAlign: 'center', color: 'var(--fg-muted)', padding: '20px' }}>Aucun résultat</td></tr>
               )}
             </tbody>
           </table>
