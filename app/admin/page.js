@@ -88,16 +88,16 @@ export default async function AdminPage({ searchParams }) {
 
   return (
     <>
-    {/* ── Top bar ── */}
-    <div style={{ background: 'var(--primary)', boxShadow: '0 2px 8px rgba(0,0,0,.18)' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 16px', display: 'flex', alignItems: 'center', gap: 16, height: 52, flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
-          <img src="/logo.png" alt="" width={90} height={36} style={{ height: 30, width: 'auto', filter: 'brightness(0) invert(1)', opacity: .9 }} />
-          <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,.2)' }} />
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#fff', letterSpacing: '-.1px' }}>Admin</span>
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,.45)', marginLeft: 2 }}>— Examens juin 2026</span>
+    {/* ── Sticky top bar ── */}
+    <div style={{ position: 'sticky', top: 0, zIndex: 50, background: 'var(--primary)', boxShadow: '0 2px 8px rgba(0,0,0,.18)' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 16px', display: 'flex', alignItems: 'center', gap: 16, height: 52 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+          <img src="/logo.png" alt="" width={90} height={36} style={{ height: 28, width: 'auto', filter: 'brightness(0) invert(1)', opacity: .9, flexShrink: 0 }} />
+          <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,.2)', flexShrink: 0 }} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#fff', letterSpacing: '-.1px', flexShrink: 0 }}>Admin</span>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginLeft: 2 }}>— Juin 2026</span>
         </div>
-        <nav style={{ display: 'flex', gap: 2 }}>
+        <nav style={{ display: 'flex', gap: 1, flexShrink: 0 }}>
           {[
             { name: 'suivi',   label: `Suivi ${respondedCodes.size}/${ALL_PROF_CODES.length}` },
             { name: 'horaire', label: 'Horaire' },
@@ -105,12 +105,8 @@ export default async function AdminPage({ searchParams }) {
             { name: 'verrous', label: 'Statuts' },
           ].map(t => (
             <a key={t.name} href={`/admin?tab=${t.name}`} style={{
-              padding: '6px 13px',
-              borderRadius: 6,
-              textDecoration: 'none',
-              fontSize: 13,
-              fontWeight: 500,
-              transition: 'background .15s, color .15s',
+              padding: '6px 12px', borderRadius: 6, textDecoration: 'none',
+              fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap',
               background: tab === t.name ? 'rgba(255,255,255,.18)' : 'transparent',
               color: tab === t.name ? '#fff' : 'rgba(255,255,255,.6)',
             }}>
@@ -122,38 +118,34 @@ export default async function AdminPage({ searchParams }) {
       </div>
     </div>
 
-    <main style={{ maxWidth: 1200, margin: '0 auto', padding: '20px 16px 48px' }}>
-
-      {/* Exports bar */}
-      <div style={{
-        display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 18,
-        padding: '12px 16px', background: 'var(--bg-card)', borderRadius: 'var(--radius)',
-        border: '1px solid var(--border)', boxShadow: 'var(--shadow-xs)',
-        alignItems: 'center',
-      }}>
-        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '.07em', marginRight: 6 }}>Exports</span>
-        <a href="/api/export?format=briefing" className="btn btn-secondary btn-sm">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Excel surveillance
-        </a>
-        <a href="/api/export?format=xlsx" className="btn btn-secondary btn-sm">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Excel élèves
-        </a>
-        <a href="/api/export?format=csv" className="btn btn-secondary btn-sm">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          CSV
-        </a>
-        <div style={{ width: 1, height: 18, background: 'var(--border)' }} />
-        <a href="/api/export?format=print" target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-          Vue globale
-        </a>
-        <a href="/admin/print" target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-          Vue par classe / prof / élève
-        </a>
+    {/* ── Sticky exports bar ── */}
+    <div style={{ position: 'sticky', top: 52, zIndex: 40, background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', boxShadow: '0 2px 6px rgba(0,0,0,.05)' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '7px 16px', display: 'flex', gap: 5, flexWrap: 'wrap', alignItems: 'center' }}>
+        <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '.08em', marginRight: 4 }}>Exports</span>
+        {[
+          { href: '/api/export?format=briefing', label: 'Excel surveillance', target: undefined },
+          { href: '/api/export?format=xlsx',     label: 'Excel élèves',       target: undefined },
+          { href: '/api/export?format=csv',      label: 'CSV',                target: undefined },
+        ].map(({ href, label, target }) => (
+          <a key={href} href={href} target={target} className="btn btn-secondary btn-xs">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            {label}
+          </a>
+        ))}
+        <div style={{ width: 1, height: 16, background: 'var(--border)' }} />
+        {[
+          { href: '/api/export?format=print', label: 'Vue globale' },
+          { href: '/admin/print',             label: 'Par classe / prof / élève' },
+        ].map(({ href, label }) => (
+          <a key={href} href={href} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-xs">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            {label}
+          </a>
+        ))}
       </div>
+    </div>
+
+    <main style={{ maxWidth: 1200, margin: '0 auto', padding: '20px 16px 48px' }}>
 
       {showSuccess && (
         <div className="alert alert-success" role="status" style={{ marginBottom: 16, animation: 'fadeOut 0.4s ease 3s forwards' }}>

@@ -339,7 +339,6 @@ function ViewClasse({ exams, partData, groupe }) {
                     <div className="exam-title">{ex.matiere}</div>
                     <div className="exam-meta">
                       <span>Prof <span className="mono">{ex.profCode}</span></span>
-                      <span>Salle <span className="mono">{ex.local}</span></span>
                       {p?.surveilleParTitulaire && <span className="surv-tag">Surveillé par le titulaire</span>}
                     </div>
                     {p?.type === 'liste' && p.eleves.length > 0 && (
@@ -403,7 +402,6 @@ function ViewProf({ exams, partData, prof }) {
               <th>Pér.</th>
               <th>Matière</th>
               <th>Classe</th>
-              <th>Salle</th>
               <th>Participation</th>
               <th>Tit.</th>
             </tr>
@@ -417,7 +415,6 @@ function ViewProf({ exams, partData, prof }) {
                   <td style={{ fontWeight: 700 }}>{ex.periode}</td>
                   <td style={{ fontWeight: 600 }}>{ex.matiere}</td>
                   <td style={{ fontWeight: 700 }}>{ex.groupe}</td>
-                  <td className="mono">{ex.local}</td>
                   <td><PartBadge p={p} /></td>
                   <td className={p?.surveilleParTitulaire ? 'surv-y' : 'surv-n'}>
                     {p?.surveilleParTitulaire ? 'Oui' : '–'}
@@ -496,7 +493,6 @@ function ViewEleve({ exams, partData, groupe }) {
                   <div key={ex.id} className="conv-exam">
                     <span className="cdate">{fmtJourCourt(ex.jour)} <strong>{ex.periode}</strong></span>
                     <span className="cmat">{ex.matiere}</span>
-                    <span className="croom">{ex.local}</span>
                   </div>
                 ))}
               </div>

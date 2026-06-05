@@ -91,7 +91,6 @@ export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: in
                 <th>Niveau</th>
                 <th>Classe</th>
                 <th>Prof</th>
-                <th>Local</th>
                 <th>Statut</th>
                 <th>Action</th>
               </tr>
@@ -116,7 +115,6 @@ export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: in
                     {profs.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </th>
-                <th />
                 <th style={{ padding: '4px 6px' }}>
                   <select value={filterStatut} onChange={e => setFilterStatut(e.target.value)} style={SEL}>
                     <option value="">Tous</option>
@@ -142,7 +140,6 @@ export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: in
                     <td>{ex.niveau}</td>
                     <td style={{ fontWeight: 600 }}>{ex.groupe}</td>
                     <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>{ex.profCode}</td>
-                    <td style={{ fontSize: 12 }}>{ex.local}</td>
                     <td>
                       <span className={`badge ${info.badgeClass}`} style={{ fontSize: 11 }}>
                         {info.label}
@@ -180,7 +177,7 @@ export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: in
               })}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={9} style={{ textAlign: 'center', color: 'var(--fg-muted)', padding: '20px', fontStyle: 'italic' }}>
+                  <td colSpan={8} style={{ textAlign: 'center', color: 'var(--fg-muted)', padding: '20px', fontStyle: 'italic' }}>
                     Aucun résultat pour ces filtres
                   </td>
                 </tr>
