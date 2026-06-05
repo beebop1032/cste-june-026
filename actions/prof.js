@@ -15,6 +15,7 @@ export async function submitProf(profCode, payload) {
   for (const ex of payload.examens) {
     if (typeof ex.id !== 'string') return { error: 'Données invalides' }
     if (!Array.isArray(ex.eleves)) return { error: 'Données invalides' }
+    if (ex.maintenu !== undefined && typeof ex.maintenu !== 'boolean') return { error: 'Données invalides' }
     for (const el of ex.eleves) {
       if (typeof el.nom !== 'string' || typeof el.prenom !== 'string') return { error: 'Données invalides' }
     }

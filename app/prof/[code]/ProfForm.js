@@ -27,7 +27,7 @@ export default function ProfForm({ profCode, examens, locked, dejaRempli }) {
 
   const [confirmed, setConfirmed] = useState(!dejaRempli)
   const [examState, setExamState] = useState(() =>
-    Object.fromEntries(openExams.map(e => [e.id, { eleves: [], surveilleParTitulaire: false }]))
+    Object.fromEntries(openExams.map(e => [e.id, { eleves: [], surveilleParTitulaire: false, maintenu: false }]))
   )
   const [isPending, startTransition] = useTransition()
   const [result, setResult] = useState(null)
@@ -60,13 +60,17 @@ export default function ProfForm({ profCode, examens, locked, dejaRempli }) {
     setExamState(s => ({ ...s, [examId]: { ...s[examId], surveilleParTitulaire: checked } }))
   }
 
+  function toggleMaintenu(examId) {
+    setExamState(s => ({ ...s, [examId]: { ...s[examId], maintenu: !s[examId].maintenu } }))
+  }
+
   function handleSubmit(e) {
     e.preventDefault()
     const payload = {
       examens: examens.map(ex => {
-        if (lockedSet.has(ex.id)) return { id: ex.id, eleves: [], surveilleParTitulaire: false }
+        if (lockedSet.has(ex.id)) return { id: ex.id, eleves: [], surveilleParTitulaire: false, maintenu: false }
         const st = examState[ex.id]
-        return { id: ex.id, eleves: st.eleves, surveilleParTitulaire: st.surveilleParTitulaire }
+        return { id: ex.id, eleves: st.eleves, surveilleParTitulaire: st.surveilleParTitulaire, maintenu: st.maintenu }
       })
     }
     startTransition(async () => {
@@ -122,7 +126,8 @@ export default function ProfForm({ profCode, examens, locked, dejaRempli }) {
         const isLocked = lockedSet.has(ex.id)
         const st = isLocked ? null : examState[ex.id]
         const nEleves = st?.eleves.length ?? 0
-        const isEmpty = !isLocked && nEleves === 0
+        const isMaintenu = st?.maintenu ?? false
+        const isEmpty = !isLocked && nEleves === 0 && !isMaintenu
 
         return (
           <div
@@ -145,7 +150,8 @@ export default function ProfForm({ profCode, examens, locked, dejaRempli }) {
                 <span className="badge badge-gray" style={{ fontSize: 12 }}>{ex.periode}</span>
                 <span className="badge badge-blue" style={{ fontSize: 12 }}>{ex.local}</span>
                 {isLocked && <span className="badge badge-gray">Verrouillé</span>}
-                {!isLocked && nEleves === 0 && <span className="badge badge-red">Aucun élève</span>}
+                {!isLocked && isMaintenu && <span className="badge badge-blue">Examen maintenu</span>}
+                {!isLocked && !isMaintenu && nEleves === 0 && <span className="badge badge-red">Aucun élève</span>}
                 {!isLocked && nEleves > 0 && <span className="badge badge-green">{nEleves} élève{nEleves > 1 ? 's' : ''}</span>}
               </div>
             </div>
@@ -182,13 +188,24 @@ export default function ProfForm({ profCode, examens, locked, dejaRempli }) {
                   ))}
                 </div>
 
-                <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginTop: st.eleves.length > 0 ? 10 : 0 }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: st.eleves.length > 0 ? 10 : 0, flexWrap: 'wrap' }}>
                   <button
                     type="button"
                     onClick={() => addEleve(ex.id)}
                     className="btn btn-secondary btn-sm"
                   >
                     <IconPlus /> Ajouter un élève
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => toggleMaintenu(ex.id)}
+                    className="btn btn-sm"
+                    style={isMaintenu
+                      ? { background: '#1D4ED8', color: '#fff' }
+                      : { background: 'var(--primary-light)', color: 'var(--primary)', border: '1.5px solid #BFDBFE' }
+                    }
+                  >
+                    {isMaintenu ? '✓ Examen maintenu' : 'Examen maintenu'}
                   </button>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer', color: 'var(--fg-muted)', userSelect: 'none' }}>
                     <input

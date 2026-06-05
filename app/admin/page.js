@@ -118,6 +118,7 @@ export default async function AdminPage({ searchParams }) {
           if (!profResp) { badge[ex.id] = { label: '—', type: 'gray' }; continue }
           const exResp = profResp.examens?.find(e => e.id === ex.id)
           if (!exResp) { badge[ex.id] = { label: '—', type: 'gray' }; continue }
+          if (exResp.maintenu) { badge[ex.id] = { label: 'Maintenu', type: 'blue' }; continue }
           if (exResp.eleves.length === 0) { badge[ex.id] = { label: 'Annulé', type: 'red' }; continue }
           badge[ex.id] = { label: `${exResp.eleves.length} élève(s)`, type: 'green' }
         }
