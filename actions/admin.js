@@ -46,6 +46,25 @@ export async function setGroupeStatutSilent(groupe, statut) {
   }
 }
 
+export async function setNiveauStatutSilent(niveau, statut) {
+  await requireAdmin()
+  if (!niveau || !['open', 'annule', 'maintenu'].includes(statut)) return { error: 'Invalide' }
+  const current = normalise(await read('admin-locks.json'))
+  const groupeStatuts = { ...current.groupeStatuts }
+  const niveauGroupes = [...new Set(exams.filter(e => e.niveau === niveau).map(e => e.groupe))]
+  for (const g of niveauGroupes) {
+    if (statut === 'open') delete groupeStatuts[g]
+    else groupeStatuts[g] = statut
+  }
+  try {
+    await writeFileSafe('admin-locks.json', { groupeStatuts, updatedAt: new Date().toISOString() })
+    return { ok: true }
+  } catch (err) {
+    console.error('setNiveauStatutSilent write failed:', err)
+    return { error: 'Erreur de sauvegarde' }
+  }
+}
+
 export async function setNiveauStatut(formData) {
   await requireAdmin()
   const niveau = formData.get('niveau')

@@ -1,10 +1,11 @@
 import { requireAdmin } from '@/lib/auth'
-import { getAllResponses, getLocksData, setGroupeStatut, setNiveauStatut } from '@/actions/admin'
+import { getAllResponses, getLocksData } from '@/actions/admin'
 import exams from '@/lib/exams.json'
 import HoraireTable from './HoraireTable'
 import ElevesTable from './ElevesTable'
 import ResetButton from './ResetButton'
 import VerrousJourTable from './VerrousJourTable'
+import ClasseTable from './ClasseTable'
 
 const NIVEAUX = ['1re', '2e', '3e', '4e', '5e', '6e']
 const ALL_PROF_CODES = [...new Set(exams.map(e => e.profCode))].sort()
@@ -218,75 +219,12 @@ export default async function AdminPage({ searchParams }) {
 
           {/* ── Vue par classe ── */}
           {vue === 'classe' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-              {NIVEAUX.map(n => {
-                const groupesNiveau = NIVEAUX_MAP[n] ?? []
-                const allSameStatut = groupesNiveau.length > 0 && groupesNiveau.every(g => groupeStatuts[g] === groupeStatuts[groupesNiveau[0]])
-                const niveauStatut  = allSameStatut ? (groupeStatuts[groupesNiveau[0]] ?? 'open') : null
-                return (
-                  <div key={n}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                      <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--fg)', margin: 0 }}>{n}</h2>
-                      <span style={{ fontSize: 12, color: 'var(--fg-muted)' }}>{groupesNiveau.length} classe{groupesNiveau.length !== 1 ? 's' : ''}</span>
-                      <div style={{ display: 'flex', gap: 4, marginLeft: 8 }}>
-                        {[
-                          { statut: 'open',     label: 'Tout ouvrir' },
-                          { statut: 'annule',   label: 'Tout annuler' },
-                          { statut: 'maintenu', label: 'Tout maintenir' },
-                        ].map(({ statut, label }) => (
-                          <form key={statut} action={setNiveauStatut}>
-                            <input type="hidden" name="niveau" value={n} />
-                            <input type="hidden" name="statut" value={statut} />
-                            <button type="submit" className="btn btn-xs btn-secondary"
-                              style={niveauStatut === statut
-                                ? { background: GS[statut].bg, color: GS[statut].text, border: `1.5px solid ${GS[statut].border}`, fontSize: 11 }
-                                : { fontSize: 11 }}>
-                              {label}
-                            </button>
-                          </form>
-                        ))}
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                      {groupesNiveau.map(g => {
-                        const gs   = groupeStatuts[g] ?? 'open'
-                        const info = GS[gs]
-                        const nEx  = exams.filter(e => e.groupe === g).length
-                        return (
-                          <div key={g} style={{
-                            display: 'flex', alignItems: 'center', gap: 10,
-                            padding: '8px 14px', borderRadius: 8,
-                            background: info.bg, border: `1px solid ${info.border}`,
-                          }}>
-                            <span style={{ fontWeight: 600, fontSize: 14, color: info.text, minWidth: 60 }}>{g}</span>
-                            <span style={{ fontSize: 12, color: info.text, opacity: 0.7, flex: 1 }}>{nEx} exam{nEx !== 1 ? 's' : ''}</span>
-                            <span className={`badge ${info.badgeClass}`} style={{ fontSize: 11 }}>{info.label}</span>
-                            <div style={{ display: 'flex', gap: 3 }}>
-                              {[
-                                { statut: 'open',     label: 'À remplir' },
-                                { statut: 'annule',   label: 'Annulé' },
-                                { statut: 'maintenu', label: 'Maintenu' },
-                              ].map(({ statut, label }) => (
-                                <form key={statut} action={setGroupeStatut}>
-                                  <input type="hidden" name="groupe" value={g} />
-                                  <input type="hidden" name="statut" value={statut} />
-                                  <button type="submit" className="btn btn-xs"
-                                    style={gs === statut
-                                      ? { background: GS[statut].text, color: '#fff', fontSize: 11, border: 'none' }
-                                      : { background: '#fff', color: '#64748B', border: '1px solid #E2E8F0', fontSize: 11 }}>
-                                    {label}
-                                  </button>
-                                </form>
-                              ))}
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+            <ClasseTable
+              exams={exams}
+              niveaux={NIVEAUX}
+              niveauxMap={NIVEAUX_MAP}
+              groupeStatuts={groupeStatuts}
+            />
           )}
         </div>
       )}
