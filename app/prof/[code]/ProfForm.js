@@ -20,7 +20,7 @@ const IconTrash = () => (
 )
 
 // groupeStatuts: { groupe: 'annule'|'maintenu' }  — open = absent
-export default function ProfForm({ profCode, examens, groupeStatuts, dejaRempli }) {
+export default function ProfForm({ profCode, examens, groupeStatuts, dejaRempli, isAdmin }) {
   const allAdminDecided = examens.every(e => groupeStatuts[e.groupe])
 
   const [confirmed, setConfirmed] = useState(!dejaRempli)
@@ -73,7 +73,12 @@ export default function ProfForm({ profCode, examens, groupeStatuts, dejaRempli 
   function isResolved(examId) {
     const st = examState[examId]
     if (!st) return true // admin-decided = auto-resolved
-    return st.eleves.length > 0 || st.statut !== null
+    if (st.statut !== null) return true // 'aucun' or 'tous' selected
+    if (st.eleves.length > 0) {
+      // All élèves must have both nom and prénom filled
+      return st.eleves.every(el => el.nom.trim() && el.prenom.trim())
+    }
+    return false
   }
 
   const openExams = examens.filter(e => !groupeStatuts[e.groupe])
@@ -246,20 +251,23 @@ export default function ProfForm({ profCode, examens, groupeStatuts, dejaRempli 
               <>
                 {nEleves > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
-                    {st.eleves.map((el, idx) => (
+                    {st.eleves.map((el, idx) => {
+                      const nomErr   = submitAttempted && !el.nom.trim()
+                      const prenomErr = submitAttempted && !el.prenom.trim()
+                      return (
                       <div key={idx} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                         <input
-                          placeholder="Nom"
+                          placeholder="Nom *"
                           value={el.nom}
                           onChange={e => updateEleve(ex.id, idx, 'nom', e.target.value)}
-                          className="input"
+                          className={`input${nomErr ? ' error' : ''}`}
                           style={{ flex: 1, padding: '7px 10px', fontSize: 13 }}
                         />
                         <input
-                          placeholder="Prénom"
+                          placeholder="Prénom *"
                           value={el.prenom}
                           onChange={e => updateEleve(ex.id, idx, 'prenom', e.target.value)}
-                          className="input"
+                          className={`input${prenomErr ? ' error' : ''}`}
                           style={{ flex: 1, padding: '7px 10px', fontSize: 13 }}
                         />
                         <button
@@ -272,7 +280,7 @@ export default function ProfForm({ profCode, examens, groupeStatuts, dejaRempli 
                           <IconTrash />
                         </button>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 )}
 

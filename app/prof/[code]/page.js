@@ -1,4 +1,4 @@
-import { requireProf } from '@/lib/auth'
+import { requireProf, verifySession } from '@/lib/auth'
 import { getProfStatus } from '@/actions/prof'
 import { read } from '@/lib/storage'
 import exams from '@/lib/exams.json'
@@ -7,6 +7,7 @@ import ProfForm from './ProfForm'
 export default async function ProfPage({ params }) {
   const { code } = await params
   await requireProf()
+  const isAdmin = await verifySession('admin')
 
   const { dejaRempli } = await getProfStatus(code)
   const locksRaw = await read('admin-locks.json')
@@ -30,11 +31,11 @@ export default async function ProfPage({ params }) {
     <main style={{ maxWidth: 760, margin: '0 auto', padding: '0 16px 48px' }}>
       {/* Header bar */}
       <div style={{ background: 'var(--primary)', margin: '0 -16px 24px', padding: '0 16px', height: 48, display: 'flex', alignItems: 'center', gap: 14 }}>
-        <a href="/prof" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: 'rgba(255,255,255,.55)', fontSize: 12, textDecoration: 'none', padding: '4px 8px', borderRadius: 5 }}>
+        <a href={isAdmin ? '/admin' : '/prof'} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: 'rgba(255,255,255,.55)', fontSize: 12, textDecoration: 'none', padding: '4px 8px', borderRadius: 5 }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
-          Retour
+          {isAdmin ? 'Admin' : 'Retour'}
         </a>
         <img src="/logo.png" alt="Collège des Hayeffes" style={{ height: 38, width: 'auto', filter: 'brightness(0) invert(1)', flexShrink: 0 }} />
         <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,.2)' }} />
@@ -50,6 +51,7 @@ export default async function ProfPage({ params }) {
         examens={profExams}
         groupeStatuts={groupeStatuts}
         dejaRempli={dejaRempli}
+        isAdmin={isAdmin}
       />
     </main>
   )
