@@ -40,13 +40,23 @@ export default function HomePage() {
         gap: 32,
       }}>
         <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-          <img
-            src="http://cste.be/msg/wp-content/uploads/2021/05/Logo_couleur_CollegeEnBlanc.png"
-            alt="Logo école des Hayeffes"
-            width={200}
-            height={80}
-            style={{ height: 'auto', maxWidth: 200 }}
-          />
+          <div style={{
+            background: 'var(--primary)',
+            borderRadius: 16,
+            padding: '20px 32px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 20px rgba(30,58,138,.25)',
+          }}>
+            <img
+              src="http://cste.be/msg/wp-content/uploads/2021/05/Logo_couleur_CollegeEnBlanc.png"
+              alt="Logo école des Hayeffes"
+              width={200}
+              height={80}
+              style={{ height: 'auto', maxWidth: 200, display: 'block' }}
+            />
+          </div>
           <div>
             <h1 style={{ fontSize: 20, fontWeight: 600, margin: '0 0 4px', color: 'var(--fg)' }}>
               Examens juin 2026

@@ -210,27 +210,31 @@ export default async function AdminPage({ searchParams }) {
       {/* ── Verrous ────────────────────────────────────────────── */}
       {tab === 'verrous' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          <div className="card" style={{ padding: '20px 24px' }}>
-            <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', margin: '0 0 12px' }}>
-              Verrouiller par niveau
-            </h2>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {NIVEAUX.map(n => (
-                <div key={n} style={{ display: 'flex', gap: 4 }}>
-                  <form action={lockByNiveau}>
-                    <input type="hidden" name="niveau" value={n} />
-                    <button type="submit" className="btn btn-sm" style={{ background: 'var(--primary)', color: '#fff' }}>
-                      Verrouiller {n}
-                    </button>
-                  </form>
-                  <form action={unlockByNiveau}>
-                    <input type="hidden" name="niveau" value={n} />
-                    <button type="submit" className="btn btn-secondary btn-sm">
-                      Débloquer {n}
-                    </button>
-                  </form>
-                </div>
-              ))}
+          <div>
+            <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', margin: '0 0 12px' }}>Par niveau</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10 }}>
+              {NIVEAUX.map(n => {
+                const total = exams.filter(e => e.niveau === n).length
+                const nLocked = exams.filter(e => e.niveau === n && locked.has(e.id)).length
+                const allLocked = nLocked === total
+                return (
+                  <div key={n} className="card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10, borderColor: allLocked ? '#BBF7D0' : 'var(--border)', background: allLocked ? '#F0FDF4' : 'var(--bg-card)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      <span style={{ fontWeight: 700, fontSize: 18, color: 'var(--fg)' }}>{n}</span>
+                      <span style={{ fontSize: 12, color: 'var(--fg-muted)' }}>{nLocked}/{total}</span>
+                    </div>
+                    <div style={{ width: '100%', background: 'var(--border)', borderRadius: 999, height: 4, overflow: 'hidden' }}>
+                      <div style={{ width: `${(nLocked / total) * 100}%`, background: allLocked ? 'var(--success)' : 'var(--primary)', height: '100%', borderRadius: 999 }} />
+                    </div>
+                    <form action={allLocked ? unlockByNiveau : lockByNiveau}>
+                      <input type="hidden" name="niveau" value={n} />
+                      <button type="submit" className={`btn btn-sm${allLocked ? ' btn-secondary' : ''}`} style={{ width: '100%', ...(allLocked ? {} : { background: 'var(--primary)', color: '#fff' }) }}>
+                        {allLocked ? 'Déverrouiller' : 'Verrouiller'}
+                      </button>
+                    </form>
+                  </div>
+                )
+              })}
             </div>
           </div>
 
