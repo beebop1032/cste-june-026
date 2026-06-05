@@ -15,34 +15,49 @@ export default async function ProfSelectPage() {
 
   return (
     <main style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 24,
-      padding: 24,
+      padding: '24px 16px',
+      background: 'var(--bg)',
     }}>
-      <h1 style={{ fontSize: 20, margin: 0 }}>Sélectionnez votre code prof</h1>
-      <form action={selectProf} style={{ display: 'flex', flexDirection: 'column', gap: 16, width: '100%', maxWidth: 320 }}>
-        <select
-          name="profCode"
-          required
-          defaultValue=""
-          style={{ padding: '10px 14px', fontSize: 16, border: '2px solid #ccc', borderRadius: 8 }}
-        >
-          <option value="" disabled>-- Votre code --</option>
-          {PROF_CODES.map(code => (
-            <option key={code} value={code}>{code}</option>
-          ))}
-        </select>
-        <button
-          type="submit"
-          style={{ padding: '12px 16px', fontSize: 16, background: '#1a1a2e', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}
-        >
-          Continuer →
-        </button>
-      </form>
+      <div style={{ width: '100%', maxWidth: 400, display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div style={{ textAlign: 'center' }}>
+          <h1 style={{ fontSize: 20, fontWeight: 600, margin: '0 0 6px', color: 'var(--fg)' }}>
+            Sélectionnez votre code
+          </h1>
+          <p style={{ margin: 0, fontSize: 14, color: 'var(--fg-muted)' }}>
+            Examens juin 2026 — Collège des Hayeffes
+          </p>
+        </div>
+
+        <div className="card" style={{ padding: '24px', boxShadow: 'var(--shadow)' }}>
+          <form action={selectProf} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div>
+              <label htmlFor="profCode" style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--fg)', marginBottom: 6 }}>
+                Code professeur
+              </label>
+              <select name="profCode" id="profCode" required defaultValue="" className="select">
+                <option value="" disabled>— Sélectionnez votre code —</option>
+                {PROF_CODES.map(code => (
+                  <option key={code} value={code}>{code}</option>
+                ))}
+              </select>
+            </div>
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '12px', fontSize: 15 }}>
+              Continuer
+            </button>
+          </form>
+        </div>
+
+        <p style={{ textAlign: 'center', margin: 0 }}>
+          <a href="/" style={{ fontSize: 13, color: 'var(--fg-muted)', textDecoration: 'none' }}>
+            ← Retour à l'accueil
+          </a>
+        </p>
+      </div>
     </main>
   )
 }

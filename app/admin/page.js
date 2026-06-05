@@ -20,105 +20,131 @@ export default async function AdminPage({ searchParams }) {
 
   const respondedCodes = new Set(Object.keys(responses))
   const missing = ALL_PROF_CODES.filter(c => !respondedCodes.has(c))
-
-  const thStyle = { padding: '8px 12px', textAlign: 'left', background: '#f0f0f0', fontWeight: 600, borderBottom: '2px solid #ddd', whiteSpace: 'nowrap', fontSize: 12 }
-  const tdStyle = { padding: '6px 12px', verticalAlign: 'top', fontSize: 12 }
-
-  function TabLink({ name, label }) {
-    const active = tab === name
-    return (
-      <a href={`/admin?tab=${name}`} style={{
-        padding: '8px 18px', borderRadius: 8, textDecoration: 'none',
-        background: active ? '#1a1a2e' : '#e9e9e9',
-        color: active ? '#fff' : '#333',
-        fontSize: 14, fontWeight: active ? 600 : 400,
-      }}>
-        {label}
-      </a>
-    )
-  }
+  const pct = Math.round((respondedCodes.size / ALL_PROF_CODES.length) * 100)
 
   return (
-    <main style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
-        <h1 style={{ margin: 0, fontSize: 20 }}>Dashboard admin — Examens juin 2026</h1>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <TabLink name="suivi" label={`Suivi (${respondedCodes.size}/${ALL_PROF_CODES.length})`} />
-          <TabLink name="horaire" label="Horaire" />
-          <TabLink name="eleves" label="Élèves" />
-          <TabLink name="verrous" label={`Verrous (${locked.size})`} />
+    <main style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 16px 48px' }}>
+
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h1 style={{ margin: '0 0 2px', fontSize: 18, fontWeight: 600, color: 'var(--fg)' }}>
+            Dashboard admin
+          </h1>
+          <p style={{ margin: 0, fontSize: 13, color: 'var(--fg-muted)' }}>Examens juin 2026 — Collège des Hayeffes</p>
         </div>
+
+        <nav className="tab-bar">
+          {[
+            { name: 'suivi', label: `Suivi (${respondedCodes.size}/${ALL_PROF_CODES.length})` },
+            { name: 'horaire', label: 'Horaire' },
+            { name: 'eleves', label: 'Élèves' },
+            { name: 'verrous', label: `Verrous (${locked.size})` },
+          ].map(t => (
+            <a key={t.name} href={`/admin?tab=${t.name}`} className={`tab${tab === t.name ? ' active' : ''}`}>
+              {t.label}
+            </a>
+          ))}
+        </nav>
       </div>
 
+      {/* ── Suivi ─────────────────────────────────────────────── */}
       {tab === 'suivi' && (
-        <div>
-          <div style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>
-            {respondedCodes.size} / {ALL_PROF_CODES.length} profs ont répondu
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div className="card" style={{ padding: '24px 28px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+              <span style={{ fontSize: 32, fontWeight: 700, color: 'var(--fg)' }}>
+                {respondedCodes.size} <span style={{ fontSize: 16, fontWeight: 400, color: 'var(--fg-muted)' }}>/ {ALL_PROF_CODES.length} profs</span>
+              </span>
+              <span style={{ fontSize: 20, fontWeight: 600, color: pct === 100 ? 'var(--success)' : 'var(--fg-muted)' }}>
+                {pct}%
+              </span>
+            </div>
+            <div style={{ width: '100%', background: 'var(--border)', borderRadius: 999, height: 8, overflow: 'hidden' }}>
+              <div style={{ width: `${pct}%`, background: pct === 100 ? 'var(--success)' : 'var(--primary)', height: '100%', borderRadius: 999, transition: 'width 0.3s ease' }} />
+            </div>
+            {pct === 100 && (
+              <p style={{ margin: '12px 0 0', color: 'var(--success)', fontWeight: 500, fontSize: 14 }}>
+                ✓ Tous les profs ont répondu
+              </p>
+            )}
           </div>
-          <div style={{ width: '100%', background: '#e9e9e9', borderRadius: 8, height: 12, marginBottom: 24, overflow: 'hidden' }}>
-            <div style={{ width: `${(respondedCodes.size / ALL_PROF_CODES.length) * 100}%`, background: '#28a745', height: '100%', borderRadius: 8 }} />
-          </div>
+
           {missing.length > 0 && (
-            <>
-              <h2 style={{ fontSize: 16, marginBottom: 12 }}>Codes manquants ({missing.length})</h2>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            <div>
+              <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', margin: '0 0 10px' }}>
+                Codes manquants ({missing.length})
+              </h2>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {missing.map(c => (
-                  <span key={c} style={{ padding: '4px 12px', background: '#fff3cd', border: '1px solid #ffc107', borderRadius: 20, fontSize: 13 }}>
-                    {c}
-                  </span>
+                  <span key={c} className="badge badge-amber">{c}</span>
                 ))}
               </div>
-            </>
+            </div>
           )}
-          {missing.length === 0 && (
-            <p style={{ color: '#28a745', fontWeight: 600 }}>✓ Tous les profs ont répondu !</p>
+
+          {respondedCodes.size > 0 && (
+            <div>
+              <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', margin: '0 0 10px' }}>
+                Réponses reçues ({respondedCodes.size})
+              </h2>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {[...respondedCodes].sort().map(c => (
+                  <span key={c} className="badge badge-green">{c}</span>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       )}
 
+      {/* ── Horaire ────────────────────────────────────────────── */}
       {tab === 'horaire' && (() => {
         const badge = {}
         for (const ex of exams) {
-          if (locked.has(ex.id)) { badge[ex.id] = { label: 'Complet', color: '#6c757d' }; continue }
+          if (locked.has(ex.id)) { badge[ex.id] = { label: 'Complet', type: 'gray' }; continue }
           const profResp = responses[ex.profCode]
-          if (!profResp) { badge[ex.id] = { label: '—', color: '#aaa' }; continue }
+          if (!profResp) { badge[ex.id] = { label: '—', type: 'gray' }; continue }
           const exResp = profResp.examens?.find(e => e.id === ex.id)
-          if (!exResp) { badge[ex.id] = { label: '—', color: '#aaa' }; continue }
-          if (exResp.eleves.length === 0) { badge[ex.id] = { label: 'Annulé', color: '#dc3545' }; continue }
-          badge[ex.id] = { label: `${exResp.eleves.length} élève(s)`, color: '#28a745' }
+          if (!exResp) { badge[ex.id] = { label: '—', type: 'gray' }; continue }
+          if (exResp.eleves.length === 0) { badge[ex.id] = { label: 'Annulé', type: 'red' }; continue }
+          badge[ex.id] = { label: `${exResp.eleves.length} élève(s)`, type: 'green' }
         }
         return (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-              <thead>
-                <tr>
-                  {['Jour', 'Période', 'Matière', 'Niveau', 'Groupe', 'Prof', 'Local', 'Statut'].map(h => (
-                    <th key={h} style={thStyle}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {exams.map(ex => {
-                  const b = badge[ex.id] ?? { label: '—', color: '#aaa' }
-                  return (
-                    <tr key={ex.id} style={{ borderBottom: '1px solid #eee' }}>
-                      <td style={tdStyle}>{formatJour(ex.jour)}</td>
-                      <td style={tdStyle}>{ex.periode}</td>
-                      <td style={tdStyle}>{ex.matiere}</td>
-                      <td style={tdStyle}>{ex.niveau}</td>
-                      <td style={tdStyle}>{ex.groupe}</td>
-                      <td style={tdStyle}>{ex.profCode}</td>
-                      <td style={tdStyle}>{ex.local}</td>
-                      <td style={{ ...tdStyle, fontWeight: 600, color: b.color }}>{b.label}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+            <div style={{ overflowX: 'auto' }}>
+              <table className="table">
+                <thead>
+                  <tr>
+                    {['Jour', 'Période', 'Matière', 'Niveau', 'Groupe', 'Prof', 'Local', 'Statut'].map(h => (
+                      <th key={h}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {exams.map(ex => {
+                    const b = badge[ex.id] ?? { label: '—', type: 'gray' }
+                    return (
+                      <tr key={ex.id}>
+                        <td>{formatJour(ex.jour)}</td>
+                        <td>{ex.periode}</td>
+                        <td style={{ fontWeight: 500 }}>{ex.matiere}</td>
+                        <td>{ex.niveau}</td>
+                        <td>{ex.groupe}</td>
+                        <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{ex.profCode}</td>
+                        <td>{ex.local}</td>
+                        <td><span className={`badge badge-${b.type}`}>{b.label}</span></td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )
       })()}
 
+      {/* ── Élèves ─────────────────────────────────────────────── */}
       {tab === 'eleves' && (() => {
         const rows = []
         for (const prof of Object.values(responses)) {
@@ -131,65 +157,76 @@ export default async function AdminPage({ searchParams }) {
           }
         }
         return (
-          <div>
-            <div style={{ marginBottom: 16, display: 'flex', gap: 12 }}>
-              <a href="/api/export?format=csv" style={{ padding: '8px 18px', background: '#28a745', color: '#fff', borderRadius: 8, textDecoration: 'none', fontSize: 14 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+              <a href="/api/export?format=csv" className="btn btn-sm" style={{ background: 'var(--success)', color: '#fff', textDecoration: 'none' }}>
                 Export CSV
               </a>
-              <a href="/api/export?format=xlsx" style={{ padding: '8px 18px', background: '#007bff', color: '#fff', borderRadius: 8, textDecoration: 'none', fontSize: 14 }}>
+              <a href="/api/export?format=xlsx" className="btn btn-sm" style={{ background: 'var(--primary)', color: '#fff', textDecoration: 'none' }}>
                 Export XLSX
               </a>
-              <span style={{ fontSize: 13, color: '#666', alignSelf: 'center' }}>{rows.length} élève(s) au total</span>
+              <span style={{ fontSize: 13, color: 'var(--fg-muted)' }}>{rows.length} élève(s) au total</span>
             </div>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-                <thead>
-                  <tr>
-                    {['Prof', 'Jour', 'Période', 'Niveau', 'Groupe', 'Matière', 'Local', 'Nom', 'Prénom', 'Surveille'].map(h => (
-                      <th key={h} style={thStyle}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((r, i) => (
-                    <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
-                      <td style={tdStyle}>{r.profCode}</td>
-                      <td style={tdStyle}>{formatJour(r.jour)}</td>
-                      <td style={tdStyle}>{r.periode}</td>
-                      <td style={tdStyle}>{r.niveau}</td>
-                      <td style={tdStyle}>{r.groupe}</td>
-                      <td style={tdStyle}>{r.matiere}</td>
-                      <td style={tdStyle}>{r.local}</td>
-                      <td style={tdStyle}>{r.nom}</td>
-                      <td style={tdStyle}>{r.prenom}</td>
-                      <td style={tdStyle}>{r.surveille ? 'Oui' : 'Non'}</td>
+            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+              <div style={{ overflowX: 'auto' }}>
+                <table className="table">
+                  <thead>
+                    <tr>
+                      {['Prof', 'Jour', 'Période', 'Niveau', 'Groupe', 'Matière', 'Local', 'Nom', 'Prénom', 'Surveille'].map(h => (
+                        <th key={h}>{h}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-              {rows.length === 0 && <p style={{ color: '#888', marginTop: 16 }}>Aucune réponse reçue.</p>}
+                  </thead>
+                  <tbody>
+                    {rows.map((r, i) => (
+                      <tr key={i}>
+                        <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{r.profCode}</td>
+                        <td>{formatJour(r.jour)}</td>
+                        <td>{r.periode}</td>
+                        <td>{r.niveau}</td>
+                        <td>{r.groupe}</td>
+                        <td style={{ fontWeight: 500 }}>{r.matiere}</td>
+                        <td>{r.local}</td>
+                        <td style={{ fontWeight: 500 }}>{r.nom}</td>
+                        <td>{r.prenom}</td>
+                        <td>
+                          <span className={`badge badge-${r.surveille ? 'blue' : 'gray'}`}>
+                            {r.surveille ? 'Oui' : 'Non'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {rows.length === 0 && (
+                <p style={{ color: 'var(--fg-muted)', margin: '24px 20px', fontSize: 14 }}>Aucune réponse reçue.</p>
+              )}
             </div>
           </div>
         )
       })()}
 
+      {/* ── Verrous ────────────────────────────────────────────── */}
       {tab === 'verrous' && (
-        <div>
-          <div style={{ marginBottom: 28 }}>
-            <h2 style={{ fontSize: 16, marginBottom: 12 }}>Verrouiller par niveau</h2>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div className="card" style={{ padding: '20px 24px' }}>
+            <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', margin: '0 0 12px' }}>
+              Verrouiller par niveau
+            </h2>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {NIVEAUX.map(n => (
                 <div key={n} style={{ display: 'flex', gap: 4 }}>
                   <form action={lockByNiveau}>
                     <input type="hidden" name="niveau" value={n} />
-                    <button type="submit" style={{ padding: '6px 14px', background: '#6c757d', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
-                      🔒 Tout {n}
+                    <button type="submit" className="btn btn-sm" style={{ background: 'var(--fg)', color: '#fff' }}>
+                      Bloquer {n}
                     </button>
                   </form>
                   <form action={unlockByNiveau}>
                     <input type="hidden" name="niveau" value={n} />
-                    <button type="submit" style={{ padding: '6px 14px', background: '#fff', color: '#6c757d', border: '1px solid #6c757d', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>
-                      🔓 Tout {n}
+                    <button type="submit" className="btn btn-secondary btn-sm">
+                      Débloquer {n}
                     </button>
                   </form>
                 </div>
@@ -197,43 +234,48 @@ export default async function AdminPage({ searchParams }) {
             </div>
           </div>
 
-          <h2 style={{ fontSize: 16, marginBottom: 12 }}>Par examen ({locked.size} verrouillé(s) sur {exams.length})</h2>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-              <thead>
-                <tr>
-                  {['Matière', 'Niveau', 'Groupe', 'Prof', 'Jour', 'Période', 'Local', 'État'].map(h => (
-                    <th key={h} style={thStyle}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {exams.map(ex => (
-                  <tr key={ex.id} style={{ borderBottom: '1px solid #eee', background: locked.has(ex.id) ? '#f8f9fa' : 'transparent' }}>
-                    <td style={tdStyle}>{ex.matiere}</td>
-                    <td style={tdStyle}>{ex.niveau}</td>
-                    <td style={tdStyle}>{ex.groupe}</td>
-                    <td style={tdStyle}>{ex.profCode}</td>
-                    <td style={tdStyle}>{formatJour(ex.jour)}</td>
-                    <td style={tdStyle}>{ex.periode}</td>
-                    <td style={tdStyle}>{ex.local}</td>
-                    <td style={tdStyle}>
-                      <form action={toggleLock}>
-                        <input type="hidden" name="examId" value={ex.id} />
-                        <button type="submit" style={{
-                          padding: '3px 10px', fontSize: 12, cursor: 'pointer', borderRadius: 4, border: 'none',
-                          background: locked.has(ex.id) ? '#6c757d' : '#e9e9e9',
-                          color: locked.has(ex.id) ? '#fff' : '#333',
-                          whiteSpace: 'nowrap',
-                        }}>
-                          {locked.has(ex.id) ? '🔒 Complet' : '🔓 Ouvrir'}
-                        </button>
-                      </form>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div>
+            <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', margin: '0 0 10px' }}>
+              Par examen <span style={{ color: 'var(--fg-muted)', fontWeight: 400 }}>({locked.size} verrouillé(s) sur {exams.length})</span>
+            </h2>
+            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+              <div style={{ overflowX: 'auto' }}>
+                <table className="table">
+                  <thead>
+                    <tr>
+                      {['Matière', 'Niveau', 'Groupe', 'Prof', 'Jour', 'Période', 'Local', 'État'].map(h => (
+                        <th key={h}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {exams.map(ex => (
+                      <tr key={ex.id} style={{ background: locked.has(ex.id) ? '#F0FDF4' : undefined }}>
+                        <td style={{ fontWeight: 500 }}>{ex.matiere}</td>
+                        <td>{ex.niveau}</td>
+                        <td>{ex.groupe}</td>
+                        <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{ex.profCode}</td>
+                        <td>{formatJour(ex.jour)}</td>
+                        <td>{ex.periode}</td>
+                        <td>{ex.local}</td>
+                        <td>
+                          <form action={toggleLock}>
+                            <input type="hidden" name="examId" value={ex.id} />
+                            <button
+                              type="submit"
+                              className={`btn btn-xs ${locked.has(ex.id) ? '' : 'btn-secondary'}`}
+                              style={locked.has(ex.id) ? { background: 'var(--success)', color: '#fff' } : {}}
+                            >
+                              {locked.has(ex.id) ? 'Complet' : 'Ouvrir'}
+                            </button>
+                          </form>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       )}

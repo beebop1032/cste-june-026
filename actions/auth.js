@@ -2,7 +2,7 @@
 import { redirect } from 'next/navigation'
 import { setSessionCookie } from '@/lib/auth'
 
-export async function checkCode(formData) {
+export async function checkCode(prevState, formData) {
   const code = formData.get('code')?.trim()
   if (code === process.env.ADMIN_KEY) {
     await setSessionCookie('admin')

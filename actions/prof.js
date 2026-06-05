@@ -23,12 +23,17 @@ export async function submitProf(profCode, payload) {
   const existing = await read(`prof-${profCode}.json`)
   const version = existing ? (existing.version ?? 0) + 1 : 1
 
-  await writeFileSafe(`prof-${profCode}.json`, {
-    profCode,
-    submittedAt: new Date().toISOString(),
-    version,
-    examens: payload.examens,
-  })
+  try {
+    await writeFileSafe(`prof-${profCode}.json`, {
+      profCode,
+      submittedAt: new Date().toISOString(),
+      version,
+      examens: payload.examens,
+    })
+  } catch (err) {
+    console.error('writeFileSafe failed:', err)
+    return { error: 'Erreur de sauvegarde. Veuillez réessayer.' }
+  }
 
   return { ok: true }
 }

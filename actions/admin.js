@@ -10,7 +10,11 @@ export async function toggleLock(formData) {
   const set = new Set(current.locked)
   if (set.has(examId)) set.delete(examId)
   else set.add(examId)
-  await writeFileSafe('admin-locks.json', { locked: [...set], updatedAt: new Date().toISOString() })
+  try {
+    await writeFileSafe('admin-locks.json', { locked: [...set], updatedAt: new Date().toISOString() })
+  } catch (err) {
+    console.error('toggleLock write failed:', err)
+  }
 }
 
 export async function lockByNiveau(formData) {
@@ -19,7 +23,11 @@ export async function lockByNiveau(formData) {
   const current = (await read('admin-locks.json')) ?? { locked: [] }
   const set = new Set(current.locked)
   exams.filter(e => e.niveau === niveau).forEach(e => set.add(e.id))
-  await writeFileSafe('admin-locks.json', { locked: [...set], updatedAt: new Date().toISOString() })
+  try {
+    await writeFileSafe('admin-locks.json', { locked: [...set], updatedAt: new Date().toISOString() })
+  } catch (err) {
+    console.error('lockByNiveau write failed:', err)
+  }
 }
 
 export async function unlockByNiveau(formData) {
@@ -28,7 +36,11 @@ export async function unlockByNiveau(formData) {
   const current = (await read('admin-locks.json')) ?? { locked: [] }
   const niveauIds = new Set(exams.filter(e => e.niveau === niveau).map(e => e.id))
   const filtered = current.locked.filter(id => !niveauIds.has(id))
-  await writeFileSafe('admin-locks.json', { locked: filtered, updatedAt: new Date().toISOString() })
+  try {
+    await writeFileSafe('admin-locks.json', { locked: filtered, updatedAt: new Date().toISOString() })
+  } catch (err) {
+    console.error('unlockByNiveau write failed:', err)
+  }
 }
 
 export async function getAllResponses() {

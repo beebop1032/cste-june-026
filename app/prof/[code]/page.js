@@ -17,20 +17,31 @@ export default async function ProfPage({ params }) {
 
   if (profExams.length === 0) {
     return (
-      <main style={{ maxWidth: 600, margin: '0 auto', padding: 24, textAlign: 'center' }}>
-        <p style={{ color: '#666' }}>Aucun examen trouvé pour le code « {code} ».</p>
-        <a href="/prof" style={{ color: '#1a1a2e' }}>← Retour</a>
+      <main style={{ maxWidth: 600, margin: '0 auto', padding: '32px 16px', textAlign: 'center' }}>
+        <div className="card" style={{ padding: '40px 24px' }}>
+          <p style={{ margin: '0 0 16px', color: 'var(--fg-muted)', fontSize: 15 }}>
+            Aucun examen trouvé pour le code <strong>{code}</strong>.
+          </p>
+          <a href="/prof" className="btn btn-secondary btn-sm">← Retour</a>
+        </div>
       </main>
     )
   }
 
   return (
-    <main style={{ maxWidth: 800, margin: '0 auto', padding: 24 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
-        <a href="/prof" style={{ color: '#666', textDecoration: 'none', fontSize: 14 }}>← Retour</a>
-        <h1 style={{ fontSize: 20, margin: 0 }}>Prof : {code}</h1>
+    <main style={{ maxWidth: 760, margin: '0 auto', padding: '24px 16px 48px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
+        <a href="/prof" className="btn btn-ghost btn-sm" style={{ padding: '6px 10px' }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          Retour
+        </a>
+        <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: 'var(--fg)' }}>
+          Prof : <span style={{ fontFamily: 'monospace', color: 'var(--primary)' }}>{code}</span>
+        </h1>
       </div>
-      <p style={{ color: '#666', marginBottom: 24, fontSize: 14 }}>
+      <p style={{ color: 'var(--fg-muted)', marginBottom: 24, fontSize: 13, marginLeft: 2 }}>
         Indiquez les élèves présents pour chaque examen. Zéro élève = examen annulé.
       </p>
       <ProfForm
