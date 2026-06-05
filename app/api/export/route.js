@@ -1,5 +1,5 @@
 import { requireAdmin } from '@/lib/auth'
-import { listFiles, read, writeFileSafe } from '@/lib/storage'
+import { listFiles, read, writeFileSafe, deleteFile } from '@/lib/storage'
 import exams from '@/lib/exams.json'
 
 export async function GET(request) {
@@ -18,6 +18,14 @@ export async function GET(request) {
   // List all current prof files
   const allFiles     = await listFiles('prof-')
   const currentFiles = allFiles.filter(f => /^prof-[^.]+\.json$/.test(f) && !/-v\d+\.json$/.test(f))
+
+  if (format === 'cleanup-debug') {
+    const { list, del } = await import('@vercel/blob')
+    const { blobs } = await list({ prefix: 'debug-probe' })
+    const urls = blobs.map(b => b.url)
+    if (urls.length) await del(urls)
+    return Response.json({ deleted: blobs.map(b => b.pathname) })
+  }
 
   if (format === 'debug') {
     // Test: write a probe file and read it back to verify the full read/write cycle
