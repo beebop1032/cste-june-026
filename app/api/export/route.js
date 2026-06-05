@@ -11,9 +11,10 @@ export async function GET(request) {
   const groupeFilter = searchParams.get('groupe')  ?? null
   const niveauFilter = searchParams.get('niveau')  ?? null
 
-  // Load admin groupe-level statuts (these override prof submissions)
-  const locksRaw = await read('admin-locks.json')
+  // Load admin statuts (exam-level overrides groupe-level)
+  const locksRaw      = await read('admin-locks.json')
   const groupeStatuts = locksRaw?.groupeStatuts ?? {}
+  const examStatuts   = locksRaw?.examStatuts   ?? {}
 
   // List all current prof files
   const allFiles     = await listFiles('prof-')
@@ -31,9 +32,12 @@ export async function GET(request) {
   async function buildPartMap() {
     const map = new Map()
     for (const ex of exams) {
+      // exam-level overrides groupe-level
+      const es = examStatuts[ex.id]
       const gs = groupeStatuts[ex.groupe]
-      if (gs === 'annule')   map.set(ex.id, { label: 'Annulé', type: 'annule' })
-      else if (gs === 'maintenu') map.set(ex.id, { label: 'Tous', type: 'tous' })
+      const s  = es ?? gs
+      if (s === 'annule')   map.set(ex.id, { label: 'Annulé', type: 'annule' })
+      else if (s === 'maintenu') map.set(ex.id, { label: 'Tous', type: 'tous' })
     }
     for (const f of currentFiles) {
       const prof = await read(f)
@@ -273,8 +277,8 @@ export async function GET(request) {
   // (no prof submission needed for these)
   const coveredByAdmin = new Set()
   for (const ex of exams) {
-    const gs = groupeStatuts[ex.groupe]
-    if (!gs) continue // open → handled by prof submission
+    const s = examStatuts[ex.id] ?? groupeStatuts[ex.groupe]
+    if (!s) continue // open → handled by prof submission
     if (groupeFilter && ex.groupe !== groupeFilter) continue
     if (niveauFilter && ex.niveau !== niveauFilter) continue
     if (profFilter && ex.profCode !== profFilter) continue
@@ -284,9 +288,9 @@ export async function GET(request) {
       niveau: ex.niveau, groupe: ex.groupe, matiere: ex.matiere, local: ex.local,
       surveilleParTitulaire: 'Non',
     }
-    if (gs === 'annule') {
+    if (s === 'annule') {
       rows.push({ ...base, nom: '', prenom: '', participation: "Annulé par l'administration" })
-    } else if (gs === 'maintenu') {
+    } else if (s === 'maintenu') {
       rows.push({ ...base, nom: '(tous les élèves)', prenom: '', participation: 'Maintenu pour tous les élèves' })
     }
   }

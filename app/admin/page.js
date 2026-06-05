@@ -34,6 +34,7 @@ export default async function AdminPage({ searchParams }) {
 
   const [responses, locksData] = await Promise.all([getAllResponses(), getLocksData()])
   const groupeStatuts = locksData.groupeStatuts ?? {}
+  const examStatuts   = locksData.examStatuts   ?? {}
 
   const respondedCodes = new Set(Object.keys(responses))
 
@@ -224,6 +225,7 @@ export default async function AdminPage({ searchParams }) {
               niveaux={NIVEAUX}
               niveauxMap={NIVEAUX_MAP}
               groupeStatuts={groupeStatuts}
+              examStatuts={examStatuts}
             />
           )}
         </div>

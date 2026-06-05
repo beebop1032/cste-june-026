@@ -4,66 +4,50 @@ import { requireAdmin } from '@/lib/auth'
 import { read, writeFileSafe, listFiles, deleteFile } from '@/lib/storage'
 import exams from '@/lib/exams.json'
 
-// Normalise to new { groupeStatuts: { groupe: 'annule'|'maintenu' } } format
 function normalise(raw) {
-  if (!raw) return { groupeStatuts: {} }
-  if (raw.groupeStatuts) return { groupeStatuts: raw.groupeStatuts }
-  // Old per-exam format → drop (not migrable to per-groupe)
-  return { groupeStatuts: {} }
+  if (!raw) return { groupeStatuts: {}, examStatuts: {} }
+  return {
+    groupeStatuts: raw.groupeStatuts ?? {},
+    examStatuts:   raw.examStatuts   ?? {},
+  }
 }
+
+async function save(groupeStatuts, examStatuts) {
+  await writeFileSafe('admin-locks.json', { groupeStatuts, examStatuts, updatedAt: new Date().toISOString() })
+}
+
+// ── Groupe ──────────────────────────────────────────────────────────────────
 
 export async function setGroupeStatut(formData) {
   await requireAdmin()
   const groupe = formData.get('groupe')
-  const statut = formData.get('statut') // 'open' | 'annule' | 'maintenu'
+  const statut = formData.get('statut')
   if (!groupe || !['open', 'annule', 'maintenu'].includes(statut)) return
   const current = normalise(await read('admin-locks.json'))
   const groupeStatuts = { ...current.groupeStatuts }
+  const examStatuts   = { ...current.examStatuts }
   if (statut === 'open') delete groupeStatuts[groupe]
   else groupeStatuts[groupe] = statut
-  try {
-    await writeFileSafe('admin-locks.json', { groupeStatuts, updatedAt: new Date().toISOString() })
-  } catch (err) {
-    console.error('setGroupeStatut write failed:', err)
-  }
+  // Clear per-exam overrides for this groupe
+  for (const ex of exams.filter(e => e.groupe === groupe)) delete examStatuts[ex.id]
+  try { await save(groupeStatuts, examStatuts) } catch (err) { console.error(err) }
   redirect('/admin?tab=verrous&vue=classe&ok=1')
 }
 
-// Variante sans redirect — utilisée par les composants client pour éviter le rechargement
 export async function setGroupeStatutSilent(groupe, statut) {
   await requireAdmin()
   if (!groupe || !['open', 'annule', 'maintenu'].includes(statut)) return { error: 'Invalide' }
   const current = normalise(await read('admin-locks.json'))
   const groupeStatuts = { ...current.groupeStatuts }
+  const examStatuts   = { ...current.examStatuts }
   if (statut === 'open') delete groupeStatuts[groupe]
   else groupeStatuts[groupe] = statut
-  try {
-    await writeFileSafe('admin-locks.json', { groupeStatuts, updatedAt: new Date().toISOString() })
-    return { ok: true }
-  } catch (err) {
-    console.error('setGroupeStatutSilent write failed:', err)
-    return { error: 'Erreur de sauvegarde' }
-  }
+  for (const ex of exams.filter(e => e.groupe === groupe)) delete examStatuts[ex.id]
+  try { await save(groupeStatuts, examStatuts); return { ok: true } }
+  catch (err) { console.error(err); return { error: 'Erreur' } }
 }
 
-export async function setNiveauStatutSilent(niveau, statut) {
-  await requireAdmin()
-  if (!niveau || !['open', 'annule', 'maintenu'].includes(statut)) return { error: 'Invalide' }
-  const current = normalise(await read('admin-locks.json'))
-  const groupeStatuts = { ...current.groupeStatuts }
-  const niveauGroupes = [...new Set(exams.filter(e => e.niveau === niveau).map(e => e.groupe))]
-  for (const g of niveauGroupes) {
-    if (statut === 'open') delete groupeStatuts[g]
-    else groupeStatuts[g] = statut
-  }
-  try {
-    await writeFileSafe('admin-locks.json', { groupeStatuts, updatedAt: new Date().toISOString() })
-    return { ok: true }
-  } catch (err) {
-    console.error('setNiveauStatutSilent write failed:', err)
-    return { error: 'Erreur de sauvegarde' }
-  }
-}
+// ── Niveau ──────────────────────────────────────────────────────────────────
 
 export async function setNiveauStatut(formData) {
   await requireAdmin()
@@ -72,28 +56,53 @@ export async function setNiveauStatut(formData) {
   if (!niveau || !['open', 'annule', 'maintenu'].includes(statut)) return
   const current = normalise(await read('admin-locks.json'))
   const groupeStatuts = { ...current.groupeStatuts }
-  const niveauGroupes = [...new Set(exams.filter(e => e.niveau === niveau).map(e => e.groupe))]
-  for (const g of niveauGroupes) {
+  const examStatuts   = { ...current.examStatuts }
+  const niveauExams   = exams.filter(e => e.niveau === niveau)
+  for (const g of [...new Set(niveauExams.map(e => e.groupe))]) {
     if (statut === 'open') delete groupeStatuts[g]
     else groupeStatuts[g] = statut
   }
-  try {
-    await writeFileSafe('admin-locks.json', { groupeStatuts, updatedAt: new Date().toISOString() })
-  } catch (err) {
-    console.error('setNiveauStatut write failed:', err)
-  }
+  for (const ex of niveauExams) delete examStatuts[ex.id]
+  try { await save(groupeStatuts, examStatuts) } catch (err) { console.error(err) }
   redirect('/admin?tab=verrous&ok=1')
 }
+
+export async function setNiveauStatutSilent(niveau, statut) {
+  await requireAdmin()
+  if (!niveau || !['open', 'annule', 'maintenu'].includes(statut)) return { error: 'Invalide' }
+  const current = normalise(await read('admin-locks.json'))
+  const groupeStatuts = { ...current.groupeStatuts }
+  const examStatuts   = { ...current.examStatuts }
+  const niveauExams   = exams.filter(e => e.niveau === niveau)
+  for (const g of [...new Set(niveauExams.map(e => e.groupe))]) {
+    if (statut === 'open') delete groupeStatuts[g]
+    else groupeStatuts[g] = statut
+  }
+  for (const ex of niveauExams) delete examStatuts[ex.id]
+  try { await save(groupeStatuts, examStatuts); return { ok: true } }
+  catch (err) { console.error(err); return { error: 'Erreur' } }
+}
+
+// ── Exam individuel ──────────────────────────────────────────────────────────
+
+export async function setExamStatutSilent(examId, statut) {
+  await requireAdmin()
+  if (!examId || !['open', 'annule', 'maintenu'].includes(statut)) return { error: 'Invalide' }
+  const current = normalise(await read('admin-locks.json'))
+  const examStatuts = { ...current.examStatuts }
+  if (statut === 'open') delete examStatuts[examId]
+  else examStatuts[examId] = statut
+  try { await save(current.groupeStatuts, examStatuts); return { ok: true } }
+  catch (err) { console.error(err); return { error: 'Erreur' } }
+}
+
+// ── Misc ─────────────────────────────────────────────────────────────────────
 
 export async function resetAllData() {
   await requireAdmin()
   const files = await listFiles('prof-')
   await Promise.all(files.map(f => deleteFile(f)))
-  try {
-    await writeFileSafe('admin-locks.json', { groupeStatuts: {}, updatedAt: new Date().toISOString() })
-  } catch (err) {
-    console.error('resetAllData write failed:', err)
-  }
+  try { await save({}, {}) } catch (err) { console.error(err) }
   redirect('/admin?tab=suivi')
 }
 
