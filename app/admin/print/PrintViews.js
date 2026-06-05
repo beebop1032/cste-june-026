@@ -544,6 +544,8 @@ export default function PrintViews({ exams, partData, allGroupes, allProfs }) {
         <a href="/admin" className="back-link">
           <BackIcon /> Admin
         </a>
+        <img src="/logo.png" alt="Collège des Hayeffes" width={120} height={48} style={{ height: 26, width: 'auto', filter: 'brightness(0) invert(1)', opacity: .85 }} />
+        <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,.2)' }} />
         <div>
           <div className="topbar-title">Vues imprimables</div>
           <div className="topbar-sub">Examens juin 2026 — Collège des Hayeffes</div>

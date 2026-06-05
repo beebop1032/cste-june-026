@@ -27,19 +27,24 @@ export default async function ProfPage({ params }) {
   }
 
   return (
-    <main style={{ maxWidth: 760, margin: '0 auto', padding: '24px 16px 48px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
-        <a href="/prof" className="btn btn-ghost btn-sm" style={{ padding: '6px 10px' }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <main style={{ maxWidth: 760, margin: '0 auto', padding: '0 16px 48px' }}>
+      {/* Header bar */}
+      <div style={{ background: 'var(--primary)', margin: '0 -16px 24px', padding: '0 16px', height: 48, display: 'flex', alignItems: 'center', gap: 14 }}>
+        <a href="/prof" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: 'rgba(255,255,255,.6)', fontSize: 12, textDecoration: 'none', padding: '4px 8px', borderRadius: 5, transition: 'background .15s' }}
+          onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,.1)'}
+          onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
           Retour
         </a>
-        <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: 'var(--fg)' }}>
-          Prof : <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--primary)', fontSize: 17 }}>{code}</span>
-        </h1>
+        <img src="/logo.png" alt="Collège des Hayeffes" width={120} height={48} style={{ height: 26, width: 'auto', filter: 'brightness(0) invert(1)', opacity: .85 }} />
+        <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,.2)' }} />
+        <span style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>
+          Prof <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13 }}>{code}</span>
+        </span>
       </div>
-      <p style={{ color: 'var(--fg-muted)', marginBottom: 24, fontSize: 13, marginLeft: 2 }}>
+      <p style={{ color: 'var(--fg-muted)', marginBottom: 20, fontSize: 13 }}>
         Indiquez le statut de chaque examen. Vous devez renseigner tous les examens avant de pouvoir envoyer.
       </p>
       <ProfForm

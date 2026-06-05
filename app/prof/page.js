@@ -24,13 +24,18 @@ export default async function ProfSelectPage() {
       background: 'var(--bg)',
     }}>
       <div style={{ width: '100%', maxWidth: 400, display: 'flex', flexDirection: 'column', gap: 24 }}>
-        <div style={{ textAlign: 'center' }}>
-          <h1 style={{ fontSize: 20, fontWeight: 600, margin: '0 0 6px', color: 'var(--fg)' }}>
-            Sélectionnez votre code
-          </h1>
-          <p style={{ margin: 0, fontSize: 14, color: 'var(--fg-muted)' }}>
-            Examens juin 2026 — Collège des Hayeffes
-          </p>
+        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+          <div style={{ background: 'var(--primary)', borderRadius: 10, padding: '10px 24px' }}>
+            <img src="/logo.png" alt="Collège des Hayeffes" width={160} height={64} style={{ height: 36, width: 'auto', display: 'block', filter: 'brightness(0) invert(1)' }} />
+          </div>
+          <div>
+            <h1 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 4px', color: 'var(--fg)' }}>
+              Sélectionnez votre code
+            </h1>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--fg-muted)' }}>
+              Examens juin 2026 — Collège des Hayeffes
+            </p>
+          </div>
         </div>
 
         <div className="card" style={{ padding: '24px', boxShadow: 'var(--shadow)' }}>
