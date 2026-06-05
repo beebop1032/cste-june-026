@@ -36,7 +36,7 @@ export default function ProfForm({ profCode, examens, groupeStatuts, dejaRempli 
   function addEleve(examId) {
     setExamState(s => ({
       ...s,
-      [examId]: { ...s[examId], eleves: [...s[examId].eleves, { nom: '', prenom: '' }] }
+      [examId]: { ...s[examId], statut: null, eleves: [...s[examId].eleves, { nom: '', prenom: '' }] }
     }))
   }
 
