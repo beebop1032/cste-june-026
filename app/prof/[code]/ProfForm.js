@@ -245,12 +245,12 @@ export default function ProfForm({ profCode, examens, statuts, dejaRempli }) {
                       ? { background: 'var(--destructive)', color: '#fff' }
                       : { background: '#FEF2F2', color: 'var(--destructive)', border: '1.5px solid #FECACA' }}
                   >
-                    {choix === 'aucun' ? '✓ ' : ''}Aucun élève ne participe
+                    {choix === 'aucun' ? '✓ ' : ''}Aucun élève ne doit participer
                   </button>
                 </div>
 
                 {/* Surveille */}
-                {(nEleves > 0 || choix !== null) && (
+                {(nEleves > 0 || (choix !== null && choix !== 'aucun')) && (
                   <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer', color: 'var(--fg-muted)', userSelect: 'none', marginTop: 8 }}>
                     <input
                       type="checkbox"
