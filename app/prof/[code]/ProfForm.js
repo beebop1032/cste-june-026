@@ -219,7 +219,7 @@ export default function ProfForm({ profCode, examens, groupeStatuts, dejaRempli 
               <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                 <span className="badge badge-gray" style={{ fontSize: 12 }}>{formatJour(ex.jour)}</span>
                 <span className="badge badge-gray" style={{ fontSize: 12 }}>{ex.periode}</span>
-                <span className="badge badge-blue" style={{ fontSize: 12 }}>{ex.local}</span>
+
                 {gs === 'annule'   && <span className="badge badge-red">Annulé par l'administration</span>}
                 {gs === 'maintenu' && <span className="badge badge-blue">Maintenu pour tous</span>}
                 {!isBlocked && choix === 'aucun' && <span className="badge badge-red">Aucun élève</span>}
