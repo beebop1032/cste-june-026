@@ -58,7 +58,7 @@ Le fichier `Surveillance exam juin2026.xlsx` (feuille « Feuil1 ») contient l'h
 ]
 ```
 
-L'`id` est construit comme `{profCode}-{matiere_slug}-{groupe}-{jour_DD}-{periode}`.
+L'`id` est construit comme `{profCode}-{matiere_slug}-{groupe}-{jour_DD}-{periode}`, où `matiere_slug` = lowercase, sans accents, tirets à la place des espaces (ex. `mathematiques`, `francais-oral`).
 
 ### `prof-{CODE}.json` (réponse courante)
 
@@ -122,8 +122,9 @@ Les archives ne sont jamais supprimées automatiquement.
 app/
   page.js                    ← accueil : saisie du code d'accès
   prof/
+    page.js                  ← sélecteur du code prof (dropdown)
     [code]/
-      page.js                ← sélecteur de prof + formulaire
+      page.js                ← formulaire du prof
   admin/
     page.js                  ← dashboard admin
   api/
@@ -147,8 +148,8 @@ data/                        ← fallback local (gitignored sauf .gitkeep)
 
 ### Flux prof
 
-1. **Accueil** : saisie du code `AIF2026LCK` → cookie httpOnly signé (8h) → redirect `/prof/[code]`
-2. **Sélection du code prof** : liste déroulante de tous les codes profs extraits de `exams.json`
+1. **Accueil** : saisie du code `AIF2026LCK` → cookie httpOnly signé (8h) → redirect `/prof`
+2. **Sélection du code prof** (`/prof`) : liste déroulante de tous les codes profs extraits de `exams.json` → redirect `/prof/[code]`
 3. **Statut** : Server Action `getProfStatus(code)` → `{ dejaRempli: boolean }` — jamais les données réelles
 4. **Si déjà rempli** : bandeau orange « Déjà rempli — vous allez écraser les réponses existantes » + bouton de confirmation obligatoire avant d'afficher le formulaire
 5. **Formulaire** : liste de cartes d'examens, une par examen du prof
