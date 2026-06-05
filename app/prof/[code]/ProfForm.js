@@ -310,7 +310,7 @@ export default function ProfForm({ profCode, examens, groupeStatuts, dejaRempli 
                       onChange={e => toggleSurveille(ex.id, e.target.checked)}
                       style={{ accentColor: 'var(--primary)', width: 14, height: 14 }}
                     />
-                    Je surveille moi-même cet examen
+                    Je souhaite surveiller cet examen
                   </label>
                 )}
               </>
