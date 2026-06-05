@@ -11,55 +11,69 @@ export async function GET(request) {
   const groupeFilter = searchParams.get('groupe')  ?? null
   const niveauFilter = searchParams.get('niveau')  ?? null
 
-  // List all prof files — accept any code (letters, digits, hyphens)
-  const allFiles    = await listFiles('prof-')
+  // Load admin groupe-level statuts (these override prof submissions)
+  const locksRaw = await read('admin-locks.json')
+  const groupeStatuts = locksRaw?.groupeStatuts ?? {}
+
+  // List all current prof files
+  const allFiles     = await listFiles('prof-')
   const currentFiles = allFiles.filter(f => /^prof-[^.]+\.json$/.test(f) && !/-v\d+\.json$/.test(f))
 
-  // Debug format: show raw storage state
   if (format === 'debug') {
-    return Response.json({
-      allFiles,
-      currentFiles,
-      useBlob: !!process.env.BLOB_READ_WRITE_TOKEN,
-    })
+    return Response.json({ allFiles, currentFiles, groupeStatuts, useBlob: !!process.env.BLOB_READ_WRITE_TOKEN })
   }
 
   const rows = []
+
+  // Helper: build rows for exams governed by admin classe-level status
+  // (no prof submission needed for these)
+  const coveredByAdmin = new Set()
+  for (const ex of exams) {
+    const gs = groupeStatuts[ex.groupe]
+    if (!gs) continue // open → handled by prof submission
+    if (groupeFilter && ex.groupe !== groupeFilter) continue
+    if (niveauFilter && ex.niveau !== niveauFilter) continue
+    if (profFilter && ex.profCode !== profFilter) continue
+    coveredByAdmin.add(ex.id)
+    const base = {
+      prof: ex.profCode, jour: ex.jour, periode: ex.periode,
+      niveau: ex.niveau, groupe: ex.groupe, matiere: ex.matiere, local: ex.local,
+      surveilleParTitulaire: 'Non',
+    }
+    if (gs === 'annule') {
+      rows.push({ ...base, nom: '', prenom: '', participation: "Annulé par l'administration" })
+    } else if (gs === 'maintenu') {
+      rows.push({ ...base, nom: '(tous les élèves)', prenom: '', participation: 'Maintenu pour tous les élèves' })
+    }
+  }
+
+  // Prof-submitted data for open groupes
   for (const f of currentFiles) {
     const prof = await read(f)
     if (!prof) continue
     if (profFilter && prof.profCode !== profFilter) continue
 
     for (const ex of prof.examens ?? []) {
+      if (coveredByAdmin.has(ex.id)) continue // admin override takes precedence
       const meta = exams.find(e => e.id === ex.id)
       if (!meta) continue
       if (groupeFilter && meta.groupe !== groupeFilter) continue
       if (niveauFilter && meta.niveau !== niveauFilter) continue
 
       const base = {
-        prof: prof.profCode,
-        jour: meta.jour,
-        periode: meta.periode,
-        niveau: meta.niveau,
-        groupe: meta.groupe,
-        matiere: meta.matiere,
-        local: meta.local,
+        prof: prof.profCode, jour: meta.jour, periode: meta.periode,
+        niveau: meta.niveau, groupe: meta.groupe, matiere: meta.matiere, local: meta.local,
         surveilleParTitulaire: ex.surveilleParTitulaire ? 'Oui' : 'Non',
       }
-
-      // Determine effective statut — handle both old (maintenu bool) and new (statut string) formats
-      const statut = ex.statut
-        ?? (ex.maintenu === true ? 'maintenu' : null)
+      const statut = ex.statut ?? (ex.maintenu === true ? 'maintenu' : null)
 
       if (statut === 'aucun') {
-        // Exam cancelled — still export as one row so admin can see it
         rows.push({ ...base, nom: '', prenom: '', participation: 'Aucun élève' })
       } else if (statut === 'tous') {
         rows.push({ ...base, nom: '(tous les élèves)', prenom: '', participation: 'Tous les élèves' })
       } else if (statut === 'maintenu') {
         rows.push({ ...base, nom: '(examen maintenu)', prenom: '', participation: 'Examen maintenu' })
       } else {
-        // Liste nominative (or old format with eleves)
         for (const el of ex.eleves ?? []) {
           if (!el.nom && !el.prenom) continue
           rows.push({ ...base, nom: el.nom, prenom: el.prenom, participation: 'Liste nominative' })
@@ -67,6 +81,9 @@ export async function GET(request) {
       }
     }
   }
+
+  // Sort: jour → groupe → prof → nom
+  rows.sort((a, b) => a.jour.localeCompare(b.jour) || a.groupe.localeCompare(b.groupe) || a.prof.localeCompare(b.prof) || a.nom.localeCompare(b.nom))
 
   const suffix   = profFilter ? `-${profFilter}` : groupeFilter ? `-${groupeFilter}` : niveauFilter ? `-${niveauFilter}` : ''
   const filename = `examens-juin2026${suffix}`
@@ -89,7 +106,6 @@ export async function GET(request) {
     })
   }
 
-  // CSV — UTF-8 BOM for Excel compatibility
   const csvRows = rows.map(r => COLS.map(k => `"${String(r[k] ?? '').replace(/"/g, '""')}"`).join(';'))
   const csv = '﻿' + [HEADERS.join(';'), ...csvRows].join('\r\n')
 

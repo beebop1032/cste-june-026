@@ -19,15 +19,15 @@ const IconTrash = () => (
   </svg>
 )
 
-// statuts: { examId: 'locked'|'annule'|'supprime' }
-export default function ProfForm({ profCode, examens, statuts, dejaRempli }) {
-  const blockedIds = new Set(Object.keys(statuts))
-  const openExams = examens.filter(e => !blockedIds.has(e.id))
-
+// groupeStatuts: { groupe: 'annule'|'maintenu' }  — open = absent
+export default function ProfForm({ profCode, examens, groupeStatuts, dejaRempli }) {
   const [confirmed, setConfirmed] = useState(!dejaRempli)
-  // statut: null | 'aucun' | 'tous' | 'maintenu'  (null = pas encore choisi)
   const [examState, setExamState] = useState(() =>
-    Object.fromEntries(openExams.map(e => [e.id, { eleves: [], surveilleParTitulaire: false, statut: null }]))
+    Object.fromEntries(
+      examens
+        .filter(e => !groupeStatuts[e.groupe]) // only open exams
+        .map(e => [e.id, { eleves: [], surveilleParTitulaire: false, statut: null }])
+    )
   )
   const [isPending, startTransition] = useTransition()
   const [result, setResult] = useState(null)
@@ -70,10 +70,11 @@ export default function ProfForm({ profCode, examens, statuts, dejaRempli }) {
 
   function isResolved(examId) {
     const st = examState[examId]
-    if (!st) return true // blocked = resolved
+    if (!st) return true // admin-decided = auto-resolved
     return st.eleves.length > 0 || st.statut !== null
   }
 
+  const openExams = examens.filter(e => !groupeStatuts[e.groupe])
   const unresolvedCount = openExams.filter(e => !isResolved(e.id)).length
 
   function handleSubmit(e) {
@@ -83,7 +84,9 @@ export default function ProfForm({ profCode, examens, statuts, dejaRempli }) {
 
     const payload = {
       examens: examens.map(ex => {
-        if (blockedIds.has(ex.id)) return { id: ex.id, eleves: [], surveilleParTitulaire: false, statut: statuts[ex.id] }
+        const gs = groupeStatuts[ex.groupe]
+        if (gs === 'annule')   return { id: ex.id, eleves: [], surveilleParTitulaire: false, statut: 'annule' }
+        if (gs === 'maintenu') return { id: ex.id, eleves: [], surveilleParTitulaire: false, statut: 'tous' }
         const st = examState[ex.id]
         return {
           id: ex.id,
@@ -134,31 +137,30 @@ export default function ProfForm({ profCode, examens, statuts, dejaRempli }) {
     )
   }
 
-  const STATUT_LABELS = { locked: 'Verrouillé', annule: 'Examen annulé', supprime: 'Examen supprimé' }
-  const STATUT_BADGE = { locked: 'badge-gray', annule: 'badge-amber', supprime: 'badge-red' }
-
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {examens.map(ex => {
-        const adminStatut = statuts[ex.id]
-        const isBlocked = !!adminStatut
+        const gs = groupeStatuts[ex.groupe] // 'annule' | 'maintenu' | undefined
+        const isBlocked = !!gs
         const st = isBlocked ? null : examState[ex.id]
         const nEleves = st?.eleves.length ?? 0
         const choix = st?.statut ?? null
         const resolved = isResolved(ex.id)
-        const showError = submitAttempted && !resolved
+        const showError = submitAttempted && !resolved && !isBlocked
+
+        // Style per status
+        const cardStyle = isBlocked
+          ? gs === 'annule'
+            ? { borderColor: '#FECACA', background: '#FEF2F2', opacity: 0.9 }
+            : { borderColor: '#BFDBFE', background: '#EFF6FF', opacity: 0.9 }
+          : showError
+            ? { borderColor: '#FECACA', background: 'var(--bg-card)' }
+            : resolved
+              ? { borderColor: '#BBF7D0', background: 'var(--bg-card)' }
+              : { background: 'var(--bg-card)' }
 
         return (
-          <div
-            key={ex.id}
-            className="card"
-            style={{
-              padding: '16px 20px',
-              borderColor: isBlocked ? 'var(--border)' : showError ? '#FECACA' : resolved ? '#BBF7D0' : 'var(--border)',
-              background: isBlocked ? '#F8FAFC' : 'var(--bg-card)',
-              opacity: isBlocked ? 0.8 : 1,
-            }}
-          >
+          <div key={ex.id} className="card" style={{ padding: '16px 20px', ...cardStyle }}>
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 8, marginBottom: isBlocked ? 0 : 14 }}>
               <div>
@@ -169,27 +171,30 @@ export default function ProfForm({ profCode, examens, statuts, dejaRempli }) {
                 <span className="badge badge-gray" style={{ fontSize: 12 }}>{formatJour(ex.jour)}</span>
                 <span className="badge badge-gray" style={{ fontSize: 12 }}>{ex.periode}</span>
                 <span className="badge badge-blue" style={{ fontSize: 12 }}>{ex.local}</span>
-                {isBlocked && <span className={`badge ${STATUT_BADGE[adminStatut] ?? 'badge-gray'}`}>{STATUT_LABELS[adminStatut] ?? adminStatut}</span>}
+                {gs === 'annule'   && <span className="badge badge-red">Annulé par l'administration</span>}
+                {gs === 'maintenu' && <span className="badge badge-blue">Maintenu pour tous</span>}
                 {!isBlocked && choix === 'aucun' && <span className="badge badge-red">Aucun élève</span>}
-                {!isBlocked && choix === 'tous' && <span className="badge badge-green">Tous les élèves</span>}
-                {!isBlocked && nEleves > 0 && <span className="badge badge-green">{nEleves} élève{nEleves > 1 ? 's' : ''}</span>}
-                {!isBlocked && !resolved && showError && <span className="badge badge-red">À compléter</span>}
+                {!isBlocked && choix === 'tous'  && <span className="badge badge-green">Tous les élèves</span>}
+                {!isBlocked && nEleves > 0        && <span className="badge badge-green">{nEleves} élève{nEleves > 1 ? 's' : ''}</span>}
+                {showError                         && <span className="badge badge-red">À compléter</span>}
               </div>
             </div>
 
-            {/* Blocked message */}
-            {isBlocked && (
-              <p style={{ margin: 0, fontSize: 13, color: 'var(--fg-muted)', fontStyle: 'italic' }}>
-                {adminStatut === 'annule' && "Cet examen a été annulé par l'administration."}
-                {adminStatut === 'supprime' && 'Cet examen a été supprimé du programme.'}
-                {adminStatut === 'locked' && 'Cet examen est verrouillé — les données ont été enregistrées.'}
+            {/* Blocked messages */}
+            {gs === 'annule' && (
+              <p style={{ margin: 0, fontSize: 13, color: '#991B1B', fontStyle: 'italic' }}>
+                Cet examen a été annulé par l'administration. Aucune action requise.
+              </p>
+            )}
+            {gs === 'maintenu' && (
+              <p style={{ margin: 0, fontSize: 13, color: '#1E40AF', fontStyle: 'italic' }}>
+                Cet examen est maintenu pour tous les élèves. Aucune action requise.
               </p>
             )}
 
             {/* Open exam controls */}
             {!isBlocked && (
               <>
-                {/* Student list */}
                 {nEleves > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
                     {st.eleves.map((el, idx) => (
@@ -222,7 +227,6 @@ export default function ProfForm({ profCode, examens, statuts, dejaRempli }) {
                   </div>
                 )}
 
-                {/* Statut buttons */}
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                   <button type="button" onClick={() => addEleve(ex.id)} className="btn btn-secondary btn-sm">
                     <IconPlus /> Ajouter un élève
@@ -249,7 +253,6 @@ export default function ProfForm({ profCode, examens, statuts, dejaRempli }) {
                   </button>
                 </div>
 
-                {/* Surveille */}
                 {(nEleves > 0 || (choix !== null && choix !== 'aucun')) && (
                   <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer', color: 'var(--fg-muted)', userSelect: 'none', marginTop: 8 }}>
                     <input
