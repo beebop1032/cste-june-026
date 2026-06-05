@@ -145,10 +145,10 @@ function parseExcel() {
     return [...a1].every(a => a2.has(a)) || [...a2].every(a => a1.has(a))
   }
 
-  // Group by profCode|groupe|jour, then try to merge compatible entries
+  // Group by profCode|groupe|niveau|jour, then try to merge compatible entries
   const byGroup = new Map()
   for (const ex of exams) {
-    const gk = `${ex.profCode}|${ex.groupe}|${ex.jour}`
+    const gk = `${ex.profCode}|${ex.groupe}|${ex.niveau}|${ex.jour}`
     if (!byGroup.has(gk)) { byGroup.set(gk, [{ ...ex }]); continue }
     const entries = byGroup.get(gk)
     let merged = false

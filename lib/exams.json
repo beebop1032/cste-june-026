@@ -120,16 +120,6 @@
     "local": "T05"
   },
   {
-    "id": "DEMN-sc5-gr1-18-P2",
-    "matiere": "Sc5",
-    "niveau": "4e",
-    "groupe": "GR1",
-    "profCode": "DEMN",
-    "jour": "2026-06-18",
-    "periode": "P2",
-    "local": "C222"
-  },
-  {
     "id": "PERS-rel-1j-18-P1",
     "matiere": "Rel",
     "niveau": "1re",
@@ -290,13 +280,13 @@
     "local": "C321"
   },
   {
-    "id": "VERM-sc6-gr1-18-P1P2",
+    "id": "VERM-sc6-gr1-18-P1",
     "matiere": "Sc6",
     "niveau": "6e",
     "groupe": "GR1",
     "profCode": "VERM",
     "jour": "2026-06-18",
-    "periode": "P1+P2",
+    "periode": "P1",
     "local": "C001"
   },
   {
@@ -330,13 +320,13 @@
     "local": "C123"
   },
   {
-    "id": "HE-sc6-gr2-18-P1P2",
+    "id": "HE-sc6-gr2-18-P1",
     "matiere": "Sc6",
     "niveau": "6e",
     "groupe": "GR2",
     "profCode": "HE",
     "jour": "2026-06-18",
-    "periode": "P1+P2",
+    "periode": "P1",
     "local": "C034"
   },
   {
@@ -390,6 +380,16 @@
     "local": "C218"
   },
   {
+    "id": "IVE-latin-gr1-18-P2",
+    "matiere": "Latin",
+    "niveau": "5e",
+    "groupe": "GR1",
+    "profCode": "IVE",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "C121"
+  },
+  {
     "id": "LNB-lg1-a4-1-18-P2",
     "matiere": "Lg1",
     "niveau": "6e",
@@ -440,6 +440,16 @@
     "local": "C221"
   },
   {
+    "id": "VERM-sc6-gr1-18-P2",
+    "matiere": "Sc6",
+    "niveau": "5e",
+    "groupe": "GR1",
+    "profCode": "VERM",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "C119"
+  },
+  {
     "id": "MEL-lg1-oral-n4-1-18-P2",
     "matiere": "Lg1 oral",
     "niveau": "6e",
@@ -458,6 +468,26 @@
     "jour": "2026-06-18",
     "periode": "P2",
     "local": "T08"
+  },
+  {
+    "id": "DEMN-sc5-gr1-18-P2",
+    "matiere": "Sc5",
+    "niveau": "4e",
+    "groupe": "GR1",
+    "profCode": "DEMN",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "C222"
+  },
+  {
+    "id": "HE-sc6-gr2-18-P2",
+    "matiere": "Sc6",
+    "niveau": "5e",
+    "groupe": "GR2",
+    "profCode": "HE",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "C120"
   },
   {
     "id": "VDS-lg1-oral-n4-2-18-P2",
@@ -2520,13 +2550,13 @@
     "local": "C120"
   },
   {
-    "id": "MEL-lg2-n2-1-25-P1P2",
+    "id": "MEL-lg2-n2-1-25-P1",
     "matiere": "Lg2",
     "niveau": "6e",
     "groupe": "N2-1",
     "profCode": "MEL",
     "jour": "2026-06-25",
-    "periode": "P1+P2",
+    "periode": "P1",
     "local": "C210"
   },
   {
@@ -2638,6 +2668,16 @@
     "jour": "2026-06-25",
     "periode": "P2",
     "local": "C001"
+  },
+  {
+    "id": "MEL-lg2-n2-1-25-P2",
+    "matiere": "Lg2",
+    "niveau": "4e",
+    "groupe": "N2-1",
+    "profCode": "MEL",
+    "jour": "2026-06-25",
+    "periode": "P2",
+    "local": "C219"
   },
   {
     "id": "HE-sc6-gr2-25-P2",
