@@ -560,8 +560,8 @@
     "local": "C217"
   },
   {
-    "id": "PEC-lg-2h-n-2e-19-P2",
-    "matiere": "Lg",
+    "id": "PEC-lg-1h-ce1d-2h-n-2e-19-P2",
+    "matiere": "Lg 1h CE1D",
     "niveau": "2e",
     "groupe": "2H-N",
     "profCode": "PEC",
@@ -1990,8 +1990,8 @@
     "local": "C217"
   },
   {
-    "id": "PIEJ-sc-2h-2e-24-P2",
-    "matiere": "Sc",
+    "id": "PIEJ-sc-1h-ce1d-2h-2e-24-P2",
+    "matiere": "Sc 1h CE1D",
     "niveau": "2e",
     "groupe": "2H",
     "profCode": "PIEJ",

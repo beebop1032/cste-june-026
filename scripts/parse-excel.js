@@ -130,8 +130,9 @@ function parseExcel() {
             // section. Forward-only qualifiers (oral, 1h) only affect rows from here onwards.
             const isBlockQualifier = normalizedCell.split(/\s+/).every(w => BACKFILL_WORDS.has(w.toLowerCase()))
             if (isBlockQualifier) {
+              const currentBase = getBase(currentMatiere[niveau])
               for (const idx of blockIndices[niveau]) {
-                if (exams[idx].matiere === oldMatiere) exams[idx].matiere = currentMatiere[niveau]
+                if (getBase(exams[idx].matiere) === currentBase) exams[idx].matiere = currentMatiere[niveau]
               }
             }
           } else {
