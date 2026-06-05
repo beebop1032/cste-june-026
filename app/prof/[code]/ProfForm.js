@@ -25,6 +25,18 @@ export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts
   const effectiveStatutFor = (ex) => examStatuts[ex.id] ?? groupeStatuts[ex.groupe]
   const allAdminDecided = examens.every(e => !!effectiveStatutFor(e))
 
+  // Linked exams: same matiere+groupe+niveau, both open, different jour
+  const openIds = new Set(examens.filter(e => !effectiveStatutFor(e)).map(e => e.id))
+  const linkedMap = {}
+  for (const ex of examens) {
+    if (!openIds.has(ex.id)) continue
+    const siblings = examens
+      .filter(o => o.id !== ex.id && openIds.has(o.id) && o.matiere === ex.matiere && o.groupe === ex.groupe && o.niveau === ex.niveau)
+      .map(o => o.id)
+    if (siblings.length > 0) linkedMap[ex.id] = siblings
+  }
+  function withLinked(examId) { return [examId, ...(linkedMap[examId] ?? [])] }
+
   const [confirmed, setConfirmed] = useState(!dejaRempli)
   const [examState, setExamState] = useState(() =>
     Object.fromEntries(
@@ -38,27 +50,33 @@ export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts
   const [submitAttempted, setSubmitAttempted] = useState(false)
 
   function addEleve(examId) {
-    setExamState(s => ({
-      ...s,
-      [examId]: { ...s[examId], statut: null, eleves: [...s[examId].eleves, { nom: '', prenom: '' }] }
-    }))
+    setExamState(s => {
+      const next = { ...s }
+      for (const id of withLinked(examId)) {
+        next[id] = { ...next[id], statut: null, eleves: [...next[id].eleves, { nom: '', prenom: '' }] }
+      }
+      return next
+    })
   }
 
   function removeEleve(examId, idx) {
-    setExamState(s => ({
-      ...s,
-      [examId]: { ...s[examId], eleves: s[examId].eleves.filter((_, i) => i !== idx) }
-    }))
+    setExamState(s => {
+      const next = { ...s }
+      for (const id of withLinked(examId)) {
+        next[id] = { ...next[id], eleves: next[id].eleves.filter((_, i) => i !== idx) }
+      }
+      return next
+    })
   }
 
   function updateEleve(examId, idx, field, value) {
-    setExamState(s => ({
-      ...s,
-      [examId]: {
-        ...s[examId],
-        eleves: s[examId].eleves.map((el, i) => i === idx ? { ...el, [field]: value } : el)
+    setExamState(s => {
+      const next = { ...s }
+      for (const id of withLinked(examId)) {
+        next[id] = { ...next[id], eleves: next[id].eleves.map((el, i) => i === idx ? { ...el, [field]: value } : el) }
       }
-    }))
+      return next
+    })
   }
 
   function toggleSurveille(examId, checked) {
@@ -66,10 +84,13 @@ export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts
   }
 
   function setStatut(examId, statut) {
-    setExamState(s => ({
-      ...s,
-      [examId]: { ...s[examId], statut, eleves: [] }
-    }))
+    setExamState(s => {
+      const next = { ...s }
+      for (const id of withLinked(examId)) {
+        next[id] = { ...next[id], statut, eleves: [] }
+      }
+      return next
+    })
   }
 
   function isResolved(examId) {
@@ -226,6 +247,14 @@ export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts
               <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                 <span className="badge badge-gray" style={{ fontSize: 12 }}>{formatJour(ex.jour)}</span>
                 <span className="badge badge-gray" style={{ fontSize: 12 }}>{ex.periode}</span>
+                {linkedMap[ex.id] && (
+                  <span className="badge badge-gray" style={{ fontSize: 11, fontStyle: 'italic', color: 'var(--primary)' }}>
+                    Même liste que le {linkedMap[ex.id].map(id => {
+                      const linked = examens.find(e => e.id === id)
+                      return linked ? new Date(linked.jour + 'T12:00:00').toLocaleDateString('fr-BE', { day: 'numeric', month: 'short' }) : id
+                    }).join(', ')}
+                  </span>
+                )}
 
                 {eff === 'annule'   && <span className="badge badge-red">Annulé par l'administration</span>}
                 {eff === 'maintenu' && <span className="badge badge-blue">Maintenu pour tous</span>}

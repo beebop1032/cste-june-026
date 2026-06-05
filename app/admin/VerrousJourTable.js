@@ -164,7 +164,7 @@ export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: in
                             key={statut}
                             type="button"
                             onClick={() => handleStatut(ex.id, statut)}
-                            disabled={es === statut}
+                            disabled={es === statut || (statut === 'open' && es === 'rempli')}
                             className="btn btn-xs"
                             style={es === statut
                               ? { background: GS[statut].text, color: '#fff', fontSize: 10, border: 'none', whiteSpace: 'nowrap', opacity: 1 }
