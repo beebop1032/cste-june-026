@@ -136,11 +136,14 @@ body { font-family: 'Source Sans 3', sans-serif; font-size: 13px; background: va
 
 // ── View: Par Classe ──────────────────────────────────────────────────────────
 
+function keep(p) { return p && p.type !== 'annule' }
+
 function ViewClasse({ exams, partData, groupe }) {
   const gExams = useMemo(() =>
-    exams.filter(e => e.groupe === groupe)
+    exams
+      .filter(e => e.groupe === groupe && keep(partData[e.id]))
       .sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode)),
-    [exams, groupe]
+    [exams, partData, groupe]
   )
 
   const byJour = useMemo(() => {
@@ -201,9 +204,10 @@ function ViewClasse({ exams, partData, groupe }) {
 
 function ViewProf({ exams, partData, prof }) {
   const pExams = useMemo(() =>
-    exams.filter(e => e.profCode === prof)
+    exams
+      .filter(e => e.profCode === prof && keep(partData[e.id]))
       .sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode)),
-    [exams, prof]
+    [exams, partData, prof]
   )
 
   if (!prof) return <div className="empty">Sélectionne un prof pour afficher son planning de surveillance.</div>
@@ -257,7 +261,8 @@ function ViewEleve({ exams, partData, groupe }) {
   const students = useMemo(() => {
     if (!groupe) return []
     const map = new Map() // key "NOM PRENOM" → { nom, prenom, exams[] }
-    const gExams = exams.filter(e => e.groupe === groupe)
+    const gExams = exams
+      .filter(e => e.groupe === groupe && keep(partData[e.id]))
       .sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode))
 
     for (const ex of gExams) {
