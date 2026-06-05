@@ -431,7 +431,7 @@ function ViewProf({ exams, partData, prof }) {
 
 // ── View: Par Élève ───────────────────────────────────────────────────────────
 
-function ViewEleve({ exams, partData, groupe }) {
+function ViewEleve({ exams, partData, groupe, selectedEleve }) {
   const students = useMemo(() => {
     if (!groupe) return []
     const map = new Map()
@@ -454,8 +454,10 @@ function ViewEleve({ exams, partData, groupe }) {
         }
       }
     }
-    return [...map.values()].sort((a, b) => a.nom.localeCompare(b.nom) || a.prenom.localeCompare(b.prenom))
-  }, [exams, partData, groupe])
+    const all = [...map.values()].sort((a, b) => a.nom.localeCompare(b.nom) || a.prenom.localeCompare(b.prenom))
+    if (selectedEleve) return all.filter(st => `${(st.nom || '').toUpperCase()}|${(st.prenom || '').toLowerCase()}` === selectedEleve)
+    return all
+  }, [exams, partData, groupe, selectedEleve])
 
   if (!groupe) return (
     <div className="empty">
@@ -474,10 +476,12 @@ function ViewEleve({ exams, partData, groupe }) {
     </div>
   )
 
+  const single = selectedEleve && students.length === 1 ? students[0] : null
+
   return (
     <div className="section">
       <div className="section-hdr">
-        <h2>Classe {groupe} — Convocations</h2>
+        <h2>{single ? `${single.prenom} ${single.nom}` : `Classe ${groupe} — Convocations`}</h2>
         <span className="section-hdr-sub">{students.length} élève{students.length !== 1 ? 's' : ''} · Juin 2026</span>
       </div>
       <div className="section-body">
@@ -567,6 +571,22 @@ export default function PrintViews({ exams, partData, allGroupes, allProfs }) {
   const [tab,    setTab]    = useState('classe')
   const [groupe, setGroupe] = useState('')
   const [prof,   setProf]   = useState('')
+  const [eleve,  setEleve]  = useState('')
+
+  // Sorted student list for the élève tab (depends on groupe selection)
+  const eleveList = useMemo(() => {
+    if (tab !== 'eleve' || !groupe) return []
+    const map = new Map()
+    for (const ex of exams.filter(e => e.groupe === groupe && keep(partData[e.id]))) {
+      const p = partData[ex.id]
+      if (p?.type !== 'liste') continue
+      for (const el of p.eleves) {
+        const key = `${(el.nom || '').toUpperCase()}|${(el.prenom || '').toLowerCase()}`
+        if (!map.has(key)) map.set(key, { key, nom: el.nom ?? '', prenom: el.prenom ?? '' })
+      }
+    }
+    return [...map.values()].sort((a, b) => a.nom.localeCompare(b.nom) || a.prenom.localeCompare(b.prenom))
+  }, [exams, partData, groupe, tab])
 
   const currentKey = tab === 'prof' ? prof : groupe
 
@@ -575,6 +595,14 @@ export default function PrintViews({ exams, partData, allGroupes, allProfs }) {
     if (tab === 'prof') {
       const rows = buildCsvRows(exams, partData, e => e.profCode === prof)
       downloadCSV(rows, `surveillance_${prof}.csv`)
+    } else if (tab === 'eleve' && eleve) {
+      const [nom, prenom] = eleve.split('|')
+      const rows = buildCsvRows(exams, partData, e => {
+        const p = partData[e.id]
+        return e.groupe === groupe && p?.type === 'liste' &&
+          p.eleves.some(el => (el.nom || '').toUpperCase() === nom && (el.prenom || '').toLowerCase() === prenom)
+      })
+      downloadCSV(rows, `convocation_${nom}_${prenom}.csv`)
     } else {
       const rows = buildCsvRows(exams, partData, e => e.groupe === groupe)
       downloadCSV(rows, `${tab === 'eleve' ? 'convocations' : 'examens'}_${groupe}.csv`)
@@ -601,7 +629,8 @@ export default function PrintViews({ exams, partData, allGroupes, allProfs }) {
       {/* Controls */}
       <div className="controls">
         {TABS.map(t => (
-          <button key={t.id} className={`tab-pill${tab === t.id ? ' active' : ''}`} onClick={() => setTab(t.id)}>
+          <button key={t.id} className={`tab-pill${tab === t.id ? ' active' : ''}`}
+            onClick={() => { setTab(t.id); setEleve('') }}>
             {t.label}
           </button>
         ))}
@@ -614,9 +643,19 @@ export default function PrintViews({ exams, partData, allGroupes, allProfs }) {
             {allProfs.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
         ) : (
-          <select className="ctrl-select" value={groupe} onChange={e => setGroupe(e.target.value)}>
+          <select className="ctrl-select" value={groupe} onChange={e => { setGroupe(e.target.value); setEleve('') }}>
             <option value="">— Choisir une classe —</option>
             {allGroupes.map(g => <option key={g} value={g}>{g}</option>)}
+          </select>
+        )}
+
+        {tab === 'eleve' && groupe && eleveList.length > 0 && (
+          <select className="ctrl-select" value={eleve} onChange={e => setEleve(e.target.value)}
+            style={{ minWidth: 200 }}>
+            <option value="">— Tous les élèves —</option>
+            {eleveList.map(el => (
+              <option key={el.key} value={el.key}>{el.nom} {el.prenom}</option>
+            ))}
           </select>
         )}
 
@@ -635,7 +674,7 @@ export default function PrintViews({ exams, partData, allGroupes, allProfs }) {
       <div className="content">
         {tab === 'classe' && <ViewClasse exams={exams} partData={partData} groupe={groupe} />}
         {tab === 'prof'   && <ViewProf   exams={exams} partData={partData} prof={prof}     />}
-        {tab === 'eleve'  && <ViewEleve  exams={exams} partData={partData} groupe={groupe} />}
+        {tab === 'eleve'  && <ViewEleve  exams={exams} partData={partData} groupe={groupe} selectedEleve={eleve} />}
       </div>
     </>
   )
