@@ -4,6 +4,9 @@ const path = require('path')
 
 // Case-insensitive annotation set — matches CE1D, CESS, oral, Oral, 1h
 const ANNOT_WORDS = new Set(['ce1d', 'cess', 'oral', '1h', 'segec'])
+// Annotations that qualify the WHOLE block (backfill previous entries)
+// vs forward-only qualifiers (oral, 1h) that only apply from that row onwards
+const BACKFILL_WORDS = new Set(['ce1d', 'cess', 'segec'])
 
 // Niveau offsets in the sheet: col 1=1ère, 6=2ème, 11=3ème, 16=4ème, 21=5ème, 26=6ème
 const NIVEAU_OFFSETS = [
@@ -123,9 +126,13 @@ function parseExcel() {
           if (currentMatiere[niveau]) {
             const oldMatiere = currentMatiere[niveau]
             currentMatiere[niveau] = `${oldMatiere} ${normalizedCell}`
-            // Backfill: exams already emitted in this block had the old matière — update them
-            for (const idx of blockIndices[niveau]) {
-              if (exams[idx].matiere === oldMatiere) exams[idx].matiere = currentMatiere[niveau]
+            // Backfill only for "block qualifiers" (CESS, CE1D, SEGEC) — these apply to the whole
+            // section. Forward-only qualifiers (oral, 1h) only affect rows from here onwards.
+            const isBlockQualifier = normalizedCell.split(/\s+/).every(w => BACKFILL_WORDS.has(w.toLowerCase()))
+            if (isBlockQualifier) {
+              for (const idx of blockIndices[niveau]) {
+                if (exams[idx].matiere === oldMatiere) exams[idx].matiere = currentMatiere[niveau]
+              }
             }
           } else {
             currentMatiere[niveau] = normalizedCell
@@ -153,18 +160,14 @@ function parseExcel() {
     }
   }
 
-  // Two matières can merge (P1+P2) only if:
-  // - identical, OR
-  // - one is base-only (no annotations) and the other adds annotations
-  //   e.g. "Lg1" + "Lg1 Oral" → ok
-  // Reject when both have non-empty but DIFFERENT annotation sets:
-  //   "Lg CE1D" + "Lg 1h CE1D" → different → keep P1 and P2 separate
+  // Two matières can merge (P1+P2) only if annotation sets are IDENTICAL.
+  // "Lg1" + "Lg1" → merge. "Lg1 CE1D" + "Lg1 CE1D" → merge.
+  // "Lg1" + "Lg1 Oral" → keep separate (different exam types on same day).
   function canMerge(m1, m2) {
     if (m1 === m2) return true
     if (getBase(m1) !== getBase(m2)) return false
     const a1 = new Set(getAnnots(m1).map(a => a.toLowerCase()))
     const a2 = new Set(getAnnots(m2).map(a => a.toLowerCase()))
-    if (a1.size === 0 || a2.size === 0) return true
     return a1.size === a2.size && [...a1].every(a => a2.has(a))
   }
 

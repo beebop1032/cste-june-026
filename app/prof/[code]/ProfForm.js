@@ -50,10 +50,11 @@ export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts
   const [submitAttempted, setSubmitAttempted] = useState(false)
 
   function addEleve(examId) {
+    const ex = examens.find(e => e.id === examId)
     setExamState(s => {
       const next = { ...s }
       for (const id of withLinked(examId)) {
-        next[id] = { ...next[id], statut: null, eleves: [...next[id].eleves, { nom: '', prenom: '' }] }
+        next[id] = { ...next[id], statut: null, eleves: [...next[id].eleves, { nom: '', prenom: '', classe: ex?.groupe ?? '' }] }
       }
       return next
     })
@@ -292,14 +293,21 @@ export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts
                           value={el.nom}
                           onChange={e => updateEleve(ex.id, idx, 'nom', e.target.value)}
                           className={`input${nomErr ? ' error' : ''}`}
-                          style={{ flex: 1, padding: '7px 10px', fontSize: 13 }}
+                          style={{ flex: 2, padding: '7px 10px', fontSize: 13 }}
                         />
                         <input
                           placeholder="Prénom *"
                           value={el.prenom}
                           onChange={e => updateEleve(ex.id, idx, 'prenom', e.target.value)}
                           className={`input${prenomErr ? ' error' : ''}`}
-                          style={{ flex: 1, padding: '7px 10px', fontSize: 13 }}
+                          style={{ flex: 2, padding: '7px 10px', fontSize: 13 }}
+                        />
+                        <input
+                          placeholder="Classe"
+                          value={el.classe ?? ''}
+                          onChange={e => updateEleve(ex.id, idx, 'classe', e.target.value)}
+                          className="input"
+                          style={{ flex: 1, minWidth: 60, padding: '7px 8px', fontSize: 12, color: 'var(--fg-muted)' }}
                         />
                         <button
                           type="button"

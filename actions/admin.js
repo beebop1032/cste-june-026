@@ -25,6 +25,8 @@ export async function saveFullStateSilent(groupeStatuts, examStatuts) {
   if (!examStatuts   || typeof examStatuts   !== 'object') return { error: 'Invalide' }
   try {
     await write('admin-locks.json', { groupeStatuts, examStatuts, updatedAt: new Date().toISOString() })
+    revalidatePath('/admin')
+    revalidatePath('/prof', 'layout')
     return { ok: true }
   } catch (err) {
     console.error(err)
