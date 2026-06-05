@@ -4,45 +4,44 @@ import { requireAdmin } from '@/lib/auth'
 import { read, writeFileSafe, listFiles } from '@/lib/storage'
 import exams from '@/lib/exams.json'
 
-export async function toggleLock(formData) {
+// Migrate old { locked: [...] } format to { statuts: { id: 'locked' } }
+function normalise(raw) {
+  if (!raw) return { statuts: {} }
+  if (raw.statuts) return raw
+  const locked = raw.locked ?? []
+  return { statuts: Object.fromEntries(locked.map(id => [id, 'locked'])) }
+}
+
+export async function setExamStatut(formData) {
   await requireAdmin()
   const examId = formData.get('examId')
-  const current = (await read('admin-locks.json')) ?? { locked: [] }
-  const set = new Set(current.locked)
-  if (set.has(examId)) set.delete(examId)
-  else set.add(examId)
+  const statut = formData.get('statut') // 'open' | 'locked' | 'annule' | 'supprime'
+  const current = normalise(await read('admin-locks.json'))
+  const statuts = { ...current.statuts }
+  if (statut === 'open') delete statuts[examId]
+  else statuts[examId] = statut
   try {
-    await writeFileSafe('admin-locks.json', { locked: [...set], updatedAt: new Date().toISOString() })
+    await writeFileSafe('admin-locks.json', { statuts, updatedAt: new Date().toISOString() })
   } catch (err) {
-    console.error('toggleLock write failed:', err)
+    console.error('setExamStatut write failed:', err)
   }
   redirect('/admin?tab=verrous&ok=1')
 }
 
-export async function lockByNiveau(formData) {
+export async function setNiveauStatut(formData) {
   await requireAdmin()
   const niveau = formData.get('niveau')
-  const current = (await read('admin-locks.json')) ?? { locked: [] }
-  const set = new Set(current.locked)
-  exams.filter(e => e.niveau === niveau).forEach(e => set.add(e.id))
-  try {
-    await writeFileSafe('admin-locks.json', { locked: [...set], updatedAt: new Date().toISOString() })
-  } catch (err) {
-    console.error('lockByNiveau write failed:', err)
+  const statut = formData.get('statut') // 'open' | 'locked' | 'annule' | 'supprime'
+  const current = normalise(await read('admin-locks.json'))
+  const statuts = { ...current.statuts }
+  for (const ex of exams.filter(e => e.niveau === niveau)) {
+    if (statut === 'open') delete statuts[ex.id]
+    else statuts[ex.id] = statut
   }
-  redirect('/admin?tab=verrous&ok=1')
-}
-
-export async function unlockByNiveau(formData) {
-  await requireAdmin()
-  const niveau = formData.get('niveau')
-  const current = (await read('admin-locks.json')) ?? { locked: [] }
-  const niveauIds = new Set(exams.filter(e => e.niveau === niveau).map(e => e.id))
-  const filtered = current.locked.filter(id => !niveauIds.has(id))
   try {
-    await writeFileSafe('admin-locks.json', { locked: filtered, updatedAt: new Date().toISOString() })
+    await writeFileSafe('admin-locks.json', { statuts, updatedAt: new Date().toISOString() })
   } catch (err) {
-    console.error('unlockByNiveau write failed:', err)
+    console.error('setNiveauStatut write failed:', err)
   }
   redirect('/admin?tab=verrous&ok=1')
 }
@@ -61,5 +60,5 @@ export async function getAllResponses() {
 
 export async function getLocksData() {
   await requireAdmin()
-  return (await read('admin-locks.json')) ?? { locked: [] }
+  return normalise(await read('admin-locks.json'))
 }

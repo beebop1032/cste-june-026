@@ -4,15 +4,18 @@ import { read } from '@/lib/storage'
 import exams from '@/lib/exams.json'
 import ProfForm from './ProfForm'
 
+function normaliseStatuts(raw) {
+  if (!raw) return {}
+  if (raw.statuts) return raw.statuts
+  return Object.fromEntries((raw.locked ?? []).map(id => [id, 'locked']))
+}
+
 export default async function ProfPage({ params }) {
   const { code } = await params
   await requireProf()
 
   const { dejaRempli } = await getProfStatus(code)
-
-  const locksData = await read('admin-locks.json')
-  const locked = new Set(locksData?.locked ?? [])
-
+  const statuts = normaliseStatuts(await read('admin-locks.json'))
   const profExams = exams.filter(e => e.profCode === code)
 
   if (profExams.length === 0) {
@@ -42,12 +45,12 @@ export default async function ProfPage({ params }) {
         </h1>
       </div>
       <p style={{ color: 'var(--fg-muted)', marginBottom: 24, fontSize: 13, marginLeft: 2 }}>
-        Indiquez les élèves présents pour chaque examen. Zéro élève = examen annulé.
+        Indiquez le statut de chaque examen. Vous devez renseigner tous les examens avant de pouvoir envoyer.
       </p>
       <ProfForm
         profCode={code}
         examens={profExams}
-        locked={[...locked]}
+        statuts={statuts}
         dejaRempli={dejaRempli}
       />
     </main>
