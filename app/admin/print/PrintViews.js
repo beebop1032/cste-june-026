@@ -213,6 +213,30 @@ body {
 .surv-y { color: #065f46; font-weight: 700; }
 .surv-n { color: var(--subtle); }
 
+/* ── Élève sidebar ─────────────────────────────────────── */
+.eleve-layout { display: flex; }
+.eleve-sidebar {
+  width: 210px; flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  background: var(--off-white);
+  max-height: calc(100vh - 104px); overflow-y: auto;
+  position: sticky; top: 52px; align-self: flex-start;
+}
+.eleve-sidebar-hdr {
+  padding: 8px 14px; font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .8px; color: var(--navy); border-bottom: 1px solid var(--border);
+  background: var(--off-white); position: sticky; top: 0; z-index: 1;
+}
+.eleve-sidebar-item {
+  display: block; width: 100%; text-align: left;
+  padding: 7px 14px; font-size: 12px; font-family: inherit;
+  color: var(--text); background: none; border: none; cursor: pointer;
+  border-bottom: 1px solid var(--border-light); transition: background .1s;
+}
+.eleve-sidebar-item:hover:not(.active) { background: var(--border-light); }
+.eleve-sidebar-item.active { background: var(--navy); color: #fff; font-weight: 600; }
+.eleve-content { flex: 1; min-width: 0; }
+
 /* ── Convocation grid ──────────────────────────────────── */
 .conv-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -268,6 +292,8 @@ body {
   .exam-row   { padding: 6px 14px; }
   .exam-row:hover { background: none; }
 
+  .eleve-sidebar { display: none !important; }
+  .eleve-layout { display: block; }
   .conv-card-hdr { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .conv-grid { gap: 8px; padding: 10px 12px; grid-template-columns: repeat(3, 1fr); }
   .conv-card { break-inside: avoid; }
@@ -431,33 +457,34 @@ function ViewProf({ exams, partData, prof }) {
 
 // ── View: Par Élève ───────────────────────────────────────────────────────────
 
-function ViewEleve({ exams, partData, groupe, selectedEleve }) {
-  const students = useMemo(() => {
+function ViewEleve({ exams, partData, groupe, selectedEleve, onSelectEleve }) {
+  const allStudents = useMemo(() => {
     if (!groupe) return []
     const map = new Map()
     const gExams = exams
       .filter(e => e.groupe === groupe && keep(partData[e.id]))
       .sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode))
-
     for (const ex of gExams) {
       const p = partData[ex.id]
       if (!p || p.type === 'annule') continue
       if (p.type === 'tous') {
         const key = '__tous__'
-        if (!map.has(key)) map.set(key, { nom: '(tous les élèves)', prenom: '', exams: [] })
+        if (!map.has(key)) map.set(key, { key, nom: '(tous les élèves)', prenom: '', exams: [] })
         map.get(key).exams.push(ex)
       } else if (p.type === 'liste' && p.eleves.length > 0) {
         for (const el of p.eleves) {
           const key = `${(el.nom || '').toUpperCase()}|${(el.prenom || '').toLowerCase()}`
-          if (!map.has(key)) map.set(key, { nom: el.nom ?? '', prenom: el.prenom ?? '', exams: [] })
+          if (!map.has(key)) map.set(key, { key, nom: el.nom ?? '', prenom: el.prenom ?? '', exams: [] })
           map.get(key).exams.push(ex)
         }
       }
     }
-    const all = [...map.values()].sort((a, b) => a.nom.localeCompare(b.nom) || a.prenom.localeCompare(b.prenom))
-    if (selectedEleve) return all.filter(st => `${(st.nom || '').toUpperCase()}|${(st.prenom || '').toLowerCase()}` === selectedEleve)
-    return all
-  }, [exams, partData, groupe, selectedEleve])
+    return [...map.values()].sort((a, b) => a.nom.localeCompare(b.nom) || a.prenom.localeCompare(b.prenom))
+  }, [exams, partData, groupe])
+
+  const displayed = selectedEleve
+    ? allStudents.filter(st => st.key === selectedEleve)
+    : allStudents
 
   if (!groupe) return (
     <div className="empty">
@@ -469,39 +496,60 @@ function ViewEleve({ exams, partData, groupe, selectedEleve }) {
     </div>
   )
 
-  if (students.length === 0) return (
+  if (allStudents.length === 0) return (
     <div className="empty">
       <p>Aucune donnée élève disponible pour la classe {groupe}.</p>
       <small>En attente des soumissions des professeurs.</small>
     </div>
   )
 
-  const single = selectedEleve && students.length === 1 ? students[0] : null
+  const single = displayed.length === 1 ? displayed[0] : null
 
   return (
     <div className="section">
       <div className="section-hdr">
         <h2>{single ? `${single.prenom} ${single.nom}` : `Classe ${groupe} — Convocations`}</h2>
-        <span className="section-hdr-sub">{students.length} élève{students.length !== 1 ? 's' : ''} · Juin 2026</span>
+        <span className="section-hdr-sub">
+          {single ? `1 / ${allStudents.length} élève${allStudents.length !== 1 ? 's' : ''}` : `${allStudents.length} élève${allStudents.length !== 1 ? 's' : ''}`}
+          {' · Juin 2026'}
+        </span>
       </div>
       <div className="section-body">
-        <div className="conv-grid">
-          {students.map((st, i) => (
-            <div key={i} className="conv-card">
-              <div className="conv-card-hdr">
-                <div className="name">{st.prenom} {st.nom}</div>
-                <div className="classe">Classe {groupe}</div>
-              </div>
-              <div className="conv-card-body">
-                {st.exams.map(ex => (
-                  <div key={ex.id} className="conv-exam">
-                    <span className="cdate">{fmtJourCourt(ex.jour)} <strong>{ex.periode}</strong></span>
-                    <span className="cmat">{ex.matiere}</span>
+        <div className="eleve-layout">
+          {/* Sidebar: alphabetical student list — hidden in print */}
+          <div className="eleve-sidebar">
+            <div className="eleve-sidebar-hdr">Élèves ({allStudents.length})</div>
+            {allStudents.map(st => (
+              <button
+                key={st.key}
+                className={`eleve-sidebar-item${selectedEleve === st.key ? ' active' : ''}`}
+                onClick={() => onSelectEleve(selectedEleve === st.key ? '' : st.key)}
+              >
+                {st.nom} {st.prenom}
+              </button>
+            ))}
+          </div>
+          {/* Main content */}
+          <div className="eleve-content">
+            <div className="conv-grid">
+              {displayed.map((st, i) => (
+                <div key={i} className="conv-card">
+                  <div className="conv-card-hdr">
+                    <div className="name">{st.prenom} {st.nom}</div>
+                    <div className="classe">Classe {groupe}</div>
                   </div>
-                ))}
-              </div>
+                  <div className="conv-card-body">
+                    {st.exams.map(ex => (
+                      <div key={ex.id} className="conv-exam">
+                        <span className="cdate">{fmtJourCourt(ex.jour)} <strong>{ex.periode}</strong></span>
+                        <span className="cmat">{ex.matiere}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </div>
@@ -674,7 +722,7 @@ export default function PrintViews({ exams, partData, allGroupes, allProfs }) {
       <div className="content">
         {tab === 'classe' && <ViewClasse exams={exams} partData={partData} groupe={groupe} />}
         {tab === 'prof'   && <ViewProf   exams={exams} partData={partData} prof={prof}     />}
-        {tab === 'eleve'  && <ViewEleve  exams={exams} partData={partData} groupe={groupe} selectedEleve={eleve} />}
+        {tab === 'eleve'  && <ViewEleve  exams={exams} partData={partData} groupe={groupe} selectedEleve={eleve} onSelectEleve={setEleve} />}
       </div>
     </>
   )
