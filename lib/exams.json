@@ -390,8 +390,8 @@
     "local": "C121"
   },
   {
-    "id": "LNB-lg1-a4-1-6e-18-P2",
-    "matiere": "Lg1",
+    "id": "LNB-lg1-oral-a4-1-6e-18-P2",
+    "matiere": "Lg1 oral",
     "niveau": "6e",
     "groupe": "A4-1",
     "profCode": "LNB",
@@ -1050,13 +1050,23 @@
     "local": "C217"
   },
   {
-    "id": "GOD-lg1-3j-n-3e-22-P1P2",
+    "id": "GOD-lg1-3j-n-3e-22-P1",
     "matiere": "Lg1",
     "niveau": "3e",
     "groupe": "3J-N",
     "profCode": "GOD",
     "jour": "2026-06-22",
-    "periode": "P1+P2",
+    "periode": "P1",
+    "local": "C118"
+  },
+  {
+    "id": "GOD-lg1-oral-3j-n-3e-22-P2",
+    "matiere": "Lg1 Oral",
+    "niveau": "3e",
+    "groupe": "3J-N",
+    "profCode": "GOD",
+    "jour": "2026-06-22",
+    "periode": "P2",
     "local": "C118"
   },
   {
@@ -1870,8 +1880,8 @@
     "local": "C321"
   },
   {
-    "id": "IVE-latin-gr1-6e-23-P2",
-    "matiere": "Latin",
+    "id": "IVE-latin-oral-gr1-6e-23-P2",
+    "matiere": "Latin oral",
     "niveau": "6e",
     "groupe": "GR1",
     "profCode": "IVE",

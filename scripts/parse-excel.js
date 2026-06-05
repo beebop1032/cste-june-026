@@ -5,8 +5,8 @@ const path = require('path')
 // Case-insensitive annotation set — matches CE1D, CESS, oral, Oral, 1h
 const ANNOT_WORDS = new Set(['ce1d', 'cess', 'oral', '1h', 'segec'])
 // Annotations that qualify the WHOLE block (backfill previous entries)
-// vs forward-only qualifiers (oral, 1h) that only apply from that row onwards
-const BACKFILL_WORDS = new Set(['ce1d', 'cess', 'segec'])
+// "oral" is a block qualifier EXCEPT for matières in NO_ORAL (e.g. Géo)
+const BACKFILL_WORDS = new Set(['ce1d', 'cess', 'segec', 'oral'])
 // Matière bases that must NEVER gain an "oral" annotation — "Geo Oral" is a typo.
 // For these, "Oral" appearing after them is ignored (not appended).
 const NO_ORAL = new Set(['geo', 'géo'])
