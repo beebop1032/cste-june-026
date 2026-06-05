@@ -49,7 +49,7 @@ export async function setNiveauStatut(formData) {
 export async function getAllResponses() {
   await requireAdmin()
   const files = await listFiles('prof-')
-  const currentFiles = files.filter(f => /^prof-[A-Z]+\.json$/.test(f))
+  const currentFiles = files.filter(f => /^prof-[^.]+\.json$/.test(f) && !/-v\d+\.json$/.test(f))
   const results = {}
   for (const f of currentFiles) {
     const data = await read(f)
