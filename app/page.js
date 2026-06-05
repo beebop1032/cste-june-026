@@ -50,7 +50,7 @@ export default function HomePage() {
             boxShadow: '0 4px 20px rgba(30,58,138,.25)',
           }}>
             <img
-              src="http://cste.be/msg/wp-content/uploads/2021/05/Logo_couleur_CollegeEnBlanc.png"
+              src="/logo.png"
               alt="Logo école des Hayeffes"
               width={200}
               height={80}
