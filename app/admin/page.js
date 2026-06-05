@@ -92,9 +92,7 @@ export default async function AdminPage({ searchParams }) {
     <div style={{ position: 'sticky', top: 0, zIndex: 50, background: 'var(--primary)', boxShadow: '0 2px 8px rgba(0,0,0,.18)' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 16px', display: 'flex', alignItems: 'center', gap: 16, height: 52 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
-          <div style={{ background: '#fff', borderRadius: 7, padding: '4px 10px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-              <img src="/logo.png" alt="Collège des Hayeffes" style={{ height: 36, width: 'auto', display: 'block' }} />
-            </div>
+          <img src="/logo.png" alt="Collège des Hayeffes" style={{ height: 38, width: 'auto', filter: 'brightness(0) invert(1)', flexShrink: 0 }} />
           <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,.2)', flexShrink: 0 }} />
           <span style={{ fontSize: 13, fontWeight: 600, color: '#fff', letterSpacing: '-.1px', flexShrink: 0 }}>Admin</span>
           <span style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginLeft: 2 }}>— Juin 2026</span>

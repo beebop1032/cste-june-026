@@ -46,18 +46,18 @@ export default function HomePage() {
           gap: 16,
         }}>
           <div style={{
-            background: '#fff',
+            background: 'rgba(255,255,255,.10)',
             borderRadius: 12,
             padding: '16px 32px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 2px 12px rgba(0,0,0,.18)',
+            border: '1px solid rgba(255,255,255,.14)',
           }}>
             <img
               src="/logo.png"
               alt="Logo Collège des Hayeffes"
-              style={{ height: 'auto', maxWidth: 220, width: 220, display: 'block' }}
+              style={{ height: 'auto', maxWidth: 220, width: 220, display: 'block', filter: 'brightness(0) invert(1)' }}
             />
           </div>
           <div style={{ textAlign: 'center' }}>
