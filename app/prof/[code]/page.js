@@ -12,6 +12,7 @@ export default async function ProfPage({ params }) {
   const isAdmin = await verifySession('admin')
 
   const { dejaRempli } = await getProfStatus(code)
+  const savedData  = dejaRempli ? await read(`prof-${code}.json`) : null
   const locksRaw = await read('admin-locks.json')
   const groupeStatuts = locksRaw?.groupeStatuts ?? {}
   const examStatuts   = locksRaw?.examStatuts   ?? {}
@@ -55,6 +56,7 @@ export default async function ProfPage({ params }) {
         groupeStatuts={groupeStatuts}
         examStatuts={examStatuts}
         dejaRempli={dejaRempli}
+        savedData={savedData}
         isAdmin={isAdmin}
       />
     </main>

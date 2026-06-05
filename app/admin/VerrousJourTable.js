@@ -23,6 +23,7 @@ const SEL = {
 export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: initialES, responses = {} }) {
   const [examStatuts, setExamStatuts] = useState(initialES)
   const [isPending, startTransition] = useTransition()
+  const [saveError, setSaveError] = useState(null)
 
   const [filterNiveau, setFilterNiveau] = useState('')
   const [filterGroupe, setFilterGroupe] = useState('')
@@ -57,11 +58,19 @@ export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: in
   }, [exams, effectif, filterNiveau, filterGroupe, filterProf, filterStatut])
 
   function handleStatut(examId, statut) {
+    const prev = examStatuts
     const newES = { ...examStatuts }
     if (statut === 'open') delete newES[examId]
     else newES[examId] = statut
     setExamStatuts(newES)
-    startTransition(async () => { await saveFullStateSilent(groupeStatuts, newES) })
+    setSaveError(null)
+    startTransition(async () => {
+      const res = await saveFullStateSilent(groupeStatuts, newES)
+      if (res?.error) {
+        setExamStatuts(prev)   // rollback optimistic update
+        setSaveError('Sauvegarde échouée — réessayez')
+      }
+    })
   }
 
   const hasFilter = filterNiveau || filterGroupe || filterProf || filterStatut
@@ -73,6 +82,7 @@ export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: in
           {rows.length} examen{rows.length !== 1 ? 's' : ''}
           {hasFilter ? ` (filtré sur ${exams.length})` : ''}
           {isPending && <span style={{ marginLeft: 8, color: 'var(--primary)', fontStyle: 'italic' }}>Sauvegarde…</span>}
+          {saveError && <span style={{ marginLeft: 8, color: 'var(--destructive)', fontStyle: 'italic', fontWeight: 500 }}>{saveError}</span>}
         </span>
         {hasFilter && (
           <button

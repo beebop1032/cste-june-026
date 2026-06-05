@@ -21,7 +21,7 @@ const IconTrash = () => (
 
 // groupeStatuts: { groupe: 'annule'|'maintenu' }  — open = absent
 // examStatuts:   { examId: 'annule'|'maintenu' }  — per-exam override, takes priority
-export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts = {}, dejaRempli, isAdmin }) {
+export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts = {}, dejaRempli, savedData, isAdmin }) {
   const effectiveStatutFor = (ex) => examStatuts[ex.id] ?? groupeStatuts[ex.groupe]
   const allAdminDecided = examens.every(e => !!effectiveStatutFor(e))
 
@@ -41,8 +41,21 @@ export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts
   const [examState, setExamState] = useState(() =>
     Object.fromEntries(
       examens
-        .filter(e => !effectiveStatutFor(e)) // only open exams
-        .map(e => [e.id, { eleves: [], surveilleParTitulaire: false, statut: null }])
+        .filter(e => !effectiveStatutFor(e))
+        .map(e => {
+          const saved = savedData?.examens?.find(s => s.id === e.id)
+          if (saved) {
+            const st = saved.statut === 'aucun' ? 'aucun'
+                     : (saved.statut === 'tous' || saved.statut === 'maintenu') ? 'tous'
+                     : null
+            return [e.id, {
+              statut: st,
+              eleves: Array.isArray(saved.eleves) ? saved.eleves : [],
+              surveilleParTitulaire: saved.surveilleParTitulaire ?? false,
+            }]
+          }
+          return [e.id, { eleves: [], surveilleParTitulaire: false, statut: null }]
+        })
     )
   )
   const [isPending, startTransition] = useTransition()
@@ -225,6 +238,7 @@ export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts
         const isBlocked = !!eff
         const st = isBlocked ? null : examState[ex.id]
         const nEleves = st?.eleves.length ?? 0
+        const nElevesNonVides = st?.eleves.filter(el => el.nom?.trim() || el.prenom?.trim()).length ?? 0
         const choix = st?.statut ?? null
         const resolved = isResolved(ex.id)
         const showError = submitAttempted && !resolved && !isBlocked
@@ -252,12 +266,8 @@ export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts
                 <span className="badge badge-gray" style={{ fontSize: 12 }}>{formatJour(ex.jour)}</span>
                 <span className="badge badge-gray" style={{ fontSize: 12 }}>{ex.periode}</span>
                 {linkedMap[ex.id] && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--primary)', background: 'var(--primary-light)', border: '1px solid var(--primary)', borderRadius: 4, padding: '2px 7px' }}>
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                    </svg>
-                    Liste identique au {linkedMap[ex.id].map(id => {
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--fg-muted)', background: 'var(--bg)', borderRadius: 4, padding: '2px 7px' }}>
+                    Liste partagée avec le {linkedMap[ex.id].map(id => {
                       const linked = examens.find(e => e.id === id)
                       return linked ? new Date(linked.jour + 'T12:00:00').toLocaleDateString('fr-BE', { weekday: 'short', day: 'numeric', month: 'short' }) : id
                     }).join(' et ')}
@@ -268,7 +278,7 @@ export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts
                 {eff === 'maintenu' && <span className="badge badge-blue">Maintenu pour tous</span>}
                 {!isBlocked && choix === 'aucun' && <span className="badge badge-red">Aucun élève</span>}
                 {!isBlocked && choix === 'tous'  && <span className="badge badge-green">Tous les élèves</span>}
-                {!isBlocked && nEleves > 0        && <span className="badge badge-green">{nEleves} élève{nEleves > 1 ? 's' : ''}</span>}
+                {!isBlocked && nElevesNonVides > 0 && <span className="badge badge-green">{nElevesNonVides} élève{nElevesNonVides > 1 ? 's' : ''}</span>}
                 {showError                         && <span className="badge badge-red">À compléter</span>}
               </div>
             </div>
