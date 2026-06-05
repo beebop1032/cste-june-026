@@ -120,6 +120,16 @@
     "local": "T05"
   },
   {
+    "id": "DEMN-sc5-gr1-18-P2",
+    "matiere": "Sc5",
+    "niveau": "4e",
+    "groupe": "GR1",
+    "profCode": "DEMN",
+    "jour": "2026-06-18",
+    "periode": "P2",
+    "local": "C222"
+  },
+  {
     "id": "PERS-rel-1j-18-P1",
     "matiere": "Rel",
     "niveau": "1re",
@@ -450,16 +460,6 @@
     "local": "T08"
   },
   {
-    "id": "DEMN-sc5-gr1-18-P2",
-    "matiere": "Sc5",
-    "niveau": "4e",
-    "groupe": "GR1",
-    "profCode": "DEMN",
-    "jour": "2026-06-18",
-    "periode": "P2",
-    "local": "C222"
-  },
-  {
     "id": "VDS-lg1-oral-n4-2-18-P2",
     "matiere": "Lg1 oral",
     "niveau": "6e",
@@ -580,13 +580,23 @@
     "local": "T12"
   },
   {
-    "id": "VBG-lg-ce1d-1h-2i-n-19-P1P2",
-    "matiere": "Lg CE1D 1h",
+    "id": "VBG-lg-ce1d-2i-n-19-P1",
+    "matiere": "Lg CE1D",
     "niveau": "2e",
     "groupe": "2I-N",
     "profCode": "VBG",
     "jour": "2026-06-19",
-    "periode": "P1+P2",
+    "periode": "P1",
+    "local": "C320"
+  },
+  {
+    "id": "VBG-lg-1h-2i-n-19-P2",
+    "matiere": "Lg 1h",
+    "niveau": "2e",
+    "groupe": "2I-N",
+    "profCode": "VBG",
+    "jour": "2026-06-19",
+    "periode": "P2",
     "local": "C320"
   },
   {
@@ -1880,13 +1890,23 @@
     "local": "T12"
   },
   {
-    "id": "DKS-sc-ce1d-1h-2i-24-P1P2",
-    "matiere": "Sc CE1D 1h",
+    "id": "DKS-sc-ce1d-2i-24-P1",
+    "matiere": "Sc CE1D",
     "niveau": "2e",
     "groupe": "2I",
     "profCode": "DKS",
     "jour": "2026-06-24",
-    "periode": "P1+P2",
+    "periode": "P1",
+    "local": "C320"
+  },
+  {
+    "id": "DKS-sc-1h-2i-24-P2",
+    "matiere": "Sc 1h",
+    "niveau": "2e",
+    "groupe": "2I",
+    "profCode": "DKS",
+    "jour": "2026-06-24",
+    "periode": "P2",
     "local": "C320"
   },
   {

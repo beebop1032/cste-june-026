@@ -134,24 +134,36 @@ function parseExcel() {
     }
   }
 
-  // Merge strategy: same profCode + base-matière + groupe + jour
-  // (ignoring local and annotation differences between P1/P2)
-  const byKey = new Map()
-  for (const ex of exams) {
-    const base = getBase(ex.matiere)
-    const key = `${ex.profCode}|${base}|${ex.groupe}|${ex.jour}`
-    if (byKey.has(key)) {
-      const existing = byKey.get(key)
-      // Merge period
-      if (existing.periode !== ex.periode) existing.periode = 'P1+P2'
-      // Merge matière annotations
-      existing.matiere = mergeMatiere(existing.matiere, ex.matiere)
-    } else {
-      byKey.set(key, { ...ex })
-    }
+    // Two matières can merge only if their annotation sets are comparable (one ⊆ other).
+  // "Lg1" (annots=[]) + "Lg1 Oral" (annots=[Oral]) → ok ([] ⊆ [Oral])
+  // "Lg CE1D" (annots=[CE1D]) + "Lg 1h" (annots=[1h]) → no (neither ⊆ other)
+  function canMerge(m1, m2) {
+    if (m1 === m2) return true
+    if (getBase(m1) !== getBase(m2)) return false
+    const a1 = new Set(getAnnots(m1).map(a => a.toLowerCase()))
+    const a2 = new Set(getAnnots(m2).map(a => a.toLowerCase()))
+    return [...a1].every(a => a2.has(a)) || [...a2].every(a => a1.has(a))
   }
 
-  const merged = [...byKey.values()].map(ex => ({
+  // Group by profCode|groupe|jour, then try to merge compatible entries
+  const byGroup = new Map()
+  for (const ex of exams) {
+    const gk = `${ex.profCode}|${ex.groupe}|${ex.jour}`
+    if (!byGroup.has(gk)) { byGroup.set(gk, [{ ...ex }]); continue }
+    const entries = byGroup.get(gk)
+    let merged = false
+    for (const existing of entries) {
+      if (canMerge(existing.matiere, ex.matiere)) {
+        if (existing.periode !== ex.periode) existing.periode = 'P1+P2'
+        existing.matiere = mergeMatiere(existing.matiere, ex.matiere)
+        merged = true
+        break
+      }
+    }
+    if (!merged) entries.push({ ...ex })
+  }
+
+  const merged = [...byGroup.values()].flat().map(ex => ({
     id: makeId(ex.profCode, ex.matiere, ex.groupe, ex.jour, ex.periode),
     matiere: ex.matiere,
     niveau: ex.niveau,
