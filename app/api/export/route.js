@@ -1,5 +1,5 @@
 import { requireAdmin } from '@/lib/auth'
-import { listFiles, read } from '@/lib/storage'
+import { listFiles, read, writeFileSafe } from '@/lib/storage'
 import exams from '@/lib/exams.json'
 
 export async function GET(request) {
@@ -20,7 +20,24 @@ export async function GET(request) {
   const currentFiles = allFiles.filter(f => /^prof-[^.]+\.json$/.test(f) && !/-v\d+\.json$/.test(f))
 
   if (format === 'debug') {
-    return Response.json({ allFiles, currentFiles, groupeStatuts, useBlob: !!process.env.BLOB_READ_WRITE_TOKEN })
+    // Test: write a probe file and read it back to verify the full read/write cycle
+    let writeReadTest = 'not run'
+    try {
+      const probe = { probe: true, ts: Date.now() }
+      await writeFileSafe('debug-probe.json', probe)
+      const readback = await read('debug-probe.json')
+      writeReadTest = readback?.probe === true ? 'OK — écriture et lecture Blob fonctionnent' : `lecture échouée (readback=${JSON.stringify(readback)})`
+    } catch (e) {
+      writeReadTest = `ERREUR: ${e?.message ?? String(e)}`
+    }
+    return Response.json({
+      useBlob: !!process.env.BLOB_READ_WRITE_TOKEN,
+      writeReadTest,
+      adminLocksContent: locksRaw,
+      groupeStatuts,
+      allFiles,
+      currentFiles,
+    })
   }
 
   const rows = []
