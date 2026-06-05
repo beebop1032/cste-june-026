@@ -24,9 +24,9 @@ export default function RootLayout({ children }) {
     <html lang="fr" className={`${fira.variable} ${firaCode.variable} ${fira.className}`}>
       <body>
         {children}
-        <footer style={{ textAlign: 'center', padding: '20px 16px', fontSize: 12, color: 'var(--fg-muted)', borderTop: '1px solid var(--border)', marginTop: 40 }}>
-          Made with <span style={{ color: '#E53E3E' }}>♥</span> by{' '}
-          <a href="https://beebopcity.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 500 }}>
+        <footer style={{ textAlign: 'center', padding: '24px 16px', fontSize: 14, fontWeight: 500, color: 'var(--fg)', borderTop: '1px solid var(--border)', marginTop: 40 }}>
+          Made with <span style={{ color: '#E53E3E', fontSize: 16 }}>♥</span> by{' '}
+          <a href="https://beebopcity.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 600 }}>
             BeebopCity
           </a>
         </footer>
