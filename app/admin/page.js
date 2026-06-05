@@ -110,6 +110,22 @@ export default async function AdminPage({ searchParams }) {
         </div>
       </div>
 
+      {/* Exports */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+        <a href="/api/export?format=briefing" className="btn btn-secondary" style={{ fontSize: 12 }}>
+          ⬇ Excel surveillance
+        </a>
+        <a href="/api/export?format=print" target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ fontSize: 12 }}>
+          🖨 Vue imprimable
+        </a>
+        <a href="/api/export?format=xlsx" className="btn btn-secondary" style={{ fontSize: 12 }}>
+          ⬇ Excel liste élèves
+        </a>
+        <a href="/api/export?format=csv" className="btn btn-secondary" style={{ fontSize: 12 }}>
+          ⬇ CSV liste élèves
+        </a>
+      </div>
+
       {showSuccess && (
         <div className="alert alert-success" role="status" style={{ marginBottom: 16, animation: 'fadeOut 0.4s ease 3s forwards' }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
