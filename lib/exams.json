@@ -10,8 +10,8 @@
     "local": "T02"
   },
   {
-    "id": "DELF-edm-2h-18-P1",
-    "matiere": "EDM",
+    "id": "DELF-edm-segec-2h-18-P1",
+    "matiere": "EDM Segec",
     "niveau": "2e",
     "groupe": "2H",
     "profCode": "DELF",
@@ -70,8 +70,8 @@
     "local": "T12"
   },
   {
-    "id": "DELF-segec-2i-18-P1",
-    "matiere": "Segec",
+    "id": "DELF-edm-segec-2i-18-P1",
+    "matiere": "EDM Segec",
     "niveau": "2e",
     "groupe": "2I",
     "profCode": "DELF",
@@ -130,8 +130,8 @@
     "local": "T03"
   },
   {
-    "id": "DESI-segec-2j-18-P1",
-    "matiere": "Segec",
+    "id": "DESI-edm-segec-2j-18-P1",
+    "matiere": "EDM Segec",
     "niveau": "2e",
     "groupe": "2J",
     "profCode": "DESI",
@@ -190,8 +190,8 @@
     "local": "T08"
   },
   {
-    "id": "FOF-segec-2k-18-P1",
-    "matiere": "Segec",
+    "id": "FOF-edm-segec-2k-18-P1",
+    "matiere": "EDM Segec",
     "niveau": "2e",
     "groupe": "2K",
     "profCode": "FOF",
@@ -240,8 +240,8 @@
     "local": "T16"
   },
   {
-    "id": "FOF-segec-2l-18-P1",
-    "matiere": "Segec",
+    "id": "FOF-edm-segec-2l-18-P1",
+    "matiere": "EDM Segec",
     "niveau": "2e",
     "groupe": "2L",
     "profCode": "FOF",
@@ -300,8 +300,8 @@
     "local": "T17"
   },
   {
-    "id": "FOF-segec-2m-18-P1",
-    "matiere": "Segec",
+    "id": "FOF-edm-segec-2m-18-P1",
+    "matiere": "EDM Segec",
     "niveau": "2e",
     "groupe": "2M",
     "profCode": "FOF",
@@ -340,8 +340,8 @@
     "local": "T18"
   },
   {
-    "id": "ORF-segec-2n-18-P1",
-    "matiere": "Segec",
+    "id": "ORF-edm-segec-2n-18-P1",
+    "matiere": "EDM Segec",
     "niveau": "2e",
     "groupe": "2N",
     "profCode": "ORF",

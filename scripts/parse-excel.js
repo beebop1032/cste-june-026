@@ -3,7 +3,7 @@ const fs = require('fs')
 const path = require('path')
 
 // Case-insensitive annotation set — matches CE1D, CESS, oral, Oral, 1h
-const ANNOT_WORDS = new Set(['ce1d', 'cess', 'oral', '1h'])
+const ANNOT_WORDS = new Set(['ce1d', 'cess', 'oral', '1h', 'segec'])
 
 // Niveau offsets in the sheet: col 1=1ère, 6=2ème, 11=3ème, 16=4ème, 21=5ème, 26=6ème
 const NIVEAU_OFFSETS = [
