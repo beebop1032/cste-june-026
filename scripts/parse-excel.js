@@ -104,14 +104,18 @@ function parseExcel() {
       // Skip "Lg oraux àpd" informational rows
       if (matiereCell.toLowerCase().startsWith('lg oraux')) continue
 
+      // "- CESS", "- CE1D", "- 1h" etc. → strip leading dash and treat as continuation
+      const normalizedCell = matiereCell.replace(/^-\s*/, '').trim()
+
       // Update current matière — case-insensitive annotation check
-      if (matiereCell) {
-        if (isAnnotation(matiereCell)) {
+      if (normalizedCell) {
+        const allAnnotations = normalizedCell.split(/\s+/).every(w => isAnnotation(w))
+        if (allAnnotations) {
           currentMatiere[niveau] = currentMatiere[niveau]
-            ? `${currentMatiere[niveau]} ${matiereCell}`
-            : matiereCell
+            ? `${currentMatiere[niveau]} ${normalizedCell}`
+            : normalizedCell
         } else {
-          currentMatiere[niveau] = matiereCell
+          currentMatiere[niveau] = normalizedCell
         }
       }
 

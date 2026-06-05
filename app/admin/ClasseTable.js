@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useTransition } from 'react'
 import { saveFullStateSilent } from '@/actions/admin'
 
 function formatJour(iso) {
@@ -29,20 +29,7 @@ export default function ClasseTable({ exams, niveaux, niveauxMap, groupeStatuts:
   const [groupeStatuts, setGroupeStatuts] = useState(initGS)
   const [examStatuts,   setExamStatuts]   = useState(initES)
   const [expanded,  setExpanded]  = useState({})
-  const [saving, setSaving] = useState(false)
-  const saveTimer = useRef(null)
-  const isMount  = useRef(true)
-
-  useEffect(() => {
-    if (isMount.current) { isMount.current = false; return }
-    setSaving(true)
-    clearTimeout(saveTimer.current)
-    saveTimer.current = setTimeout(async () => {
-      await saveFullStateSilent(groupeStatuts, examStatuts)
-      setSaving(false)
-    }, 500)
-    return () => clearTimeout(saveTimer.current)
-  }, [groupeStatuts, examStatuts])
+  const [isPending, startTransition] = useTransition()
 
   // Effective statut: exam-level overrides groupe-level
   function effectif(examId, groupe) {
@@ -57,6 +44,7 @@ export default function ClasseTable({ exams, niveaux, niveauxMap, groupeStatuts:
     for (const ex of exams.filter(e => e.groupe === groupe)) delete newES[ex.id]
     setGroupeStatuts(newGS)
     setExamStatuts(newES)
+    startTransition(async () => { await saveFullStateSilent(newGS, newES) })
   }
 
   function handleNiveau(niveau, statut) {
@@ -69,6 +57,7 @@ export default function ClasseTable({ exams, niveaux, niveauxMap, groupeStatuts:
     for (const ex of exams.filter(e => e.niveau === niveau)) delete newES[ex.id]
     setGroupeStatuts(newGS)
     setExamStatuts(newES)
+    startTransition(async () => { await saveFullStateSilent(newGS, newES) })
   }
 
   function handleExam(examId, statut) {
@@ -76,11 +65,12 @@ export default function ClasseTable({ exams, niveaux, niveauxMap, groupeStatuts:
     if (statut === 'open') delete newES[examId]
     else newES[examId] = statut
     setExamStatuts(newES)
+    startTransition(async () => { await saveFullStateSilent(groupeStatuts, newES) })
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {saving && <span style={{ fontSize: 12, color: 'var(--primary)', fontStyle: 'italic' }}>Sauvegarde…</span>}
+      {isPending && <span style={{ fontSize: 12, color: 'var(--primary)', fontStyle: 'italic' }}>Sauvegarde…</span>}
 
       {niveaux.map(n => {
         const groupesNiveau = niveauxMap[n] ?? []

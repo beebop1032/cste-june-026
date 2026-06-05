@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useTransition } from 'react'
 import { saveFullStateSilent } from '@/actions/admin'
 
 function formatJour(iso) {
@@ -20,20 +20,7 @@ const SEL = {
 
 export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: initialES }) {
   const [examStatuts, setExamStatuts] = useState(initialES)
-  const [saving, setSaving] = useState(false)
-  const saveTimer = useRef(null)
-  const isMount  = useRef(true)
-
-  useEffect(() => {
-    if (isMount.current) { isMount.current = false; return }
-    setSaving(true)
-    clearTimeout(saveTimer.current)
-    saveTimer.current = setTimeout(async () => {
-      await saveFullStateSilent(groupeStatuts, examStatuts)
-      setSaving(false)
-    }, 500)
-    return () => clearTimeout(saveTimer.current)
-  }, [examStatuts])
+  const [isPending, startTransition] = useTransition()
 
   const [filterNiveau, setFilterNiveau] = useState('')
   const [filterGroupe, setFilterGroupe] = useState('')
@@ -68,6 +55,7 @@ export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: in
     if (statut === 'open') delete newES[examId]
     else newES[examId] = statut
     setExamStatuts(newES)
+    startTransition(async () => { await saveFullStateSilent(groupeStatuts, newES) })
   }
 
   const hasFilter = filterNiveau || filterGroupe || filterProf || filterStatut
@@ -78,7 +66,7 @@ export default function VerrousJourTable({ exams, groupeStatuts, examStatuts: in
         <span style={{ fontSize: 12, color: 'var(--fg-muted)' }}>
           {rows.length} examen{rows.length !== 1 ? 's' : ''}
           {hasFilter ? ` (filtré sur ${exams.length})` : ''}
-          {saving && <span style={{ marginLeft: 8, color: 'var(--primary)', fontStyle: 'italic' }}>Sauvegarde…</span>}
+          {isPending && <span style={{ marginLeft: 8, color: 'var(--primary)', fontStyle: 'italic' }}>Sauvegarde…</span>}
         </span>
         {hasFilter && (
           <button
