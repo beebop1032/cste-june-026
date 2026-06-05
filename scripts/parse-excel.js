@@ -7,6 +7,9 @@ const ANNOT_WORDS = new Set(['ce1d', 'cess', 'oral', '1h', 'segec'])
 // Annotations that qualify the WHOLE block (backfill previous entries)
 // vs forward-only qualifiers (oral, 1h) that only apply from that row onwards
 const BACKFILL_WORDS = new Set(['ce1d', 'cess', 'segec'])
+// Matière bases that must NEVER gain an "oral" annotation — "Geo Oral" is a typo.
+// For these, "Oral" appearing after them is ignored (not appended).
+const NO_ORAL = new Set(['geo', 'géo'])
 
 // Niveau offsets in the sheet: col 1=1ère, 6=2ème, 11=3ème, 16=4ème, 21=5ème, 26=6ème
 const NIVEAU_OFFSETS = [
@@ -124,15 +127,21 @@ function parseExcel() {
         const allAnnotations = normalizedCell.split(/\s+/).every(w => isAnnotation(w))
         if (allAnnotations) {
           if (currentMatiere[niveau]) {
-            const oldMatiere = currentMatiere[niveau]
-            currentMatiere[niveau] = `${oldMatiere} ${normalizedCell}`
-            // Backfill only for "block qualifiers" (CESS, CE1D, SEGEC) — these apply to the whole
-            // section. Forward-only qualifiers (oral, 1h) only affect rows from here onwards.
-            const isBlockQualifier = normalizedCell.split(/\s+/).every(w => BACKFILL_WORDS.has(w.toLowerCase()))
-            if (isBlockQualifier) {
-              const currentBase = getBase(currentMatiere[niveau])
-              for (const idx of blockIndices[niveau]) {
-                if (getBase(exams[idx].matiere) === currentBase) exams[idx].matiere = currentMatiere[niveau]
+            // Skip "oral" annotation for matières that must never become "Geo Oral"
+            const baseWords = getBase(currentMatiere[niveau]).toLowerCase().split(/\s+/)
+            const annotWords = normalizedCell.toLowerCase().split(/\s+/)
+            const skipOral = annotWords.some(w => w === 'oral') && baseWords.every(w => NO_ORAL.has(w))
+            if (!skipOral) {
+              const oldMatiere = currentMatiere[niveau]
+              currentMatiere[niveau] = `${oldMatiere} ${normalizedCell}`
+              // Backfill only for "block qualifiers" (CESS, CE1D, SEGEC) — these apply to the whole
+              // section. Forward-only qualifiers (oral, 1h) only affect rows from here onwards.
+              const isBlockQualifier = normalizedCell.split(/\s+/).every(w => BACKFILL_WORDS.has(w.toLowerCase()))
+              if (isBlockQualifier) {
+                const currentBase = getBase(currentMatiere[niveau])
+                for (const idx of blockIndices[niveau]) {
+                  if (getBase(exams[idx].matiere) === currentBase) exams[idx].matiere = currentMatiere[niveau]
+                }
               }
             }
           } else {

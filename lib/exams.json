@@ -390,8 +390,8 @@
     "local": "C121"
   },
   {
-    "id": "LNB-lg1-oral-a4-1-6e-18-P2",
-    "matiere": "Lg1 oral",
+    "id": "LNB-lg1-a4-1-6e-18-P2",
+    "matiere": "Lg1",
     "niveau": "6e",
     "groupe": "A4-1",
     "profCode": "LNB",
@@ -2100,8 +2100,8 @@
     "local": "C001"
   },
   {
-    "id": "DEST-geo-oral-6i-6e-24-P1",
-    "matiere": "Géo Oral",
+    "id": "DEST-geo-6i-6e-24-P1",
+    "matiere": "Géo",
     "niveau": "6e",
     "groupe": "6I",
     "profCode": "DEST",
@@ -2170,8 +2170,8 @@
     "local": "C201"
   },
   {
-    "id": "SMO-geo-oral-6j-6e-24-P1",
-    "matiere": "Géo Oral",
+    "id": "SMO-geo-6j-6e-24-P1",
+    "matiere": "Géo",
     "niveau": "6e",
     "groupe": "6J",
     "profCode": "SMO",
@@ -2240,8 +2240,8 @@
     "local": "C321"
   },
   {
-    "id": "SMO-geo-oral-6k-6e-24-P1",
-    "matiere": "Géo Oral",
+    "id": "SMO-geo-6k-6e-24-P1",
+    "matiere": "Géo",
     "niveau": "6e",
     "groupe": "6K",
     "profCode": "SMO",
