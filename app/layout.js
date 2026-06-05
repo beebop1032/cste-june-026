@@ -26,7 +26,7 @@ export default function RootLayout({ children }) {
         {children}
         <footer style={{ textAlign: 'center', padding: '24px 16px', fontSize: 14, fontWeight: 500, color: 'var(--fg)', borderTop: '1px solid var(--border)', marginTop: 40 }}>
           Made with <span style={{ color: '#E53E3E', fontSize: 16 }}>♥</span> by{' '}
-          <a href="https://beebopcity.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 600 }}>
+          <a href="https://www.beebopcity.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', textDecoration: 'none' }}>
             BeebopCity
           </a>
         </footer>

@@ -278,7 +278,7 @@ body {
 @media print {
   @page { size: A4 portrait; margin: 12mm 15mm; }
 
-  .topbar, .controls { display: none !important; }
+  .no-print, .topbar, .controls { display: none !important; }
   .content { padding: 0; max-width: none; }
 
   body { font-size: 11px; background: #fff; }
@@ -660,19 +660,6 @@ export default function PrintViews({ exams, partData, allGroupes, allProfs }) {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: STYLES }} />
-
-      {/* Top bar */}
-      <div className="topbar">
-        <a href="/admin" className="back-link">
-          <BackIcon /> Admin
-        </a>
-        <img src="/logo.png" alt="Collège des Hayeffes" style={{ height: 38, width: 'auto', filter: 'brightness(0) invert(1)', flexShrink: 0 }} />
-        <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,.2)' }} />
-        <div>
-          <div className="topbar-title">Vues imprimables</div>
-          <div className="topbar-sub">Examens juin 2026 — Collège des Hayeffes</div>
-        </div>
-      </div>
 
       {/* Controls */}
       <div className="controls">

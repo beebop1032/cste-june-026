@@ -37,5 +37,38 @@ export default async function PrintPage() {
   const allGroupes = [...new Set(exams.map(e => e.groupe))].sort()
   const allProfs   = [...new Set(exams.map(e => e.profCode))].sort()
 
-  return <PrintViews exams={exams} partData={partData} allGroupes={allGroupes} allProfs={allProfs} />
+  return (
+    <>
+      {/* Classic admin nav — hidden on print */}
+      <div className="no-print" style={{ position: 'sticky', top: 0, zIndex: 50, background: 'var(--primary)', boxShadow: '0 2px 8px rgba(0,0,0,.18)' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 16px', display: 'flex', alignItems: 'center', gap: 16, height: 52 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+            <img src="/logo.png" alt="Collège des Hayeffes" style={{ height: 38, width: 'auto', filter: 'brightness(0) invert(1)', flexShrink: 0 }} />
+            <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,.2)', flexShrink: 0 }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#fff', letterSpacing: '-.1px', flexShrink: 0 }}>Admin</span>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginLeft: 2 }}>— Juin 2026</span>
+          </div>
+          <nav style={{ display: 'flex', gap: 1, flexShrink: 0 }}>
+            {[
+              { href: '/admin?tab=suivi',   label: 'Suivi'    },
+              { href: '/admin?tab=horaire', label: 'Horaire'  },
+              { href: '/admin?tab=eleves',  label: 'Élèves'   },
+              { href: '/admin?tab=verrous', label: 'Statuts'  },
+              { href: '/admin/print',       label: 'Vues imprimables', active: true },
+            ].map(({ href, label, active }) => (
+              <a key={href} href={href} style={{
+                padding: '6px 12px', borderRadius: 6, textDecoration: 'none',
+                fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap',
+                background: active ? 'rgba(255,255,255,.18)' : 'transparent',
+                color: active ? '#fff' : 'rgba(255,255,255,.6)',
+              }}>
+                {label}
+              </a>
+            ))}
+          </nav>
+        </div>
+      </div>
+      <PrintViews exams={exams} partData={partData} allGroupes={allGroupes} allProfs={allProfs} />
+    </>
+  )
 }
