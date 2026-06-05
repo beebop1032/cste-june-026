@@ -2,7 +2,9 @@ const XLSX = require('xlsx')
 const fs = require('fs')
 const path = require('path')
 
-const ANNOTATIONS = new Set(['CE1D', 'CESS', 'oral', '1h'])
+// Case-insensitive annotation set — matches CE1D, CESS, oral, Oral, 1h
+const ANNOT_WORDS = new Set(['ce1d', 'cess', 'oral', '1h'])
+
 // Niveau offsets in the sheet: col 1=1ère, 6=2ème, 11=3ème, 16=4ème, 21=5ème, 26=6ème
 const NIVEAU_OFFSETS = [
   { niveau: '1re', col: 1 },
@@ -12,6 +14,33 @@ const NIVEAU_OFFSETS = [
   { niveau: '5e', col: 21 },
   { niveau: '6e', col: 26 },
 ]
+
+function isAnnotation(word) {
+  return ANNOT_WORDS.has(word.toLowerCase())
+}
+
+// Base matière = words that are NOT annotations
+function getBase(matiere) {
+  return matiere.trim().split(/\s+/).filter(w => !isAnnotation(w)).join(' ')
+}
+
+// Annotations from a matière string (deduped, lowercased for comparison)
+function getAnnots(matiere) {
+  return matiere.trim().split(/\s+/).filter(w => isAnnotation(w))
+}
+
+// Merge two matière strings: keep base + union of annotations (P1 annots first)
+function mergeMatiere(m1, m2) {
+  const base = getBase(m1) || getBase(m2)
+  const annots1 = getAnnots(m1)
+  const annots2 = getAnnots(m2)
+  const seen = new Set(annots1.map(a => a.toLowerCase()))
+  const combined = [...annots1]
+  for (const a of annots2) {
+    if (!seen.has(a.toLowerCase())) { combined.push(a); seen.add(a.toLowerCase()) }
+  }
+  return combined.length ? `${base} ${combined.join(' ')}`.trim() : base
+}
 
 function slugify(str) {
   return String(str)
@@ -53,7 +82,6 @@ function parseExcel() {
     // Day header: contains "/" like "Jeudi 18/06 (...)"
     if (col0.includes('/')) {
       currentJour = parseDayToISO(col0)
-      // Reset all matières for new day
       NIVEAU_OFFSETS.forEach(({ niveau }) => { currentMatiere[niveau] = '' })
       continue
     }
@@ -76,9 +104,9 @@ function parseExcel() {
       // Skip "Lg oraux àpd" informational rows
       if (matiereCell.toLowerCase().startsWith('lg oraux')) continue
 
-      // Update current matière state
+      // Update current matière — case-insensitive annotation check
       if (matiereCell) {
-        if (ANNOTATIONS.has(matiereCell)) {
+        if (isAnnotation(matiereCell)) {
           currentMatiere[niveau] = currentMatiere[niveau]
             ? `${currentMatiere[niveau]} ${matiereCell}`
             : matiereCell
@@ -102,13 +130,18 @@ function parseExcel() {
     }
   }
 
-  // Merge P1+P2: same profCode/matière/groupe/local on same jour
+  // Merge strategy: same profCode + base-matière + groupe + jour
+  // (ignoring local and annotation differences between P1/P2)
   const byKey = new Map()
   for (const ex of exams) {
-    const key = `${ex.profCode}|${ex.matiere}|${ex.groupe}|${ex.local}|${ex.jour}`
+    const base = getBase(ex.matiere)
+    const key = `${ex.profCode}|${base}|${ex.groupe}|${ex.jour}`
     if (byKey.has(key)) {
       const existing = byKey.get(key)
+      // Merge period
       if (existing.periode !== ex.periode) existing.periode = 'P1+P2'
+      // Merge matière annotations
+      existing.matiere = mergeMatiere(existing.matiere, ex.matiere)
     } else {
       byKey.set(key, { ...ex })
     }

@@ -280,13 +280,13 @@
     "local": "C321"
   },
   {
-    "id": "VERM-sc6-gr1-18-P1",
+    "id": "VERM-sc6-gr1-18-P1P2",
     "matiere": "Sc6",
     "niveau": "6e",
     "groupe": "GR1",
     "profCode": "VERM",
     "jour": "2026-06-18",
-    "periode": "P1",
+    "periode": "P1+P2",
     "local": "C001"
   },
   {
@@ -320,13 +320,13 @@
     "local": "C123"
   },
   {
-    "id": "HE-sc6-gr2-18-P1",
+    "id": "HE-sc6-gr2-18-P1P2",
     "matiere": "Sc6",
     "niveau": "6e",
     "groupe": "GR2",
     "profCode": "HE",
     "jour": "2026-06-18",
-    "periode": "P1",
+    "periode": "P1+P2",
     "local": "C034"
   },
   {
@@ -380,16 +380,6 @@
     "local": "C218"
   },
   {
-    "id": "IVE-latin-gr1-18-P2",
-    "matiere": "Latin",
-    "niveau": "5e",
-    "groupe": "GR1",
-    "profCode": "IVE",
-    "jour": "2026-06-18",
-    "periode": "P2",
-    "local": "C121"
-  },
-  {
     "id": "LNB-lg1-a4-1-18-P2",
     "matiere": "Lg1",
     "niveau": "6e",
@@ -440,16 +430,6 @@
     "local": "C221"
   },
   {
-    "id": "VERM-sc6-gr1-18-P2",
-    "matiere": "Sc6",
-    "niveau": "5e",
-    "groupe": "GR1",
-    "profCode": "VERM",
-    "jour": "2026-06-18",
-    "periode": "P2",
-    "local": "C119"
-  },
-  {
     "id": "MEL-lg1-oral-n4-1-18-P2",
     "matiere": "Lg1 oral",
     "niveau": "6e",
@@ -478,16 +458,6 @@
     "jour": "2026-06-18",
     "periode": "P2",
     "local": "C222"
-  },
-  {
-    "id": "HE-sc6-gr2-18-P2",
-    "matiere": "Sc6",
-    "niveau": "5e",
-    "groupe": "GR2",
-    "profCode": "HE",
-    "jour": "2026-06-18",
-    "periode": "P2",
-    "local": "C120"
   },
   {
     "id": "VDS-lg1-oral-n4-2-18-P2",
@@ -610,13 +580,13 @@
     "local": "T12"
   },
   {
-    "id": "VBG-lg-ce1d-2i-n-19-P1",
-    "matiere": "Lg CE1D",
+    "id": "VBG-lg-ce1d-1h-2i-n-19-P1P2",
+    "matiere": "Lg CE1D 1h",
     "niveau": "2e",
     "groupe": "2I-N",
     "profCode": "VBG",
     "jour": "2026-06-19",
-    "periode": "P1",
+    "periode": "P1+P2",
     "local": "C320"
   },
   {
@@ -670,13 +640,13 @@
     "local": "T03"
   },
   {
-    "id": "BAL-lg-ce1d-2j-n-19-P1",
-    "matiere": "Lg CE1D",
+    "id": "BAL-lg-ce1d-1h-2j-n-19-P1P2",
+    "matiere": "Lg CE1D 1h",
     "niveau": "2e",
     "groupe": "2J-N",
     "profCode": "BAL",
     "jour": "2026-06-19",
-    "periode": "P1",
+    "periode": "P1+P2",
     "local": "C216"
   },
   {
@@ -730,13 +700,13 @@
     "local": "T08"
   },
   {
-    "id": "VBG-lg-ce1d-2k-n-19-P1",
-    "matiere": "Lg CE1D",
+    "id": "VBG-lg-ce1d-1h-2k-n-19-P1P2",
+    "matiere": "Lg CE1D 1h",
     "niveau": "2e",
     "groupe": "2K-N",
     "profCode": "VBG",
     "jour": "2026-06-19",
-    "periode": "P1",
+    "periode": "P1+P2",
     "local": "C223"
   },
   {
@@ -780,13 +750,13 @@
     "local": "T16"
   },
   {
-    "id": "PEC-lg-ce1d-2l-a-19-P1",
-    "matiere": "Lg CE1D",
+    "id": "PEC-lg-ce1d-1h-2l-a-19-P1P2",
+    "matiere": "Lg CE1D 1h",
     "niveau": "2e",
     "groupe": "2L-A",
     "profCode": "PEC",
     "jour": "2026-06-19",
-    "periode": "P1",
+    "periode": "P1+P2",
     "local": "C225"
   },
   {
@@ -830,13 +800,13 @@
     "local": "T17"
   },
   {
-    "id": "BAL-lg-ce1d-2m-a-19-P1",
-    "matiere": "Lg CE1D",
+    "id": "BAL-lg-ce1d-1h-2m-a-19-P1P2",
+    "matiere": "Lg CE1D 1h",
     "niveau": "2e",
     "groupe": "2M-A",
     "profCode": "BAL",
     "jour": "2026-06-19",
-    "periode": "P1",
+    "periode": "P1+P2",
     "local": "C319"
   },
   {
@@ -880,13 +850,13 @@
     "local": "T18"
   },
   {
-    "id": "PEC-lg-ce1d-2n-a-19-P1",
-    "matiere": "Lg CE1D",
+    "id": "PEC-lg-ce1d-1h-2n-a-19-P1P2",
+    "matiere": "Lg CE1D 1h",
     "niveau": "2e",
     "groupe": "2N-A",
     "profCode": "PEC",
     "jour": "2026-06-19",
-    "periode": "P1",
+    "periode": "P1+P2",
     "local": "C226"
   },
   {
@@ -910,16 +880,6 @@
     "local": "C218"
   },
   {
-    "id": "VBG-lg-1h-2i-n-19-P2",
-    "matiere": "Lg 1h",
-    "niveau": "2e",
-    "groupe": "2I-N",
-    "profCode": "VBG",
-    "jour": "2026-06-19",
-    "periode": "P2",
-    "local": "C320"
-  },
-  {
     "id": "JY-rel-4i-19-P2",
     "matiere": "Rel",
     "niveau": "4e",
@@ -928,16 +888,6 @@
     "jour": "2026-06-19",
     "periode": "P2",
     "local": "C219"
-  },
-  {
-    "id": "BAL-lg-1h-ce1d-2j-n-19-P2",
-    "matiere": "Lg 1h CE1D",
-    "niveau": "2e",
-    "groupe": "2J-N",
-    "profCode": "BAL",
-    "jour": "2026-06-19",
-    "periode": "P2",
-    "local": "C216"
   },
   {
     "id": "JY-rel-4j-19-P2",
@@ -950,16 +900,6 @@
     "local": "C220"
   },
   {
-    "id": "VBG-lg-1h-ce1d-2k-n-19-P2",
-    "matiere": "Lg 1h CE1D",
-    "niveau": "2e",
-    "groupe": "2K-N",
-    "profCode": "VBG",
-    "jour": "2026-06-19",
-    "periode": "P2",
-    "local": "C223"
-  },
-  {
     "id": "JY-rel-4k-19-P2",
     "matiere": "Rel",
     "niveau": "4e",
@@ -968,16 +908,6 @@
     "jour": "2026-06-19",
     "periode": "P2",
     "local": "C221"
-  },
-  {
-    "id": "PEC-lg-1h-ce1d-2l-a-19-P2",
-    "matiere": "Lg 1h CE1D",
-    "niveau": "2e",
-    "groupe": "2L-A",
-    "profCode": "PEC",
-    "jour": "2026-06-19",
-    "periode": "P2",
-    "local": "C225"
   },
   {
     "id": "JY-rel-4l-19-P2",
@@ -990,16 +920,6 @@
     "local": "C222"
   },
   {
-    "id": "BAL-lg-1h-ce1d-2m-a-19-P2",
-    "matiere": "Lg 1h CE1D",
-    "niveau": "2e",
-    "groupe": "2M-A",
-    "profCode": "BAL",
-    "jour": "2026-06-19",
-    "periode": "P2",
-    "local": "C319"
-  },
-  {
     "id": "PAY-grec-gr1-19-P2",
     "matiere": "Grec",
     "niveau": "3e",
@@ -1008,16 +928,6 @@
     "jour": "2026-06-19",
     "periode": "P2",
     "local": "C201"
-  },
-  {
-    "id": "PEC-lg-1h-ce1d-2n-a-19-P2",
-    "matiere": "Lg 1h CE1D",
-    "niveau": "2e",
-    "groupe": "2N-A",
-    "profCode": "PEC",
-    "jour": "2026-06-19",
-    "periode": "P2",
-    "local": "C226"
   },
   {
     "id": "JOR-fr-1h-22-P1",
@@ -1100,13 +1010,13 @@
     "local": "C320"
   },
   {
-    "id": "DOM-lg1-a4-1-22-P1",
-    "matiere": "Lg1",
+    "id": "DOM-lg1-oral-a4-1-22-P1P2",
+    "matiere": "Lg1 Oral",
     "niveau": "3e",
     "groupe": "A4-1",
     "profCode": "DOM",
     "jour": "2026-06-22",
-    "periode": "P1",
+    "periode": "P1+P2",
     "local": "C116"
   },
   {
@@ -1160,13 +1070,13 @@
     "local": "C216"
   },
   {
-    "id": "GOD-lg1-a4-2-22-P1",
-    "matiere": "Lg1",
+    "id": "GOD-lg1-oral-a4-2-22-P1P2",
+    "matiere": "Lg1 Oral",
     "niveau": "3e",
     "groupe": "A4-2",
     "profCode": "GOD",
     "jour": "2026-06-22",
-    "periode": "P1",
+    "periode": "P1+P2",
     "local": "C122"
   },
   {
@@ -1220,13 +1130,13 @@
     "local": "C223"
   },
   {
-    "id": "BAL-lg1-a4-3-22-P1",
-    "matiere": "Lg1",
+    "id": "BAL-lg1-oral-a4-3-22-P1P2",
+    "matiere": "Lg1 Oral",
     "niveau": "3e",
     "groupe": "A4-3",
     "profCode": "BAL",
     "jour": "2026-06-22",
-    "periode": "P1",
+    "periode": "P1+P2",
     "local": "C117"
   },
   {
@@ -1280,13 +1190,13 @@
     "local": "C225"
   },
   {
-    "id": "GAU-lg1-n4-1-22-P1",
-    "matiere": "Lg1",
+    "id": "GAU-lg1-oral-n4-1-22-P1P2",
+    "matiere": "Lg1 Oral",
     "niveau": "3e",
     "groupe": "N4-1",
     "profCode": "GAU",
     "jour": "2026-06-22",
-    "periode": "P1",
+    "periode": "P1+P2",
     "local": "C121"
   },
   {
@@ -1320,13 +1230,13 @@
     "local": "C319"
   },
   {
-    "id": "PEC-lg1-n4-2-22-P1",
-    "matiere": "Lg1",
+    "id": "PEC-lg1-oral-n4-2-22-P1P2",
+    "matiere": "Lg1 Oral",
     "niveau": "3e",
     "groupe": "N4-2",
     "profCode": "PEC",
     "jour": "2026-06-22",
-    "periode": "P1",
+    "periode": "P1+P2",
     "local": "C201"
   },
   {
@@ -1350,13 +1260,13 @@
     "local": "C226"
   },
   {
-    "id": "VBG-lg1-n4-3-22-P1",
-    "matiere": "Lg1",
+    "id": "VBG-lg1-oral-n4-3-22-P1P2",
+    "matiere": "Lg1 Oral",
     "niveau": "3e",
     "groupe": "N4-3",
     "profCode": "VBG",
     "jour": "2026-06-22",
-    "periode": "P1",
+    "periode": "P1+P2",
     "local": "C123"
   },
   {
@@ -1380,16 +1290,6 @@
     "local": "C001"
   },
   {
-    "id": "DOM-oral-a4-1-22-P2",
-    "matiere": "Oral",
-    "niveau": "3e",
-    "groupe": "A4-1",
-    "profCode": "DOM",
-    "jour": "2026-06-22",
-    "periode": "P2",
-    "local": "C116"
-  },
-  {
     "id": "DEST-hist-5i-22-P2",
     "matiere": "Hist",
     "niveau": "5e",
@@ -1408,16 +1308,6 @@
     "jour": "2026-06-22",
     "periode": "P2",
     "local": "C034"
-  },
-  {
-    "id": "GOD-oral-a4-2-22-P2",
-    "matiere": "Oral",
-    "niveau": "3e",
-    "groupe": "A4-2",
-    "profCode": "GOD",
-    "jour": "2026-06-22",
-    "periode": "P2",
-    "local": "C122"
   },
   {
     "id": "SMO-hist-5j-22-P2",
@@ -1440,16 +1330,6 @@
     "local": "C232"
   },
   {
-    "id": "BAL-oral-a4-3-22-P2",
-    "matiere": "Oral",
-    "niveau": "3e",
-    "groupe": "A4-3",
-    "profCode": "BAL",
-    "jour": "2026-06-22",
-    "periode": "P2",
-    "local": "C117"
-  },
-  {
     "id": "SMO-hist-5k-22-P2",
     "matiere": "Hist",
     "niveau": "5e",
@@ -1468,36 +1348,6 @@
     "jour": "2026-06-22",
     "periode": "P2",
     "local": "C210"
-  },
-  {
-    "id": "GAU-oral-n4-1-22-P2",
-    "matiere": "Oral",
-    "niveau": "3e",
-    "groupe": "N4-1",
-    "profCode": "GAU",
-    "jour": "2026-06-22",
-    "periode": "P2",
-    "local": "C121"
-  },
-  {
-    "id": "PEC-oral-n4-2-22-P2",
-    "matiere": "Oral",
-    "niveau": "3e",
-    "groupe": "N4-2",
-    "profCode": "PEC",
-    "jour": "2026-06-22",
-    "periode": "P2",
-    "local": "C201"
-  },
-  {
-    "id": "VBG-oral-n4-3-22-P2",
-    "matiere": "Oral",
-    "niveau": "3e",
-    "groupe": "N4-3",
-    "profCode": "VBG",
-    "jour": "2026-06-22",
-    "periode": "P2",
-    "local": "C123"
   },
   {
     "id": "CLO-lg-1h-n-23-P1",
@@ -2030,13 +1880,13 @@
     "local": "T12"
   },
   {
-    "id": "DKS-sc-ce1d-2i-24-P1",
-    "matiere": "Sc CE1D",
+    "id": "DKS-sc-ce1d-1h-2i-24-P1P2",
+    "matiere": "Sc CE1D 1h",
     "niveau": "2e",
     "groupe": "2I",
     "profCode": "DKS",
     "jour": "2026-06-24",
-    "periode": "P1",
+    "periode": "P1+P2",
     "local": "C320"
   },
   {
@@ -2070,8 +1920,8 @@
     "local": "C001"
   },
   {
-    "id": "DEST-oral-6i-24-P1",
-    "matiere": "Oral",
+    "id": "DEST-geo-oral-6i-24-P1",
+    "matiere": "Géo Oral",
     "niveau": "6e",
     "groupe": "6I",
     "profCode": "DEST",
@@ -2090,13 +1940,13 @@
     "local": "T03"
   },
   {
-    "id": "DKS-sc-ce1d-2j-24-P1",
-    "matiere": "Sc CE1D",
+    "id": "DKS-sc-ce1d-1h-2j-24-P1P2",
+    "matiere": "Sc CE1D 1h",
     "niveau": "2e",
     "groupe": "2J",
     "profCode": "DKS",
     "jour": "2026-06-24",
-    "periode": "P1",
+    "periode": "P1+P2",
     "local": "C216"
   },
   {
@@ -2130,8 +1980,8 @@
     "local": "C201"
   },
   {
-    "id": "SMO-oral-6j-24-P1",
-    "matiere": "Oral",
+    "id": "SMO-geo-oral-6j-24-P1",
+    "matiere": "Géo Oral",
     "niveau": "6e",
     "groupe": "6J",
     "profCode": "SMO",
@@ -2150,13 +2000,13 @@
     "local": "T08"
   },
   {
-    "id": "DKS-sc-ce1d-2k-24-P1",
-    "matiere": "Sc CE1D",
+    "id": "DKS-sc-ce1d-1h-2k-24-P1P2",
+    "matiere": "Sc CE1D 1h",
     "niveau": "2e",
     "groupe": "2K",
     "profCode": "DKS",
     "jour": "2026-06-24",
-    "periode": "P1",
+    "periode": "P1+P2",
     "local": "C223"
   },
   {
@@ -2190,8 +2040,8 @@
     "local": "C321"
   },
   {
-    "id": "SMO-oral-6k-24-P1",
-    "matiere": "Oral",
+    "id": "SMO-geo-oral-6k-24-P1",
+    "matiere": "Géo Oral",
     "niveau": "6e",
     "groupe": "6K",
     "profCode": "SMO",
@@ -2210,13 +2060,13 @@
     "local": "T16"
   },
   {
-    "id": "DKS-sc-ce1d-2l-24-P1",
-    "matiere": "Sc CE1D",
+    "id": "DKS-sc-ce1d-1h-2l-24-P1P2",
+    "matiere": "Sc CE1D 1h",
     "niveau": "2e",
     "groupe": "2L",
     "profCode": "DKS",
     "jour": "2026-06-24",
-    "periode": "P1",
+    "periode": "P1+P2",
     "local": "C225"
   },
   {
@@ -2260,13 +2110,13 @@
     "local": "T17"
   },
   {
-    "id": "PIEJ-sc-ce1d-2m-24-P1",
-    "matiere": "Sc CE1D",
+    "id": "PIEJ-sc-ce1d-1h-2m-24-P1P2",
+    "matiere": "Sc CE1D 1h",
     "niveau": "2e",
     "groupe": "2M",
     "profCode": "PIEJ",
     "jour": "2026-06-24",
-    "periode": "P1",
+    "periode": "P1+P2",
     "local": "C319"
   },
   {
@@ -2310,13 +2160,13 @@
     "local": "T18"
   },
   {
-    "id": "BERS-sc-ce1d-2n-24-P1",
-    "matiere": "Sc CE1D",
+    "id": "BERS-sc-ce1d-1h-2n-24-P1P2",
+    "matiere": "Sc CE1D 1h",
     "niveau": "2e",
     "groupe": "2N",
     "profCode": "BERS",
     "jour": "2026-06-24",
-    "periode": "P1",
+    "periode": "P1+P2",
     "local": "C226"
   },
   {
@@ -2360,16 +2210,6 @@
     "local": "C232"
   },
   {
-    "id": "DKS-sc-1h-2i-24-P2",
-    "matiere": "Sc 1h",
-    "niveau": "2e",
-    "groupe": "2I",
-    "profCode": "DKS",
-    "jour": "2026-06-24",
-    "periode": "P2",
-    "local": "C320"
-  },
-  {
     "id": "DOM-lg2-a4-1-24-P2",
     "matiere": "Lg2",
     "niveau": "3e",
@@ -2390,16 +2230,6 @@
     "local": "C210"
   },
   {
-    "id": "DKS-sc-1h-ce1d-2j-24-P2",
-    "matiere": "Sc 1h CE1D",
-    "niveau": "2e",
-    "groupe": "2J",
-    "profCode": "DKS",
-    "jour": "2026-06-24",
-    "periode": "P2",
-    "local": "C216"
-  },
-  {
     "id": "BAL-lg2-n2-1-24-P2",
     "matiere": "Lg2",
     "niveau": "3e",
@@ -2408,16 +2238,6 @@
     "jour": "2026-06-24",
     "periode": "P2",
     "local": "C117"
-  },
-  {
-    "id": "DKS-sc-1h-ce1d-2k-24-P2",
-    "matiere": "Sc 1h CE1D",
-    "niveau": "2e",
-    "groupe": "2K",
-    "profCode": "DKS",
-    "jour": "2026-06-24",
-    "periode": "P2",
-    "local": "C223"
   },
   {
     "id": "VBG-lg2-n2-2-24-P2",
@@ -2440,16 +2260,6 @@
     "local": "C001"
   },
   {
-    "id": "DKS-sc-1h-ce1d-2l-24-P2",
-    "matiere": "Sc 1h CE1D",
-    "niveau": "2e",
-    "groupe": "2L",
-    "profCode": "DKS",
-    "jour": "2026-06-24",
-    "periode": "P2",
-    "local": "C225"
-  },
-  {
     "id": "GAU-lg2-n4-1-24-P2",
     "matiere": "Lg2",
     "niveau": "3e",
@@ -2460,16 +2270,6 @@
     "local": "C121"
   },
   {
-    "id": "PIEJ-sc-1h-ce1d-2m-24-P2",
-    "matiere": "Sc 1h CE1D",
-    "niveau": "2e",
-    "groupe": "2M",
-    "profCode": "PIEJ",
-    "jour": "2026-06-24",
-    "periode": "P2",
-    "local": "C319"
-  },
-  {
     "id": "GAU-lg2-3j-a4-24-P2",
     "matiere": "Lg2",
     "niveau": "3e",
@@ -2478,16 +2278,6 @@
     "jour": "2026-06-24",
     "periode": "P2",
     "local": "C118"
-  },
-  {
-    "id": "BERS-sc-1h-ce1d-2n-24-P2",
-    "matiere": "Sc 1h CE1D",
-    "niveau": "2e",
-    "groupe": "2N",
-    "profCode": "BERS",
-    "jour": "2026-06-24",
-    "periode": "P2",
-    "local": "C226"
   },
   {
     "id": "GOD-lg2-3m-a4-24-P2",
@@ -2710,13 +2500,13 @@
     "local": "C120"
   },
   {
-    "id": "MEL-lg2-n2-1-25-P1",
+    "id": "MEL-lg2-n2-1-25-P1P2",
     "matiere": "Lg2",
     "niveau": "6e",
     "groupe": "N2-1",
     "profCode": "MEL",
     "jour": "2026-06-25",
-    "periode": "P1",
+    "periode": "P1+P2",
     "local": "C210"
   },
   {
@@ -2828,16 +2618,6 @@
     "jour": "2026-06-25",
     "periode": "P2",
     "local": "C001"
-  },
-  {
-    "id": "MEL-lg2-n2-1-25-P2",
-    "matiere": "Lg2",
-    "niveau": "4e",
-    "groupe": "N2-1",
-    "profCode": "MEL",
-    "jour": "2026-06-25",
-    "periode": "P2",
-    "local": "C219"
   },
   {
     "id": "HE-sc6-gr2-25-P2",
