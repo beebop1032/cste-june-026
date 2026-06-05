@@ -1,5 +1,5 @@
 'use server'
-import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/auth'
 import { read, writeFileSafe, listFiles } from '@/lib/storage'
 import exams from '@/lib/exams.json'
@@ -16,7 +16,7 @@ export async function toggleLock(formData) {
   } catch (err) {
     console.error('toggleLock write failed:', err)
   }
-  revalidatePath('/admin')
+  redirect('/admin?tab=verrous&ok=1')
 }
 
 export async function lockByNiveau(formData) {
@@ -30,7 +30,7 @@ export async function lockByNiveau(formData) {
   } catch (err) {
     console.error('lockByNiveau write failed:', err)
   }
-  revalidatePath('/admin')
+  redirect('/admin?tab=verrous&ok=1')
 }
 
 export async function unlockByNiveau(formData) {
@@ -44,7 +44,7 @@ export async function unlockByNiveau(formData) {
   } catch (err) {
     console.error('unlockByNiveau write failed:', err)
   }
-  revalidatePath('/admin')
+  redirect('/admin?tab=verrous&ok=1')
 }
 
 export async function getAllResponses() {

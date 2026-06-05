@@ -21,6 +21,7 @@ export default async function AdminPage({ searchParams }) {
   const respondedCodes = new Set(Object.keys(responses))
   const missing = ALL_PROF_CODES.filter(c => !respondedCodes.has(c))
   const pct = Math.round((respondedCodes.size / ALL_PROF_CODES.length) * 100)
+  const showSuccess = sp?.ok === '1'
 
   return (
     <main style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 16px 48px' }}>
@@ -47,6 +48,16 @@ export default async function AdminPage({ searchParams }) {
           ))}
         </nav>
       </div>
+
+      {showSuccess && (
+        <div className="alert alert-success" role="status" style={{ marginBottom: 16, animation: 'fadeOut 0.4s ease 3s forwards' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          Verrous mis à jour avec succès.
+        </div>
+      )}
+      <style>{`@keyframes fadeOut { to { opacity: 0; height: 0; padding: 0; margin: 0; overflow: hidden; } }`}</style>
 
       {/* ── Suivi ─────────────────────────────────────────────── */}
       {tab === 'suivi' && (
