@@ -519,17 +519,67 @@ const PrintIcon = () => (
     <rect x="6" y="14" width="12" height="8"/>
   </svg>
 )
-
+const DownloadIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+    <polyline points="7 10 12 15 17 10"/>
+    <line x1="12" y1="15" x2="12" y2="3"/>
+  </svg>
+)
 const BackIcon = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M19 12H5M12 19l-7-7 7-7"/>
   </svg>
 )
 
+function fmtJourCsv(iso) {
+  return new Date(iso + 'T12:00:00').toLocaleDateString('fr-BE', { weekday: 'short', day: 'numeric', month: 'short' })
+}
+
+function downloadCSV(csvRows, filename) {
+  const headers = ['Jour', 'Pér.', 'Matière', 'Groupe', 'Prof', 'Nom', 'Prénom', 'Participation']
+  const lines = [
+    headers.join(';'),
+    ...csvRows.map(r => [r.jour, r.periode, r.matiere, r.groupe, r.prof, r.nom, r.prenom, r.participation]
+      .map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(';'))
+  ].join('\r\n')
+  const blob = new Blob(['﻿' + lines], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = filename; a.click()
+  URL.revokeObjectURL(url)
+}
+
+function buildCsvRows(exams, partData, filterFn) {
+  const rows = []
+  for (const ex of exams.filter(filterFn).sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode))) {
+    const p = partData[ex.id]
+    if (!p) continue
+    const base = { jour: fmtJourCsv(ex.jour), periode: ex.periode, matiere: ex.matiere, groupe: ex.groupe, prof: ex.profCode }
+    if (p.type === 'annule')                          rows.push({ ...base, nom: '', prenom: '', participation: 'Annulé' })
+    else if (p.type === 'tous')                       rows.push({ ...base, nom: '(tous)', prenom: '', participation: 'Tous les élèves' })
+    else if (p.type === 'liste' && p.eleves.length)   p.eleves.forEach(el => rows.push({ ...base, nom: el.nom ?? '', prenom: el.prenom ?? '', participation: 'Liste nominative' }))
+  }
+  return rows
+}
+
 export default function PrintViews({ exams, partData, allGroupes, allProfs }) {
   const [tab,    setTab]    = useState('classe')
   const [groupe, setGroupe] = useState('')
   const [prof,   setProf]   = useState('')
+
+  const currentKey = tab === 'prof' ? prof : groupe
+
+  function handleDownloadCSV() {
+    if (!currentKey) return
+    if (tab === 'prof') {
+      const rows = buildCsvRows(exams, partData, e => e.profCode === prof)
+      downloadCSV(rows, `surveillance_${prof}.csv`)
+    } else {
+      const rows = buildCsvRows(exams, partData, e => e.groupe === groupe)
+      downloadCSV(rows, `${tab === 'eleve' ? 'convocations' : 'examens'}_${groupe}.csv`)
+    }
+  }
 
   return (
     <>
@@ -568,6 +618,12 @@ export default function PrintViews({ exams, partData, allGroupes, allProfs }) {
             <option value="">— Choisir une classe —</option>
             {allGroupes.map(g => <option key={g} value={g}>{g}</option>)}
           </select>
+        )}
+
+        {currentKey && (
+          <button className="print-btn" style={{ background: '#2d6a4f', marginLeft: 0 }} onClick={handleDownloadCSV}>
+            <DownloadIcon /> CSV
+          </button>
         )}
 
         <button className="print-btn" onClick={() => window.print()}>

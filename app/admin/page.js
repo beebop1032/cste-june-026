@@ -80,7 +80,7 @@ export default async function AdminPage({ searchParams }) {
       } else {
         for (const el of ex.eleves ?? []) {
           if (!el.nom && !el.prenom) continue
-          elevesRows.push({ ...base, nom: el.nom, prenom: el.prenom, participation: 'Liste nominative' })
+          elevesRows.push({ ...base, nom: el.nom, prenom: el.prenom, classe: el.classe ?? '', participation: 'Liste nominative' })
         }
       }
     }
@@ -124,16 +124,10 @@ export default async function AdminPage({ searchParams }) {
     <div style={{ position: 'sticky', top: 52, zIndex: 40, background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', boxShadow: '0 2px 6px rgba(0,0,0,.05)' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '7px 16px', display: 'flex', gap: 5, flexWrap: 'wrap', alignItems: 'center' }}>
         <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--fg-subtle)', textTransform: 'uppercase', letterSpacing: '.08em', marginRight: 4 }}>Exports</span>
-        {[
-          { href: '/api/export?format=briefing', label: 'Excel surveillance', target: undefined },
-          { href: '/api/export?format=xlsx',     label: 'Excel élèves',       target: undefined },
-          { href: '/api/export?format=csv',      label: 'CSV',                target: undefined },
-        ].map(({ href, label, target }) => (
-          <a key={href} href={href} target={target} className="btn btn-secondary btn-xs">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            {label}
-          </a>
-        ))}
+        <a href="/api/export?format=csv" className="btn btn-secondary btn-xs">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          CSV global
+        </a>
         <div style={{ width: 1, height: 16, background: 'var(--border)' }} />
         {[
           { href: '/api/export?format=print', label: 'Vue globale' },

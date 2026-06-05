@@ -51,10 +51,13 @@ export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts
 
   function addEleve(examId) {
     const ex = examens.find(e => e.id === examId)
+    // Standard class like "6H" or "3J" → pre-fill; "3J-N" → "3J"; group codes (GR2, A4-1) → empty
+    const g = ex?.groupe ?? ''
+    const defaultClasse = /^\d[A-Z]$/.test(g) ? g : (g.match(/^(\d[A-Z])-/) ?? [])[1] ?? ''
     setExamState(s => {
       const next = { ...s }
       for (const id of withLinked(examId)) {
-        next[id] = { ...next[id], statut: null, eleves: [...next[id].eleves, { nom: '', prenom: '', classe: ex?.groupe ?? '' }] }
+        next[id] = { ...next[id], statut: null, eleves: [...next[id].eleves, { nom: '', prenom: '', classe: defaultClasse }] }
       }
       return next
     })
@@ -249,11 +252,15 @@ export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts
                 <span className="badge badge-gray" style={{ fontSize: 12 }}>{formatJour(ex.jour)}</span>
                 <span className="badge badge-gray" style={{ fontSize: 12 }}>{ex.periode}</span>
                 {linkedMap[ex.id] && (
-                  <span className="badge badge-gray" style={{ fontSize: 11, fontStyle: 'italic', color: 'var(--primary)' }}>
-                    Même liste que le {linkedMap[ex.id].map(id => {
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--primary)', background: 'var(--primary-light)', border: '1px solid var(--primary)', borderRadius: 4, padding: '2px 7px' }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                    </svg>
+                    Liste identique au {linkedMap[ex.id].map(id => {
                       const linked = examens.find(e => e.id === id)
-                      return linked ? new Date(linked.jour + 'T12:00:00').toLocaleDateString('fr-BE', { day: 'numeric', month: 'short' }) : id
-                    }).join(', ')}
+                      return linked ? new Date(linked.jour + 'T12:00:00').toLocaleDateString('fr-BE', { weekday: 'short', day: 'numeric', month: 'short' }) : id
+                    }).join(' et ')}
                   </span>
                 )}
 
