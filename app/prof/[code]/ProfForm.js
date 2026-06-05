@@ -53,7 +53,8 @@ export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts
     const ex = examens.find(e => e.id === examId)
     // Standard class like "6H" or "3J" → pre-fill; "3J-N" → "3J"; group codes (GR2, A4-1) → empty
     const g = ex?.groupe ?? ''
-    const defaultClasse = /^\d[A-Z]$/.test(g) ? g : (g.match(/^(\d[A-Z])-/) ?? [])[1] ?? ''
+    const niveauYear = (ex?.niveau ?? '').match(/^(\d+)/)?.[1] ?? ''
+    const defaultClasse = /^\d[A-Z]$/.test(g) ? g : (g.match(/^(\d[A-Z])-/) ?? [])[1] ?? niveauYear
     setExamState(s => {
       const next = { ...s }
       for (const id of withLinked(examId)) {
@@ -314,6 +315,7 @@ export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts
                           value={el.classe ?? ''}
                           onChange={e => updateEleve(ex.id, idx, 'classe', e.target.value)}
                           className="input"
+                          title="Classe de l'élève (ex : 5A, 5B…) — facilite le regroupement par classe"
                           style={{ flex: 1, minWidth: 60, padding: '7px 8px', fontSize: 12, color: 'var(--fg-muted)' }}
                         />
                         <button
@@ -327,6 +329,11 @@ export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts
                         </button>
                       </div>
                     )})}
+                    {!/^\d[A-Z]$/.test(ex.groupe) && (
+                      <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--fg-muted)', fontStyle: 'italic' }}>
+                        Indiquez la classe de l'élève (ex&nbsp;: 5A, 5B…) — cela facilite le regroupement par classe.
+                      </p>
+                    )}
                   </div>
                 )}
 
