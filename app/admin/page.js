@@ -41,10 +41,11 @@ export default async function AdminPage({ searchParams }) {
   const respondedCodes = new Set(Object.keys(responses))
 
   // Profs whose ALL exams are admin-decided (annulé/maintenu) count as "done" without submission
+  // Checks both groupe-level and individual exam-level statuts
   const adminDoneCodes = new Set(
     ALL_PROF_CODES.filter(code => {
       const profExams = exams.filter(e => e.profCode === code)
-      return profExams.length > 0 && profExams.every(e => groupeStatuts[e.groupe])
+      return profExams.length > 0 && profExams.every(e => groupeStatuts[e.groupe] || examStatuts[e.id])
     })
   )
   const effectiveDone = new Set([...respondedCodes, ...adminDoneCodes])

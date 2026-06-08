@@ -129,9 +129,9 @@ export async function getAllResponses() {
   await requireAdmin()
   const files = await listFiles('prof-')
   const currentFiles = files.filter(f => /^prof-[^.]+\.json$/.test(f) && !/-v\d+\.json$/.test(f))
+  const allData = await Promise.all(currentFiles.map(f => read(f)))
   const results = {}
-  for (const f of currentFiles) {
-    const data = await read(f)
+  for (const data of allData) {
     if (data) results[data.profCode] = data
   }
   return results
