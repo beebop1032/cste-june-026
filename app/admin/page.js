@@ -82,9 +82,24 @@ function computeGroupingHints(groupeStatuts, examStatuts, responses) {
       ...g,
       total: g.items.reduce((s, e) => s + e.copies, 0),
       sameLocal: g.items.every(e => e.local === g.items[0].local),
-      samePeriode: g.items.every(e => e.periode === g.items[0].periode),
     }))
     .sort((a, b) => a.jour.localeCompare(b.jour) || a.profCode.localeCompare(b.profCode))
+}
+
+function computeExamDetails(groupeStatuts, examStatuts, responses) {
+  return exams.map(ex => {
+    const adminStatut = examStatuts[ex.id] ?? groupeStatuts[ex.groupe]
+    if (adminStatut === 'annule')   return { id: ex.id, profCode: ex.profCode, jour: ex.jour, periode: ex.periode, matiere: ex.matiere, groupe: ex.groupe, local: ex.local, copies: 0,             type: 'annule'   }
+    if (adminStatut === 'maintenu') return { id: ex.id, profCode: ex.profCode, jour: ex.jour, periode: ex.periode, matiere: ex.matiere, groupe: ex.groupe, local: ex.local, copies: MAINTENU_COPIES, type: 'maintenu'  }
+    const profResp = Object.values(responses).find(r => r.profCode === ex.profCode)
+    const profEx   = profResp?.examens?.find(e => e.id === ex.id)
+    if (!profEx) return { id: ex.id, profCode: ex.profCode, jour: ex.jour, periode: ex.periode, matiere: ex.matiere, groupe: ex.groupe, local: ex.local, copies: null,            type: 'pending'  }
+    const statut = profEx.statut ?? (profEx.maintenu === true ? 'maintenu' : null)
+    if (statut === 'aucun')                        return { id: ex.id, profCode: ex.profCode, jour: ex.jour, periode: ex.periode, matiere: ex.matiere, groupe: ex.groupe, local: ex.local, copies: 0,             type: 'annule'   }
+    if (statut === 'maintenu' || statut === 'tous') return { id: ex.id, profCode: ex.profCode, jour: ex.jour, periode: ex.periode, matiere: ex.matiere, groupe: ex.groupe, local: ex.local, copies: MAINTENU_COPIES, type: 'maintenu'  }
+    const n = (profEx.eleves ?? []).filter(e => e.nom || e.prenom).length
+    return { id: ex.id, profCode: ex.profCode, jour: ex.jour, periode: ex.periode, matiere: ex.matiere, groupe: ex.groupe, local: ex.local, copies: n, type: 'liste' }
+  })
 }
 
 const NIVEAUX = ['1re', '2e', '3e', '4e', '5e', '6e']
@@ -169,6 +184,7 @@ export default async function AdminPage({ searchParams }) {
 
   const tempsProfRows    = computeTempsProfRows(groupeStatuts, examStatuts, responses)
   const groupingHints    = computeGroupingHints(groupeStatuts, examStatuts, responses)
+  const examDetails      = computeExamDetails(groupeStatuts, examStatuts, responses)
 
   return (
     <>
@@ -373,7 +389,7 @@ export default async function AdminPage({ searchParams }) {
 
       {/* ── Temps prof ─────────────────────────────────────── */}
       {tab === 'temps-prof' && (
-        <TempsProfTable rows={tempsProfRows} hints={groupingHints} />
+        <TempsProfTable rows={tempsProfRows} hints={groupingHints} examDetails={examDetails} />
       )}
     </main>
     </>
