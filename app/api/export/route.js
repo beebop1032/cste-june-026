@@ -148,6 +148,57 @@ export async function GET(request) {
   if (format === 'print') {
     const partMap = await buildPartMap()
 
+    // ── Surv data ────────────────────────────────────────────────────────────
+    // survFlagMap: examId → true if prof requested to supervise
+    const survFlagMap = new Map()
+    for (const f of currentFiles) {
+      const prof = await read(f)
+      if (!prof) continue
+      for (const ex of prof.examens ?? []) {
+        if (ex.surveilleParTitulaire) survFlagMap.set(ex.id, true)
+      }
+    }
+
+    // Per slot (jour|periode): profs with active exams vs profs with annulled exams (potentially free)
+    const activeAtSlot = new Map() // slot → Set<profCode>
+    const freeAtSlot   = new Map() // slot → Array<profCode> sorted
+
+    for (const ex of exams) {
+      const slot = `${ex.jour}|${ex.periode}`
+      if (!activeAtSlot.has(slot)) activeAtSlot.set(slot, new Set())
+      if (!freeAtSlot.has(slot))   freeAtSlot.set(slot, [])
+      const p = partMap.get(ex.id)
+      if (!p || p.type === 'annule') freeAtSlot.get(slot).push(ex.profCode)
+      else activeAtSlot.get(slot).add(ex.profCode)
+    }
+
+    // Conflict detection: prof has 2+ active exams at same slot → can't supervise all
+    const profActiveCount = new Map()
+    for (const ex of exams) {
+      const p = partMap.get(ex.id)
+      if (!p || p.type === 'annule') continue
+      const key = `${ex.profCode}|${ex.jour}|${ex.periode}`
+      profActiveCount.set(key, (profActiveCount.get(key) || 0) + 1)
+    }
+
+    function survCells(ex) {
+      const p = partMap.get(ex.id)
+      if (!p || p.type === 'annule') {
+        return `<td class="ts-an"></td><td class="ts-an"></td><td class="ts-fin"></td>`
+      }
+      const slot        = `${ex.jour}|${ex.periode}`
+      const wantsSurv   = survFlagMap.get(ex.id) ?? false
+      const hasConflict = (profActiveCount.get(`${ex.profCode}|${ex.jour}|${ex.periode}`) || 0) > 1
+      const survVal     = (wantsSurv && !hasConflict) ? ex.profCode : ''
+      let conseilVal = ''
+      if (!wantsSurv || hasConflict) {
+        const active = activeAtSlot.get(slot) || new Set()
+        const free   = (freeAtSlot.get(slot) || []).filter(pc => !active.has(pc) && pc !== ex.profCode)
+        conseilVal = free[0] ?? ''
+      }
+      return `<td class="ts${survVal ? ' ts-ok' : ''}">${survVal}</td><td class="ts${conseilVal ? ' ts-conseil' : ''}">${conseilVal}</td><td class="ts-fin"></td>`
+    }
+
     function partBadge(ex) {
       const p = partMap.get(ex.id)
       if (!p) return `<td class="p-ns"><span class="badge b-ns">–</span></td>`
@@ -163,76 +214,74 @@ export async function GET(request) {
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
       :root { --navy:#1a3254; --gold:#b8893a; --bg:#f4f3ef; --white:#ffffff; --text:#1c1c1c; --muted:#6b7280; --border:#d6d2c8 }
       body { font-family:'Source Sans 3','Helvetica Neue',sans-serif; font-size:11px; background:var(--bg); color:var(--text); line-height:1.4 }
-
-      /* ── Screen chrome ── */
-      .topbar { background:var(--navy); color:#fff; padding:20px 32px; display:flex; align-items:center; justify-content:space-between; gap:16px }
-      .topbar-left h1 { font-family:'Playfair Display',Georgia,serif; font-size:20px; font-weight:700; letter-spacing:-0.3px }
-      .topbar-left p  { font-size:11px; color:rgba(255,255,255,.55); margin-top:3px }
+      .topbar { background:var(--navy); color:#fff; padding:18px 32px; display:flex; align-items:center; justify-content:space-between; gap:16px }
+      .topbar-left h1 { font-family:'Playfair Display',Georgia,serif; font-size:19px; font-weight:700; letter-spacing:-0.3px }
+      .topbar-left p  { font-size:10.5px; color:rgba(255,255,255,.55); margin-top:3px }
       .topbar-right   { display:flex; align-items:center; gap:12px }
-      .print-btn { background:var(--gold); color:#fff; border:none; padding:9px 20px; font-family:inherit; font-size:12px; font-weight:700; cursor:pointer; border-radius:4px; letter-spacing:.4px }
+      .print-btn { background:var(--gold); color:#fff; border:none; padding:8px 18px; font-family:inherit; font-size:12px; font-weight:700; cursor:pointer; border-radius:4px; letter-spacing:.4px }
       .print-btn:hover { opacity:.88 }
-      .legend { display:flex; gap:14px; align-items:center; padding:8px 32px; background:#fff; border-bottom:1px solid var(--border); font-size:10.5px; color:var(--muted) }
+      .legend { display:flex; gap:14px; align-items:center; padding:8px 32px; background:#fff; border-bottom:1px solid var(--border); font-size:10px; color:var(--muted); flex-wrap:wrap }
       .leg { display:flex; align-items:center; gap:5px }
       .leg-dot { width:10px; height:10px; border-radius:2px; flex-shrink:0 }
-
-      /* ── Content ── */
-      .content { max-width:1440px; margin:0 auto; padding:20px 24px 40px }
-
-      /* ── Day card ── */
-      .day { background:var(--white); border:1px solid var(--border); border-radius:6px; overflow:hidden; margin-bottom:14px; box-shadow:0 1px 6px rgba(0,0,0,.06) }
-      .day-hdr { background:var(--navy); color:#fff; padding:9px 16px; display:flex; align-items:center; justify-content:space-between }
-      .day-name { font-weight:700; font-size:12.5px; letter-spacing:.6px; text-transform:uppercase }
+      .content { max-width:1700px; margin:0 auto; padding:18px 20px 36px }
+      .day { background:var(--white); border:1px solid var(--border); border-radius:6px; overflow:hidden; margin-bottom:12px; box-shadow:0 1px 6px rgba(0,0,0,.06) }
+      .day-hdr { background:var(--navy); color:#fff; padding:8px 14px; display:flex; align-items:center; justify-content:space-between }
+      .day-name { font-weight:700; font-size:12px; letter-spacing:.6px; text-transform:uppercase }
       .day-res  { font-size:10px; color:rgba(255,255,255,.55) }
       .res-field { display:inline-block; min-width:55px; border-bottom:1px solid rgba(255,255,255,.4); margin-left:5px }
-
-      /* ── Period block ── */
-      .per { padding:10px 16px 12px; border-top:1px solid var(--border) }
+      .per { padding:8px 14px 10px; border-top:1px solid var(--border) }
       .per:first-of-type { border-top:none }
-      .per-label { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:var(--navy); margin-bottom:7px; display:flex; align-items:center; gap:7px }
+      .per-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:var(--navy); margin-bottom:6px; display:flex; align-items:center; gap:7px }
       .per-label::after { content:''; flex:1; height:1px; background:var(--border) }
-
-      /* ── Table ── */
       table { width:100%; border-collapse:collapse }
-      thead tr.niv-row th { padding:3px 4px; font-size:10px; font-weight:700; color:#fff; letter-spacing:.4px; text-align:center; border:1px solid rgba(255,255,255,.2) }
-      thead tr.col-row th { background:#f0ede6; color:var(--navy); font-size:8.5px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; padding:2px 3px; border:1px solid var(--border); text-align:center }
+      thead tr.niv-row th { padding:3px 3px; font-size:9.5px; font-weight:700; color:#fff; letter-spacing:.4px; text-align:center; border:1px solid rgba(255,255,255,.2) }
+      thead tr.col-row th { background:#f0ede6; color:var(--navy); font-size:7.5px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; padding:2px 2px; border:1px solid var(--border); text-align:center }
       thead tr.col-row th.tc { background:#e8e4db }
-      tbody td { border:1px solid #e2dfd8; padding:2px 3px; text-align:center; vertical-align:middle; white-space:nowrap }
+      tbody td { border:1px solid #e2dfd8; padding:2px 2px; text-align:center; vertical-align:middle; white-space:nowrap }
       tbody tr:nth-child(even) td { background:#faf9f6 }
-      .tc { background:#f8f6f1 !important; font-weight:700; font-size:9px; color:var(--navy) }
-      .tm { font-weight:600; color:var(--text) }
-      .tg { font-weight:700; color:var(--navy) }
-      .tp { font-family:'JetBrains Mono','Courier New',monospace; font-size:8.5px; color:var(--muted) }
+      .tc { background:#f8f6f1 !important; font-weight:700; font-size:8.5px; color:var(--navy) }
+      .tm { font-weight:600; color:var(--text); font-size:9px }
+      .tg { font-weight:700; color:var(--navy); font-size:9px }
+      .tp { font-family:'JetBrains Mono','Courier New',monospace; font-size:8px; color:var(--muted) }
       .te { background:#faf9f7 !important }
-
-      /* ── Participation badges ── */
-      .badge { display:inline-block; padding:1px 5px; border-radius:3px; font-weight:700; font-size:8px; letter-spacing:.15px }
+      .badge { display:inline-block; padding:1px 4px; border-radius:3px; font-weight:700; font-size:7.5px; letter-spacing:.1px }
       .b-an  { background:#fde8e8; color:#991b1b; border:1px solid #fca5a5 }
       .b-to  { background:#d1fae5; color:#065f46; border:1px solid #6ee7b7 }
       .b-li  { background:#dbeafe; color:#1e40af; border:1px solid #93c5fd }
-      .b-ns  { color:#9ca3af; font-style:italic; font-weight:400; font-size:8.5px }
+      .b-ns  { color:#9ca3af; font-style:italic; font-weight:400; font-size:8px }
       .p-an td, td.p-an { background:#fff5f5 }
       .p-to td, td.p-to { background:#f0fff4 }
       .p-li td, td.p-li { background:#eff6ff }
-
-      /* ── Print ── */
+      /* ── Surv columns ── */
+      .ts { font-family:'JetBrains Mono','Courier New',monospace; font-size:8px; min-width:20px; padding:1px 2px !important; text-align:center }
+      .ts-ok     { background:#f0fdf4 !important; color:#166534; font-weight:700 }
+      .ts-conseil { background:#fefce8 !important; color:#713f12; font-weight:600; font-style:italic }
+      .ts-fin    { min-width:28px; background:#fff !important; border-bottom:1px dashed #aaa !important }
+      .ts-an     { background:#f5f5f5 !important; opacity:.35 }
+      .surv-hdr  { background:#374151 !important; font-size:7px !important; letter-spacing:.05em !important }
+      /* ── Print A3 ── */
       .print-hdr { display:none }
       @media print {
-        @page { size: A4 landscape; margin: 8mm 10mm }
-        body { background:#fff; font-size:8px }
+        @page { size: A3 landscape; margin: 6mm 8mm }
+        body { background:#fff; font-size:7px }
         .topbar, .legend, .print-btn { display:none }
-        .print-hdr { display:block; text-align:center; margin-bottom:8px; padding-bottom:6px; border-bottom:2px solid var(--navy) }
-        .print-hdr h1 { font-family:'Playfair Display',Georgia,serif; font-size:14px; font-weight:700; color:var(--navy) }
-        .print-hdr p  { font-size:9px; color:var(--muted); margin-top:2px }
+        .print-hdr { display:block; text-align:center; margin-bottom:6px; padding-bottom:5px; border-bottom:2px solid var(--navy) }
+        .print-hdr h1 { font-family:'Playfair Display',Georgia,serif; font-size:13px; font-weight:700; color:var(--navy) }
+        .print-hdr p  { font-size:8px; color:var(--muted); margin-top:2px }
         .content { padding:0; max-width:none }
-        .day { box-shadow:none; border-radius:0; border:1px solid #bbb; margin-bottom:7px }
-        .day-hdr { padding:5px 8px }
-        .day-name { font-size:9.5px }
-        .per { padding:4px 8px 6px }
-        table { font-size:7px }
-        thead tr.niv-row th { font-size:8px; padding:2px 3px }
-        thead tr.col-row th { font-size:6.5px; padding:1px 2px }
-        tbody td { padding:1px 2px }
-        .badge { font-size:6.5px; padding:0 3px }
+        .day { box-shadow:none; border-radius:0; border:1px solid #bbb; margin-bottom:5px }
+        .day-hdr { padding:3px 7px }
+        .day-name { font-size:8.5px }
+        .per { padding:2px 7px 4px }
+        table { font-size:6px }
+        .tm, .tg { font-size:6px }
+        .tp { font-size:5.5px }
+        thead tr.niv-row th { font-size:7px; padding:1px 2px }
+        thead tr.col-row th { font-size:5.5px; padding:1px 1px }
+        tbody td { padding:1px 1px }
+        .badge { font-size:5.5px; padding:0 2px }
+        .ts { font-size:6px; min-width:14px }
+        .ts-fin { min-width:20px }
       }
     `
 
@@ -246,7 +295,7 @@ export async function GET(request) {
 <div class="topbar">
   <div class="topbar-left">
     <h1>Surveillance des examens</h1>
-    <p>Collège des Hayeffes &nbsp;·&nbsp; Juin 2026</p>
+    <p>Collège des Hayeffes &nbsp;·&nbsp; Juin 2026 &nbsp;·&nbsp; Format A3 paysage</p>
   </div>
   <div class="topbar-right">
     <div class="legend">
@@ -254,8 +303,10 @@ export async function GET(request) {
       <span class="leg"><span class="leg-dot" style="background:#d1fae5;border:1px solid #6ee7b7"></span>Tous les élèves</span>
       <span class="leg"><span class="leg-dot" style="background:#dbeafe;border:1px solid #93c5fd"></span>Liste nominative</span>
       <span class="leg"><span class="leg-dot" style="background:#f0ede6;border:1px solid #d6d2c8"></span>Non renseigné</span>
+      <span class="leg"><span class="leg-dot" style="background:#f0fdf4;border:1px solid #86efac"></span>SURV confirmée</span>
+      <span class="leg"><span class="leg-dot" style="background:#fefce8;border:1px solid #fde047"></span>SURV conseillée</span>
     </div>
-    <button class="print-btn" onclick="window.print()">Imprimer / PDF</button>
+    <button class="print-btn" onclick="window.print()">Imprimer A3 / PDF</button>
   </div>
 </div>
 
@@ -283,12 +334,12 @@ export async function GET(request) {
 <thead>
 <tr class="niv-row"><th class="tc"></th>`
         NIVEAUX.forEach((_, i) => {
-          html += `<th colspan="4" style="background:${NIV_COLORS[i]}">${NIVEAU_LABELS[i]}</th>`
+          html += `<th colspan="7" style="background:${NIV_COLORS[i]}">${NIVEAU_LABELS[i]}</th>`
         })
         html += `</tr>
 <tr class="col-row"><th class="tc">Pér.</th>`
         NIVEAUX.forEach(() => {
-          html += `<th>Matière</th><th>Classe</th><th>Prof</th><th>Élèves</th>`
+          html += `<th>Mat.</th><th>Cl.</th><th>Prof</th><th>Él.</th><th class="surv-hdr" style="color:#fff">SURV</th><th class="surv-hdr" style="color:#fff">Cons.</th><th class="surv-hdr" style="color:#fff">Fin.</th>`
         })
         html += `</tr></thead><tbody>`
 
@@ -296,8 +347,11 @@ export async function GET(request) {
           html += `<tr><td class="tc">${i === 0 ? periode : ''}</td>`
           NIVEAUX.forEach(n => {
             const ex = byNiveau[n][i]
-            if (!ex) { html += `<td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td>`; return }
-            html += `<td class="tm">${ex.matiere}</td><td class="tg">${ex.groupe}</td><td class="tp">${ex.profCode}</td>${partBadge(ex)}`
+            if (!ex) {
+              html += `<td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td>`
+              return
+            }
+            html += `<td class="tm">${ex.matiere}</td><td class="tg">${ex.groupe}</td><td class="tp">${ex.profCode}</td>${partBadge(ex)}${survCells(ex)}`
           })
           html += `</tr>`
         }
