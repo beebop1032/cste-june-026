@@ -33,7 +33,12 @@ const SortIcon = ({ field, sortField, sortDir }) => {
   return <span style={{ fontSize: 10 }}>{sortDir === 1 ? '↑' : '↓'}</span>
 }
 
-export default function TempsProfTable({ rows: initialRows }) {
+function formatJour(iso) {
+  const d = new Date(iso + 'T12:00:00')
+  return d.toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'short' })
+}
+
+export default function TempsProfTable({ rows: initialRows, hints = [] }) {
   const [sortField, setSortField] = useState('copies')
   const [sortDir,   setSortDir]   = useState(-1) // desc par défaut
 
@@ -183,6 +188,70 @@ export default function TempsProfTable({ rows: initialRows }) {
           </tbody>
         </table>
       </div>
+
+      {/* ── Hypothèses de regroupement ─────────────────────────────── */}
+      {hints.length > 0 && (
+        <div style={{ marginTop: 8 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#D97706', flexShrink: 0 }}>
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            Hypothèses de regroupement — même prof · même jour · ≤ 10 élèves/examen
+            <span style={{ background: '#FFFBEB', color: '#92400E', border: '1px solid #FDE68A', padding: '1px 7px', borderRadius: 99, fontSize: 11, fontWeight: 700 }}>{hints.length}</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {hints.map(h => {
+              const samePer = h.samePeriode
+              const sameRoom = h.sameLocal
+              return (
+                <div key={`${h.profCode}-${h.jour}`} className="card" style={{ padding: '12px 16px', borderLeft: '3px solid #F59E0B' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
+                    <a href={`/prof/${h.profCode}`} style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13, color: 'var(--primary)', textDecoration: 'none', background: 'var(--primary-light)', padding: '2px 8px', borderRadius: 5 }}>
+                      {h.profCode}
+                    </a>
+                    <span style={{ fontSize: 13, color: 'var(--fg)', fontWeight: 500 }}>{formatJour(h.jour)}</span>
+                    <span style={{ fontSize: 12, color: 'var(--fg-muted)', marginLeft: 'auto' }}>
+                      {h.total} élève{h.total > 1 ? 's' : ''} au total
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+                    {h.items.map((item, i) => (
+                      <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#F8FAFC', border: '1px solid var(--border)', borderRadius: 6, padding: '4px 10px', fontSize: 12 }}>
+                        <span style={{ fontWeight: 700, color: 'var(--fg)' }}>{item.matiere}</span>
+                        <span style={{ color: 'var(--fg-muted)' }}>{item.groupe}</span>
+                        <span style={{ color: 'var(--fg-subtle)', fontSize: 11 }}>({item.periode})</span>
+                        <span style={{ background: '#F0FDF4', color: '#15803D', fontWeight: 700, padding: '1px 5px', borderRadius: 4, fontSize: 11 }}>{item.copies} él.</span>
+                        <span style={{ color: 'var(--fg-subtle)', fontSize: 11 }}>{item.local}</span>
+                      </span>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {samePer
+                      ? <span style={{ fontSize: 11, background: '#F0FDF4', color: '#15803D', border: '1px solid #BBF7D0', padding: '2px 8px', borderRadius: 5, fontWeight: 600 }}>
+                          Même période ({h.items[0].periode}) — regroupement direct possible
+                        </span>
+                      : <span style={{ fontSize: 11, background: '#FFFBEB', color: '#92400E', border: '1px solid #FDE68A', padding: '2px 8px', borderRadius: 5, fontWeight: 600 }}>
+                          Périodes différentes — à négocier
+                        </span>
+                    }
+                    {sameRoom && (
+                      <span style={{ fontSize: 11, background: '#EFF6FF', color: '#1E40AF', border: '1px solid #BFDBFE', padding: '2px 8px', borderRadius: 5, fontWeight: 600 }}>
+                        Même local ({h.items[0].local})
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {hints.length === 0 && (
+        <div style={{ marginTop: 8, fontSize: 12, color: 'var(--fg-subtle)', textAlign: 'center', padding: '12px 0' }}>
+          Aucune hypothèse de regroupement détectée (critère : même prof · même jour · liste nominative ≤ 10 élèves).
+        </div>
+      )}
     </div>
   )
 }

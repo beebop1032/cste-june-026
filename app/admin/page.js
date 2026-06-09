@@ -50,6 +50,43 @@ function computeTempsProfRows(groupeStatuts, examStatuts, responses) {
   return rows
 }
 
+const FEW_THRESHOLD = 10
+
+function computeGroupingHints(groupeStatuts, examStatuts, responses) {
+  const examData = []
+  for (const ex of exams) {
+    const adminStatut = examStatuts[ex.id] ?? groupeStatuts[ex.groupe]
+    let copies = null
+    if (adminStatut === 'annule') continue
+    if (adminStatut === 'maintenu') continue // 25 élèves = pas "peu"
+    const profResp = Object.values(responses).find(r => r.profCode === ex.profCode)
+    const profEx   = profResp?.examens?.find(e => e.id === ex.id)
+    if (!profEx) continue
+    const statut = profEx.statut ?? (profEx.maintenu === true ? 'maintenu' : null)
+    if (!statut || statut === 'aucun' || statut === 'maintenu' || statut === 'tous') continue
+    const n = (profEx.eleves ?? []).filter(e => e.nom || e.prenom).length
+    if (n < 1 || n > FEW_THRESHOLD) continue
+    examData.push({ profCode: ex.profCode, jour: ex.jour, periode: ex.periode, matiere: ex.matiere, groupe: ex.groupe, local: ex.local, copies: n })
+  }
+
+  const map = {}
+  for (const ed of examData) {
+    const key = `${ed.profCode}|${ed.jour}`
+    if (!map[key]) map[key] = { profCode: ed.profCode, jour: ed.jour, items: [] }
+    map[key].items.push(ed)
+  }
+
+  return Object.values(map)
+    .filter(g => g.items.length >= 2)
+    .map(g => ({
+      ...g,
+      total: g.items.reduce((s, e) => s + e.copies, 0),
+      sameLocal: g.items.every(e => e.local === g.items[0].local),
+      samePeriode: g.items.every(e => e.periode === g.items[0].periode),
+    }))
+    .sort((a, b) => a.jour.localeCompare(b.jour) || a.profCode.localeCompare(b.profCode))
+}
+
 const NIVEAUX = ['1re', '2e', '3e', '4e', '5e', '6e']
 const ALL_PROF_CODES = [...new Set(exams.map(e => e.profCode))].sort()
 const ALL_GROUPES    = [...new Set(exams.map(e => e.groupe))].sort()
@@ -130,7 +167,8 @@ export default async function AdminPage({ searchParams }) {
   const elevesGroupes = [...new Set(elevesRows.map(r => r.groupe))].sort()
   const elevesProfs   = [...new Set(elevesRows.map(r => r.prof))].sort()
 
-  const tempsProfRows = computeTempsProfRows(groupeStatuts, examStatuts, responses)
+  const tempsProfRows    = computeTempsProfRows(groupeStatuts, examStatuts, responses)
+  const groupingHints    = computeGroupingHints(groupeStatuts, examStatuts, responses)
 
   return (
     <>
@@ -335,7 +373,7 @@ export default async function AdminPage({ searchParams }) {
 
       {/* ── Temps prof ─────────────────────────────────────── */}
       {tab === 'temps-prof' && (
-        <TempsProfTable rows={tempsProfRows} />
+        <TempsProfTable rows={tempsProfRows} hints={groupingHints} />
       )}
     </main>
     </>
