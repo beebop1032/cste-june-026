@@ -8,6 +8,7 @@ import ElevesTable from './ElevesTable'
 import ResetButton from './ResetButton'
 import VerrousJourTable from './VerrousJourTable'
 import ClasseTable from './ClasseTable'
+import DoublonsView from './DoublonsView'
 
 const NIVEAUX = ['1re', '2e', '3e', '4e', '5e', '6e']
 const ALL_PROF_CODES = [...new Set(exams.map(e => e.profCode))].sort()
@@ -102,10 +103,11 @@ export default async function AdminPage({ searchParams }) {
         </div>
         <nav style={{ display: 'flex', gap: 1, flexShrink: 0 }}>
           {[
-            { name: 'suivi',   label: `Suivi ${respondedCodes.size}/${ALL_PROF_CODES.length}` },
-            { name: 'horaire', label: 'Horaire' },
-            { name: 'eleves',  label: 'Élèves' },
-            { name: 'verrous', label: 'Statuts' },
+            { name: 'suivi',    label: `Suivi ${respondedCodes.size}/${ALL_PROF_CODES.length}` },
+            { name: 'horaire',  label: 'Horaire' },
+            { name: 'eleves',   label: 'Élèves' },
+            { name: 'verrous',  label: 'Statuts' },
+            { name: 'doublons', label: 'Doublons' },
           ].map(t => (
             <a key={t.name} href={`/admin?tab=${t.name}`} style={{
               padding: '6px 12px', borderRadius: 6, textDecoration: 'none',
@@ -234,6 +236,16 @@ export default async function AdminPage({ searchParams }) {
       {/* ── Élèves ─────────────────────────────────────────── */}
       {tab === 'eleves' && (
         <ElevesTable rows={elevesRows} groupes={elevesGroupes} profs={elevesProfs} />
+      )}
+
+      {/* ── Doublons ───────────────────────────────────────── */}
+      {tab === 'doublons' && (
+        <DoublonsView
+          responses={responses}
+          exams={exams}
+          groupeStatuts={groupeStatuts}
+          examStatuts={examStatuts}
+        />
       )}
 
       {/* ── Statuts ────────────────────────────────────────── */}
