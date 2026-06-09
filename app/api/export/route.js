@@ -253,17 +253,19 @@ export async function GET(request) {
       .p-to td, td.p-to { background:#f0fff4 }
       .p-li td, td.p-li { background:#eff6ff }
       /* ── Surv columns ── */
-      .ts { font-family:'JetBrains Mono','Courier New',monospace; font-size:8px; min-width:20px; padding:1px 2px !important; text-align:center }
-      .ts-ok     { background:#f0fdf4 !important; color:#166534; font-weight:700 }
+      .ts { font-family:'JetBrains Mono','Courier New',monospace; font-size:9px; min-width:26px; padding:2px 3px !important; text-align:center }
+      .ts-ok      { background:#f0fdf4 !important; color:#166534; font-weight:700 }
       .ts-conseil { background:#fefce8 !important; color:#713f12; font-weight:600; font-style:italic }
-      .ts-fin    { min-width:28px; background:#fff !important; border-bottom:1px dashed #aaa !important }
-      .ts-an     { background:#f5f5f5 !important; opacity:.35 }
-      .surv-hdr  { background:#374151 !important; font-size:7px !important; letter-spacing:.05em !important }
+      .ts-fin     { min-width:40px; background:#fff !important; border-bottom:1px dashed #aaa !important }
+      .ts-an      { background:#f5f5f5 !important; opacity:.35 }
+      .surv-hdr   { background:#374151 !important; font-size:8px !important; letter-spacing:.05em !important }
+      /* ── Half-table gap ── */
+      .half-gap { height:4px }
       /* ── Print A3 ── */
       .print-hdr { display:none }
       @media print {
         @page { size: A3 landscape; margin: 6mm 8mm }
-        body { background:#fff; font-size:7px }
+        body { background:#fff; font-size:8px }
         .topbar, .legend, .print-btn { display:none }
         .print-hdr { display:block; text-align:center; margin-bottom:6px; padding-bottom:5px; border-bottom:2px solid var(--navy) }
         .print-hdr h1 { font-family:'Playfair Display',Georgia,serif; font-size:13px; font-weight:700; color:var(--navy) }
@@ -271,17 +273,18 @@ export async function GET(request) {
         .content { padding:0; max-width:none }
         .day { box-shadow:none; border-radius:0; border:1px solid #bbb; margin-bottom:5px }
         .day-hdr { padding:3px 7px }
-        .day-name { font-size:8.5px }
-        .per { padding:2px 7px 4px }
-        table { font-size:6px }
-        .tm, .tg { font-size:6px }
-        .tp { font-size:5.5px }
-        thead tr.niv-row th { font-size:7px; padding:1px 2px }
-        thead tr.col-row th { font-size:5.5px; padding:1px 1px }
-        tbody td { padding:1px 1px }
-        .badge { font-size:5.5px; padding:0 2px }
-        .ts { font-size:6px; min-width:14px }
-        .ts-fin { min-width:20px }
+        .day-name { font-size:9px }
+        .per { padding:2px 7px 5px }
+        table { font-size:7.5px }
+        .tm, .tg { font-size:7.5px }
+        .tp { font-size:7px }
+        thead tr.niv-row th { font-size:8.5px; padding:2px 3px }
+        thead tr.col-row th { font-size:6.5px; padding:1px 2px }
+        tbody td { padding:1px 2px }
+        .badge { font-size:6.5px; padding:0 3px }
+        .ts { font-size:7px; min-width:18px; padding:1px 2px !important }
+        .ts-fin { min-width:28px }
+        .half-gap { height:3px }
       }
     `
 
@@ -329,33 +332,47 @@ export async function GET(request) {
         if (!bloc.length) continue
         const { byNiveau, maxRows } = buildBlocRows(bloc)
 
-        html += `<div class="per"><div class="per-label">${periode}</div>
-<table>
+        // Split 6 niveaux into 2 half-tables of 3
+        const HALVES = [[0,1,2],[3,4,5]]
+
+        html += `<div class="per"><div class="per-label">${periode}</div>`
+
+        HALVES.forEach((indices, hi) => {
+          const halfNiveaux = indices.map(i => NIVEAUX[i])
+          const halfLabels  = indices.map(i => NIVEAU_LABELS[i])
+          const halfColors  = indices.map(i => NIV_COLORS[i])
+
+          if (hi > 0) html += `<div class="half-gap"></div>`
+
+          html += `<table>
 <thead>
 <tr class="niv-row"><th class="tc"></th>`
-        NIVEAUX.forEach((_, i) => {
-          html += `<th colspan="7" style="background:${NIV_COLORS[i]}">${NIVEAU_LABELS[i]}</th>`
-        })
-        html += `</tr>
-<tr class="col-row"><th class="tc">Pér.</th>`
-        NIVEAUX.forEach(() => {
-          html += `<th>Mat.</th><th>Cl.</th><th>Prof</th><th>Él.</th><th class="surv-hdr" style="color:#fff">SURV</th><th class="surv-hdr" style="color:#fff">Cons.</th><th class="surv-hdr" style="color:#fff">Fin.</th>`
-        })
-        html += `</tr></thead><tbody>`
-
-        for (let i = 0; i < maxRows; i++) {
-          html += `<tr><td class="tc">${i === 0 ? periode : ''}</td>`
-          NIVEAUX.forEach(n => {
-            const ex = byNiveau[n][i]
-            if (!ex) {
-              html += `<td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td>`
-              return
-            }
-            html += `<td class="tm">${ex.matiere}</td><td class="tg">${ex.groupe}</td><td class="tp">${ex.profCode}</td>${partBadge(ex)}${survCells(ex)}`
+          halfNiveaux.forEach((_, i) => {
+            html += `<th colspan="7" style="background:${halfColors[i]}">${halfLabels[i]}</th>`
           })
-          html += `</tr>`
-        }
-        html += `</tbody></table></div>`
+          html += `</tr>
+<tr class="col-row"><th class="tc">Pér.</th>`
+          halfNiveaux.forEach(() => {
+            html += `<th>Mat.</th><th>Cl.</th><th>Prof</th><th>Él.</th><th class="surv-hdr" style="color:#fff">SURV</th><th class="surv-hdr" style="color:#fff">Cons.</th><th class="surv-hdr" style="color:#fff">Fin.</th>`
+          })
+          html += `</tr></thead><tbody>`
+
+          for (let i = 0; i < maxRows; i++) {
+            html += `<tr><td class="tc">${i === 0 ? periode : ''}</td>`
+            halfNiveaux.forEach(n => {
+              const ex = byNiveau[n][i]
+              if (!ex) {
+                html += `<td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td>`
+                return
+              }
+              html += `<td class="tm">${ex.matiere}</td><td class="tg">${ex.groupe}</td><td class="tp">${ex.profCode}</td>${partBadge(ex)}${survCells(ex)}`
+            })
+            html += `</tr>`
+          }
+          html += `</tbody></table>`
+        })
+
+        html += `</div>`
       }
       html += `</div>`
     }
