@@ -641,7 +641,7 @@ export async function GET(request) {
           return \`<tr>
             <td class="rc-prof">\${prof}</td>
             <td class="rc-n">\${copies}</td>
-            <td class="rc-n">\${surv > 0 ? surv : '<span style="color:#9ca3af">–</span>'}</td>
+            <td class="rc-n">\${surv > 0 ? surv * SURV_PTS : '<span style="color:#9ca3af">–</span>'}</td>
             <td class="rc-score" style="color:\${scoreColor}">\${score}</td>
           </tr>\`;
         }).join('');
