@@ -269,6 +269,7 @@ export default async function AdminPage({ searchParams }) {
               niveauxMap={NIVEAUX_MAP}
               groupeStatuts={groupeStatuts}
               examStatuts={examStatuts}
+              responses={responses}
             />
           )}
         </div>
