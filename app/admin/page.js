@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { requireAdmin } from '@/lib/auth'
-import { getAllResponses, getLocksData, getMerges } from '@/actions/admin'
+import { getAllResponses, getLocksData } from '@/actions/admin'
 import exams from '@/lib/exams.json'
 import HoraireTable from './HoraireTable'
 import ElevesTable from './ElevesTable'
@@ -35,7 +35,7 @@ export default async function AdminPage({ searchParams }) {
   const tab = sp?.tab ?? 'suivi'
   const vue = sp?.vue ?? 'jour'
 
-  const [responses, locksData, merges] = await Promise.all([getAllResponses(), getLocksData(), getMerges()])
+  const [responses, locksData] = await Promise.all([getAllResponses(), getLocksData()])
   const groupeStatuts = locksData.groupeStatuts ?? {}
   const examStatuts   = locksData.examStatuts   ?? {}
 
@@ -245,7 +245,6 @@ export default async function AdminPage({ searchParams }) {
           exams={exams}
           groupeStatuts={groupeStatuts}
           examStatuts={examStatuts}
-          initialMerges={merges}
         />
       )}
 

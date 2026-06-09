@@ -2,7 +2,7 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/auth'
-import { read, write, listFiles, deleteFile } from '@/lib/storage'
+import { read, write, writeFileSafe, listFiles, deleteFile } from '@/lib/storage'
 import exams from '@/lib/exams.json'
 
 function normalise(raw) {
@@ -142,40 +142,30 @@ export async function getLocksData() {
   return normalise(await read('admin-locks.json'))
 }
 
-// ── Student merges ────────────────────────────────────────────────────────────
+// ── Student name replacement ──────────────────────────────────────────────────
 
-export async function getMerges() {
+export async function replaceStudentName(fromNom, fromPrenom, toNom, toPrenom) {
   await requireAdmin()
-  return (await read('student-merges.json'))?.merges ?? []
-}
-
-export async function saveMerge(keep, remove) {
-  await requireAdmin()
-  if (!keep?.nom || !remove?.nom) return { error: 'Invalide' }
-  const data = (await read('student-merges.json')) ?? { merges: [] }
-  // Remove any existing entry for this alias
-  for (const m of data.merges) {
-    m.aliases = (m.aliases ?? []).filter(a => !(a.nom === remove.nom && a.prenom === remove.prenom))
-  }
-  data.merges = data.merges.filter(m => (m.aliases ?? []).length > 0)
-  // Add under canonical
-  const idx = data.merges.findIndex(m => m.keep.nom === keep.nom && m.keep.prenom === keep.prenom)
-  if (idx >= 0) {
-    data.merges[idx].aliases.push(remove)
-  } else {
-    data.merges.push({ keep, aliases: [remove] })
-  }
-  try { await write('student-merges.json', data); return { ok: true } }
-  catch (err) { console.error(err); return { error: 'Erreur' } }
-}
-
-export async function deleteMerge(removeNom, removePrenom) {
-  await requireAdmin()
-  const data = (await read('student-merges.json')) ?? { merges: [] }
-  for (const m of data.merges) {
-    m.aliases = (m.aliases ?? []).filter(a => !(a.nom === removeNom && a.prenom === removePrenom))
-  }
-  data.merges = data.merges.filter(m => (m.aliases ?? []).length > 0)
-  try { await write('student-merges.json', data); return { ok: true } }
-  catch (err) { console.error(err); return { error: 'Erreur' } }
+  if (!fromNom || !toNom) return { error: 'Invalide' }
+  const files = await listFiles('prof-')
+  const currentFiles = files.filter(f => /^prof-[^.]+\.json$/.test(f) && !/-v\d+\.json$/.test(f))
+  let count = 0
+  await Promise.all(currentFiles.map(async f => {
+    const data = await read(f)
+    if (!data) return
+    let changed = false
+    for (const ex of data.examens ?? []) {
+      for (const el of ex.eleves ?? []) {
+        if ((el.nom ?? '').trim() === fromNom.trim() && (el.prenom ?? '').trim() === fromPrenom.trim()) {
+          el.nom = toNom
+          el.prenom = toPrenom
+          changed = true
+          count++
+        }
+      }
+    }
+    if (changed) await writeFileSafe(f, data)
+  }))
+  revalidatePath('/admin', 'layout')
+  return { ok: true, count }
 }

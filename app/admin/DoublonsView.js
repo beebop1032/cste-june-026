@@ -1,6 +1,6 @@
 'use client'
 import { useMemo, useState, useTransition } from 'react'
-import { saveMerge, deleteMerge } from '@/actions/admin'
+import { replaceStudentName } from '@/actions/admin'
 
 // ── Fuzzy helpers ─────────────────────────────────────────────────────────────
 
@@ -28,24 +28,10 @@ function fmtJour(iso) {
   return new Date(iso + 'T12:00:00').toLocaleDateString('fr-BE', { day: 'numeric', month: 'short' })
 }
 
-function stKey(nom, prenom) {
-  return `${(nom || '').trim().toUpperCase()}|||${(prenom || '').trim()}`
-}
+// ── Build student list ────────────────────────────────────────────────────────
 
-// ── Build student list (with merges applied) ──────────────────────────────────
-
-function buildStudents(responses, exams, groupeStatuts, examStatuts, merges) {
+function buildStudents(responses, exams, groupeStatuts, examStatuts) {
   const examMap = Object.fromEntries(exams.map(e => [e.id, e]))
-
-  // Build merge lookup: aliasKey -> { key: canonicalKey, nom, prenom }
-  const mergeMap = new Map()
-  for (const { keep, aliases = [] } of merges) {
-    const keepKey = stKey(keep.nom, keep.prenom)
-    for (const alias of aliases) {
-      mergeMap.set(stKey(alias.nom, alias.prenom), { key: keepKey, nom: keep.nom, prenom: keep.prenom })
-    }
-  }
-
   const map = new Map()
 
   for (const prof of Object.values(responses)) {
@@ -58,14 +44,9 @@ function buildStudents(responses, exams, groupeStatuts, examStatuts, merges) {
 
       for (const el of ex.eleves ?? []) {
         if (!el.nom && !el.prenom) continue
-        const rawKey = stKey(el.nom, el.prenom)
-        const merged = mergeMap.get(rawKey)
-        const key    = merged?.key ?? rawKey
-        const nom    = merged?.nom    ?? (el.nom   ?? '').trim()
-        const prenom = merged?.prenom ?? (el.prenom ?? '').trim()
-
+        const key = `${(el.nom || '').trim().toUpperCase()}|||${(el.prenom || '').trim()}`
         if (!map.has(key)) {
-          map.set(key, { key, nom, prenom, classe: (el.classe ?? '').trim().toUpperCase(), exams: [] })
+          map.set(key, { key, nom: (el.nom ?? '').trim(), prenom: (el.prenom ?? '').trim(), classe: (el.classe ?? '').trim().toUpperCase(), exams: [] })
         }
         const entry = map.get(key)
         if (!entry.exams.some(e => e.id === ex.id)) {
@@ -85,55 +66,24 @@ function buildStudents(responses, exams, groupeStatuts, examStatuts, merges) {
 
 function ExamPill({ ex }) {
   return (
-    <span style={{
-      fontSize: 10, padding: '1px 6px', borderRadius: 3, whiteSpace: 'nowrap',
-      background: '#EFF6FF', color: '#1E40AF', border: '1px solid #BFDBFE',
-    }}>
+    <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 3, whiteSpace: 'nowrap', background: '#EFF6FF', color: '#1E40AF', border: '1px solid #BFDBFE' }}>
       {fmtJour(ex.jour)} {ex.periode} · {ex.matiere} · {ex.groupe}
     </span>
   )
 }
 
-function PairCard({ st, onKeep, isPending }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <div style={{ fontWeight: 700, fontSize: 13 }}>
-        {st.nom.toUpperCase()} {st.prenom}
-        {st.classe && <span style={{ fontSize: 11, fontWeight: 400, color: '#92400E', marginLeft: 5 }}>({st.classe})</span>}
-      </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, marginBottom: 4 }}>
-        {st.exams.map(ex => (
-          <span key={ex.id} style={{ fontSize: 10, padding: '1px 5px', borderRadius: 3, background: '#FEF3C7', color: '#92400E', border: '1px solid #FDE68A' }}>
-            {fmtJour(ex.jour)} · {ex.matiere}
-          </span>
-        ))}
-        {st.exams.length === 0 && <span style={{ fontSize: 10, color: '#94a3b8', fontStyle: 'italic' }}>Aucun examen</span>}
-      </div>
-      <button
-        onClick={onKeep}
-        disabled={isPending}
-        className="btn btn-xs btn-secondary"
-        style={{ alignSelf: 'flex-start', fontSize: 11 }}
-      >
-        ✓ Garder ce nom
-      </button>
-    </div>
-  )
-}
+// ── Main ──────────────────────────────────────────────────────────────────────
 
-// ── Main component ────────────────────────────────────────────────────────────
-
-export default function DoublonsView({ responses, exams, groupeStatuts, examStatuts, initialMerges = [] }) {
-  const [merges,       setMerges]       = useState(initialMerges)
+export default function DoublonsView({ responses, exams, groupeStatuts, examStatuts }) {
   const [threshold,    setThreshold]    = useState(2)
   const [filterClasse, setFilterClasse] = useState('')
   const [filterNom,    setFilterNom]    = useState('')
   const [isPending,    startTransition] = useTransition()
-  const [error,        setError]        = useState(null)
+  const [feedback,     setFeedback]     = useState(null) // { msg, ok }
 
   const students = useMemo(
-    () => buildStudents(responses, exams, groupeStatuts, examStatuts, merges),
-    [responses, exams, groupeStatuts, examStatuts, merges]
+    () => buildStudents(responses, exams, groupeStatuts, examStatuts),
+    [responses, exams, groupeStatuts, examStatuts]
   )
 
   const classes = useMemo(() => {
@@ -172,42 +122,25 @@ export default function DoublonsView({ responses, exams, groupeStatuts, examStat
 
   const totalFiltered = byClasse.reduce((acc, [, list]) => acc + list.length, 0)
 
-  // All active aliases (flat) for the "Fusions actives" section
-  const activeMerges = useMemo(() =>
-    merges.flatMap(({ keep, aliases = [] }) => aliases.map(alias => ({ keep, alias }))),
-    [merges]
-  )
-
-  function handleMerge(keep, remove) {
-    setError(null)
-    const newMerges = merges.map(m => ({ ...m, aliases: [...(m.aliases ?? [])] }))
-    // Remove any existing alias entry
-    for (const m of newMerges) m.aliases = m.aliases.filter(a => !(a.nom === remove.nom && a.prenom === remove.prenom))
-    // Add under canonical
-    const idx = newMerges.findIndex(m => m.keep.nom === keep.nom && m.keep.prenom === keep.prenom)
-    if (idx >= 0) newMerges[idx].aliases.push(remove)
-    else newMerges.push({ keep, aliases: [remove] })
-    setMerges(newMerges.filter(m => (m.aliases ?? []).length > 0))
+  // keep = the correct student, remove = the one to rename
+  function handleKeep(keep, remove) {
+    setFeedback(null)
     startTransition(async () => {
-      const res = await saveMerge(keep, remove)
-      if (res?.error) setError('Sauvegarde échouée')
-    })
-  }
-
-  function handleDeleteMerge(alias) {
-    setError(null)
-    const newMerges = merges
-      .map(m => ({ ...m, aliases: (m.aliases ?? []).filter(a => !(a.nom === alias.nom && a.prenom === alias.prenom)) }))
-      .filter(m => (m.aliases ?? []).length > 0)
-    setMerges(newMerges)
-    startTransition(async () => {
-      const res = await deleteMerge(alias.nom, alias.prenom)
-      if (res?.error) setError('Sauvegarde échouée')
+      const res = await replaceStudentName(remove.nom, remove.prenom, keep.nom, keep.prenom)
+      if (res?.error) setFeedback({ msg: 'Erreur lors du remplacement', ok: false })
+      else setFeedback({ msg: `${res.count} occurrence${res.count !== 1 ? 's' : ''} renommée${res.count !== 1 ? 's' : ''} → ${keep.nom} ${keep.prenom}`, ok: true })
     })
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+      {/* ── Feedback ── */}
+      {feedback && (
+        <div className={`alert ${feedback.ok ? 'alert-success' : 'alert-error'}`} style={{ animation: 'fadeOut 0.4s ease 4s forwards' }}>
+          {feedback.msg}
+        </div>
+      )}
 
       {/* ── Doublons potentiels ── */}
       <div className="card" style={{ padding: '16px 20px' }}>
@@ -218,8 +151,7 @@ export default function DoublonsView({ responses, exams, groupeStatuts, examStat
               : '✓ Aucun doublon potentiel'}
           </h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 'auto' }}>
-            {isPending && <span style={{ fontSize: 11, color: 'var(--primary)', fontStyle: 'italic' }}>Sauvegarde…</span>}
-            {error   && <span style={{ fontSize: 11, color: 'var(--destructive)' }}>{error}</span>}
+            {isPending && <span style={{ fontSize: 11, color: 'var(--primary)', fontStyle: 'italic' }}>Renommage…</span>}
             <span style={{ fontSize: 11, color: 'var(--fg-muted)' }}>Distance max :</span>
             {[1, 2, 3].map(v => (
               <button key={v} onClick={() => setThreshold(v)} className="btn btn-xs"
@@ -235,52 +167,59 @@ export default function DoublonsView({ responses, exams, groupeStatuts, examStat
         {duplicates.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {duplicates.map(({ a, b, dist }, i) => (
-              <div key={i} style={{
-                padding: '12px 14px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 8,
-              }}>
+              <div key={i} style={{ padding: '12px 14px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 8 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 12, alignItems: 'start' }}>
-                  <PairCard st={a} isPending={isPending} onKeep={() => handleMerge({ nom: a.nom, prenom: a.prenom }, { nom: b.nom, prenom: b.prenom })} />
+
+                  {/* Côté A */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13 }}>
+                      {a.nom.toUpperCase()} {a.prenom}
+                      {a.classe && <span style={{ fontSize: 11, fontWeight: 400, color: '#92400E', marginLeft: 5 }}>({a.classe})</span>}
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                      {a.exams.map(ex => (
+                        <span key={ex.id} style={{ fontSize: 10, padding: '1px 5px', borderRadius: 3, background: '#FEF3C7', color: '#92400E', border: '1px solid #FDE68A' }}>
+                          {fmtJour(ex.jour)} · {ex.matiere}
+                        </span>
+                      ))}
+                    </div>
+                    <button disabled={isPending} onClick={() => handleKeep(a, b)}
+                      className="btn btn-xs btn-secondary" style={{ alignSelf: 'flex-start', fontSize: 11 }}>
+                      ✓ Garder ce nom — renommer B
+                    </button>
+                  </div>
+
+                  {/* Séparateur */}
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, paddingTop: 4 }}>
                     <span style={{ fontSize: 18, color: '#D97706' }}>↔</span>
                     <span style={{ fontSize: 10, color: '#D97706', fontWeight: 700 }}>dist.{dist}</span>
                   </div>
-                  <PairCard st={b} isPending={isPending} onKeep={() => handleMerge({ nom: b.nom, prenom: b.prenom }, { nom: a.nom, prenom: a.prenom })} />
+
+                  {/* Côté B */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13 }}>
+                      {b.nom.toUpperCase()} {b.prenom}
+                      {b.classe && <span style={{ fontSize: 11, fontWeight: 400, color: '#92400E', marginLeft: 5 }}>({b.classe})</span>}
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                      {b.exams.map(ex => (
+                        <span key={ex.id} style={{ fontSize: 10, padding: '1px 5px', borderRadius: 3, background: '#FEF3C7', color: '#92400E', border: '1px solid #FDE68A' }}>
+                          {fmtJour(ex.jour)} · {ex.matiere}
+                        </span>
+                      ))}
+                    </div>
+                    <button disabled={isPending} onClick={() => handleKeep(b, a)}
+                      className="btn btn-xs btn-secondary" style={{ alignSelf: 'flex-start', fontSize: 11 }}>
+                      ✓ Garder ce nom — renommer A
+                    </button>
+                  </div>
+
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
-
-      {/* ── Fusions actives ── */}
-      {activeMerges.length > 0 && (
-        <div className="card" style={{ padding: '12px 16px' }}>
-          <h2 style={{ fontSize: 12, fontWeight: 700, color: 'var(--fg-muted)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '.06em' }}>
-            Fusions actives — {activeMerges.length}
-          </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {activeMerges.map(({ keep, alias }, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
-                <span style={{ color: 'var(--fg-muted)', fontFamily: 'monospace' }}>
-                  {alias.nom.toUpperCase()} {alias.prenom}
-                </span>
-                <span style={{ color: 'var(--fg-subtle)' }}>→</span>
-                <span style={{ fontWeight: 600 }}>
-                  {keep.nom.toUpperCase()} {keep.prenom}
-                </span>
-                <button
-                  onClick={() => handleDeleteMerge(alias)}
-                  disabled={isPending}
-                  className="btn btn-ghost btn-xs"
-                  style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--destructive)' }}
-                >
-                  Annuler
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* ── Liste complète par classe ── */}
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -293,39 +232,25 @@ export default function DoublonsView({ responses, exams, groupeStatuts, examStat
             <option value="">Toutes les classes</option>
             {classes.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-          <input
-            type="text"
-            placeholder="Nom…"
-            value={filterNom}
-            onChange={e => setFilterNom(e.target.value)}
-            style={{ fontSize: 12, padding: '4px 8px', border: '1px solid var(--border)', borderRadius: 6, width: 140, outline: 'none', background: 'var(--bg-card)' }}
-          />
+          <input type="text" placeholder="Nom…" value={filterNom} onChange={e => setFilterNom(e.target.value)}
+            style={{ fontSize: 12, padding: '4px 8px', border: '1px solid var(--border)', borderRadius: 6, width: 140, outline: 'none', background: 'var(--bg-card)' }} />
         </div>
 
         {byClasse.length === 0 ? (
-          <div style={{ padding: '32px', textAlign: 'center', color: 'var(--fg-muted)', fontStyle: 'italic', fontSize: 13 }}>
-            Aucun élève
-          </div>
+          <div style={{ padding: '32px', textAlign: 'center', color: 'var(--fg-muted)', fontStyle: 'italic', fontSize: 13 }}>Aucun élève</div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table className="table">
               <thead>
                 <tr>
-                  <th>Nom</th>
-                  <th>Prénom</th>
-                  <th>Classe</th>
-                  <th>Examens à représenter</th>
+                  <th>Nom</th><th>Prénom</th><th>Classe</th><th>Examens à représenter</th>
                 </tr>
               </thead>
               <tbody>
                 {byClasse.map(([classe, list]) => (
                   <>
                     <tr key={`hdr-${classe}`}>
-                      <td colSpan={4} style={{
-                        background: 'var(--primary-light)', fontWeight: 700, fontSize: 12,
-                        color: 'var(--primary)', letterSpacing: '0.05em', padding: '5px 14px',
-                        borderBottom: '1px solid var(--border)',
-                      }}>
+                      <td colSpan={4} style={{ background: 'var(--primary-light)', fontWeight: 700, fontSize: 12, color: 'var(--primary)', letterSpacing: '0.05em', padding: '5px 14px', borderBottom: '1px solid var(--border)' }}>
                         {classe} — {list.length} élève{list.length !== 1 ? 's' : ''}
                       </td>
                     </tr>
