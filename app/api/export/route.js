@@ -429,12 +429,8 @@ export async function GET(request) {
       const wantsSurv   = survFlagMapF.get(ex.id) ?? false
       const hasConflict = (profActiveCountF.get(`${ex.profCode}|${ex.jour}|${ex.periode}`) || 0) > 1
       const survVal     = (wantsSurv && !hasConflict) ? ex.profCode : ''
-      let conseilVal = ''
-      if (wantsSurv && !survVal) {
-        // Prof asked to supervise but has a conflict → suggest someone already present and willing
-        const willing = (survWillingAtSlot.get(slot) || []).filter(pc => pc !== ex.profCode)
-        conseilVal = willing[0] ?? ''
-      }
+      // Arrow shows the prof's own code whenever they asked to supervise (conflict or not)
+      const conseilVal = wantsSurv ? ex.profCode : ''
       const cpBtn = conseilVal
         ? `<button class="cp-btn" data-v="${conseilVal}" onclick="cp(this)" title="${conseilVal}">← ${conseilVal}</button>`
         : ''
