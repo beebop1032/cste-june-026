@@ -434,7 +434,7 @@ export async function GET(request) {
       const cpBtn = conseilVal
         ? `<button class="cp-btn" data-v="${conseilVal}" onclick="cp(this)" title="${conseilVal}">← ${conseilVal}</button>`
         : ''
-      return `<td class="ts${survVal ? ' ts-ok' : ''}">${survVal}</td><td class="tfin-cell"><div class="tfin-wrap">${cpBtn}<input class="fin-inp" type="text" list="profs-dl" data-conseil="${conseilVal}" placeholder="${conseilVal}" autocomplete="off" /></div></td>`
+      return `<td class="ts${survVal ? ' ts-ok' : ''}">${survVal}</td><td class="tfin-cell"><div class="tfin-wrap"><input class="fin-inp" type="text" list="profs-dl" data-conseil="${conseilVal}" placeholder="${conseilVal}" autocomplete="off" />${cpBtn}</div></td>`
     }
 
     function partBadgeF(ex) {
@@ -567,7 +567,7 @@ export async function GET(request) {
     const jsF = `
       const allInps = () => [...document.querySelectorAll('.fin-inp')];
       function cp(btn) {
-        const inp = btn.nextElementSibling;
+        const inp = btn.previousElementSibling;
         inp.value = btn.dataset.v;
         inp.classList.add('has-val');
         save();
