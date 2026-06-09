@@ -5,7 +5,6 @@ import { getAllResponses, getLocksData } from '@/actions/admin'
 import exams from '@/lib/exams.json'
 import HoraireTable from './HoraireTable'
 import ElevesTable from './ElevesTable'
-import ResetButton from './ResetButton'
 import VerrousJourTable from './VerrousJourTable'
 import ClasseTable from './ClasseTable'
 import DoublonsView from './DoublonsView'
@@ -119,7 +118,6 @@ export default async function AdminPage({ searchParams }) {
             </a>
           ))}
         </nav>
-        <ResetButton />
       </div>
     </div>
 

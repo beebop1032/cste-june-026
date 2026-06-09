@@ -25,13 +25,13 @@ export default function ProfForm({ profCode, examens, groupeStatuts, examStatuts
   const effectiveStatutFor = (ex) => examStatuts[ex.id] ?? groupeStatuts[ex.groupe]
   const allAdminDecided = examens.every(e => !!effectiveStatutFor(e))
 
-  // Linked exams: same matiere+groupe+niveau, both open, different jour
+  // Linked exams: same matiere+groupe+niveau, both open, different jour (skipped when noLink is set)
   const openIds = new Set(examens.filter(e => !effectiveStatutFor(e)).map(e => e.id))
   const linkedMap = {}
   for (const ex of examens) {
-    if (!openIds.has(ex.id)) continue
+    if (!openIds.has(ex.id) || ex.noLink) continue
     const siblings = examens
-      .filter(o => o.id !== ex.id && openIds.has(o.id) && o.matiere === ex.matiere && o.groupe === ex.groupe && o.niveau === ex.niveau)
+      .filter(o => o.id !== ex.id && openIds.has(o.id) && !o.noLink && o.matiere === ex.matiere && o.groupe === ex.groupe && o.niveau === ex.niveau)
       .map(o => o.id)
     if (siblings.length > 0) linkedMap[ex.id] = siblings
   }

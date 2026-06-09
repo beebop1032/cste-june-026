@@ -1837,7 +1837,8 @@
     "profCode": "DANB",
     "jour": "2026-06-23",
     "periode": "P1",
-    "local": "C210"
+    "local": "C210",
+    "noLink": true
   },
   {
     "id": "BAL-lg-n4-2-1re-23-P1",
@@ -2467,7 +2468,8 @@
     "profCode": "DANB",
     "jour": "2026-06-24",
     "periode": "P2",
-    "local": "C210"
+    "local": "C210",
+    "noLink": true
   },
   {
     "id": "BAL-lg2-n2-1-3e-24-P2",
