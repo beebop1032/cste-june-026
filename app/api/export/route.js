@@ -430,8 +430,8 @@ export async function GET(request) {
       const hasConflict = (profActiveCountF.get(`${ex.profCode}|${ex.jour}|${ex.periode}`) || 0) > 1
       const survVal     = (wantsSurv && !hasConflict) ? ex.profCode : ''
       let conseilVal = ''
-      if (!survVal) {
-        // Suggest a prof who is already present (supervising their own exam) and willing
+      if (wantsSurv && !survVal) {
+        // Prof asked to supervise but has a conflict → suggest someone already present and willing
         const willing = (survWillingAtSlot.get(slot) || []).filter(pc => pc !== ex.profCode)
         conseilVal = willing[0] ?? ''
       }
