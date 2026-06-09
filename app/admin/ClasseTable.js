@@ -210,8 +210,9 @@ export default function ClasseTable({ exams, niveaux, niveauxMap, groupeStatuts:
                               {elevesData?.statut === 'liste' && elevesData.eleves.length > 0 && (
                                 <div style={{ padding: '2px 14px 8px 54px', display: 'flex', flexWrap: 'wrap', gap: '2px 8px' }}>
                                   {elevesData.eleves.map((el, i) => (
-                                    <span key={i} style={{ fontSize: 11, color: 'var(--fg-muted)' }}>
-                                      {el.nom}{el.prenom ? ` ${el.prenom}` : ''}{el.classe ? <span style={{ opacity: 0.6 }}> ({el.classe})</span> : ''}
+                                    <span key={i} style={{ fontSize: 11, color: 'var(--fg)' }}>
+                                      {el.nom}{el.prenom ? ` ${el.prenom}` : ''}
+                                      {el.classe && <span style={{ fontSize: 10, color: 'var(--fg-muted)' }}> ({el.classe.toUpperCase()})</span>}
                                     </span>
                                   ))}
                                 </div>

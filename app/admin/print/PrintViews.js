@@ -309,22 +309,37 @@ function keep(p) { return p && p.type !== 'annule' }
 
 // ── View: Par Classe ──────────────────────────────────────────────────────────
 
-function ViewClasse({ exams, partData, groupe }) {
-  const gExams = useMemo(() =>
-    exams
-      .filter(e => e.groupe === groupe && keep(partData[e.id]))
-      .sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode)),
-    [exams, partData, groupe]
-  )
+function ViewClasse({ exams, partData, groupe, manuscriptGroupes = [] }) {
+  // Build entries: official groupe match (case-insensitive) + cross-match via el.classe
+  const gEntries = useMemo(() => {
+    if (!groupe) return []
+    const upper = groupe.toUpperCase()
+    const seen = new Set()
+    const result = []
+    for (const ex of exams) {
+      const p = partData[ex.id]
+      if (!keep(p)) continue
+      if (ex.groupe.toUpperCase() === upper) {
+        if (!seen.has(ex.id)) { result.push({ ex, p }); seen.add(ex.id) }
+      } else if (p?.type === 'liste') {
+        const matching = p.eleves.filter(el => el.classe?.trim().toUpperCase() === upper)
+        if (matching.length > 0 && !seen.has(ex.id)) {
+          result.push({ ex, p: { ...p, eleves: matching, nEleves: matching.length }, fromOtherGroupe: ex.groupe })
+          seen.add(ex.id)
+        }
+      }
+    }
+    return result.sort((a, b) => a.ex.jour.localeCompare(b.ex.jour) || a.ex.periode.localeCompare(b.ex.periode))
+  }, [exams, partData, groupe])
 
   const byJour = useMemo(() => {
     const m = new Map()
-    for (const ex of gExams) {
-      if (!m.has(ex.jour)) m.set(ex.jour, [])
-      m.get(ex.jour).push(ex)
+    for (const entry of gEntries) {
+      if (!m.has(entry.ex.jour)) m.set(entry.ex.jour, [])
+      m.get(entry.ex.jour).push(entry)
     }
     return m
-  }, [gExams])
+  }, [gEntries])
 
   if (!groupe) return (
     <div className="empty">
@@ -336,7 +351,7 @@ function ViewClasse({ exams, partData, groupe }) {
     </div>
   )
 
-  if (gExams.length === 0) return (
+  if (gEntries.length === 0) return (
     <div className="empty">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
@@ -346,41 +361,41 @@ function ViewClasse({ exams, partData, groupe }) {
     </div>
   )
 
+  const isManuscript = manuscriptGroupes.includes(groupe)
+
   return (
     <div className="section">
       <div className="section-hdr">
-        <h2>Classe {groupe}</h2>
-        <span className="section-hdr-sub">{gExams.length} examen{gExams.length !== 1 ? 's' : ''} · Juin 2026</span>
+        <h2>Classe {groupe}{isManuscript ? ' — manuscrit' : ''}</h2>
+        <span className="section-hdr-sub">{gEntries.length} examen{gEntries.length !== 1 ? 's' : ''} · Juin 2026</span>
       </div>
       <div className="section-body">
-        {[...byJour.entries()].map(([jour, jExams]) => (
+        {[...byJour.entries()].map(([jour, jEntries]) => (
           <div key={jour} className="day-group">
             <div className="day-label">{fmtJour(jour)}</div>
-            {jExams.map(ex => {
-              const p = partData[ex.id]
-              return (
-                <div key={ex.id} className="exam-row">
-                  <div className="exam-per">{ex.periode}</div>
-                  <div className="exam-main">
-                    <div className="exam-title">{ex.matiere}</div>
-                    <div className="exam-meta">
-                      <span>Prof <span className="mono">{ex.profCode}</span></span>
-                      {p?.surveilleParTitulaire && <span className="surv-tag">Surveillé par le titulaire</span>}
+            {jEntries.map(({ ex, p, fromOtherGroupe }) => (
+              <div key={ex.id} className="exam-row">
+                <div className="exam-per">{ex.periode}</div>
+                <div className="exam-main">
+                  <div className="exam-title">{ex.matiere}</div>
+                  <div className="exam-meta">
+                    <span>Prof <span className="mono">{ex.profCode}</span></span>
+                    {fromOtherGroupe && <span className="mono" style={{ color: 'var(--gold)' }}>→ {fromOtherGroupe}</span>}
+                    {p?.surveilleParTitulaire && <span className="surv-tag">Surveillé par le titulaire</span>}
+                  </div>
+                  {p?.type === 'liste' && p.eleves.length > 0 && (
+                    <div className="student-grid">
+                      {p.eleves.map((el, i) => (
+                        <span key={i} className="student-chip">{el.prenom} {el.nom}</span>
+                      ))}
                     </div>
-                    {p?.type === 'liste' && p.eleves.length > 0 && (
-                      <div className="student-grid">
-                        {p.eleves.map((el, i) => (
-                          <span key={i} className="student-chip">{el.prenom} {el.nom}</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="exam-right">
-                    <PartBadge p={p} />
-                  </div>
+                  )}
                 </div>
-              )
-            })}
+                <div className="exam-right">
+                  <PartBadge p={p} />
+                </div>
+              </div>
+            ))}
           </div>
         ))}
       </div>
@@ -460,22 +475,33 @@ function ViewProf({ exams, partData, prof }) {
 function ViewEleve({ exams, partData, groupe, selectedEleve, onSelectEleve }) {
   const allStudents = useMemo(() => {
     if (!groupe) return []
+    const upper = groupe.toUpperCase()
     const map = new Map()
-    const gExams = exams
-      .filter(e => e.groupe === groupe && keep(partData[e.id]))
-      .sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode))
-    for (const ex of gExams) {
+    const seen = new Set()
+    const sortedExams = [...exams].sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode))
+    for (const ex of sortedExams) {
       const p = partData[ex.id]
       if (!p || p.type === 'annule') continue
-      if (p.type === 'tous') {
-        const key = '__tous__'
-        if (!map.has(key)) map.set(key, { key, nom: '(tous les élèves)', prenom: '', exams: [] })
-        map.get(key).exams.push(ex)
-      } else if (p.type === 'liste' && p.eleves.length > 0) {
+      const isOfficialMatch = ex.groupe.toUpperCase() === upper
+      if (isOfficialMatch) {
+        if (p.type === 'tous') {
+          const key = '__tous__'
+          if (!map.has(key)) map.set(key, { key, nom: '(tous les élèves)', prenom: '', exams: [] })
+          if (!seen.has(ex.id + '__tous__')) { map.get(key).exams.push(ex); seen.add(ex.id + '__tous__') }
+        } else if (p.type === 'liste' && p.eleves.length > 0) {
+          for (const el of p.eleves) {
+            const key = `${(el.nom || '').toUpperCase()}|${(el.prenom || '').toLowerCase()}`
+            if (!map.has(key)) map.set(key, { key, nom: el.nom ?? '', prenom: el.prenom ?? '', exams: [] })
+            if (!seen.has(ex.id + key)) { map.get(key).exams.push(ex); seen.add(ex.id + key) }
+          }
+        }
+      } else if (p.type === 'liste') {
+        // Cross-match: include students from other groups whose el.classe matches
         for (const el of p.eleves) {
+          if (el.classe?.trim().toUpperCase() !== upper) continue
           const key = `${(el.nom || '').toUpperCase()}|${(el.prenom || '').toLowerCase()}`
           if (!map.has(key)) map.set(key, { key, nom: el.nom ?? '', prenom: el.prenom ?? '', exams: [] })
-          map.get(key).exams.push(ex)
+          if (!seen.has(ex.id + key)) { map.get(key).exams.push(ex); seen.add(ex.id + key) }
         }
       }
     }
@@ -615,7 +641,7 @@ function buildCsvRows(exams, partData, filterFn) {
   return rows
 }
 
-export default function PrintViews({ exams, partData, allGroupes, allProfs }) {
+export default function PrintViews({ exams, partData, allGroupes, allProfs, manuscriptGroupes = [] }) {
   const [tab,    setTab]    = useState('classe')
   const [groupe, setGroupe] = useState('')
   const [prof,   setProf]   = useState('')
@@ -624,11 +650,14 @@ export default function PrintViews({ exams, partData, allGroupes, allProfs }) {
   // Sorted student list for the élève tab (depends on groupe selection)
   const eleveList = useMemo(() => {
     if (tab !== 'eleve' || !groupe) return []
+    const upper = groupe.toUpperCase()
     const map = new Map()
-    for (const ex of exams.filter(e => e.groupe === groupe && keep(partData[e.id]))) {
+    for (const ex of exams) {
       const p = partData[ex.id]
-      if (p?.type !== 'liste') continue
+      if (!keep(p) || p?.type !== 'liste') continue
+      const isOfficialMatch = ex.groupe.toUpperCase() === upper
       for (const el of p.eleves) {
+        if (!isOfficialMatch && el.classe?.trim().toUpperCase() !== upper) continue
         const key = `${(el.nom || '').toUpperCase()}|${(el.prenom || '').toLowerCase()}`
         if (!map.has(key)) map.set(key, { key, nom: el.nom ?? '', prenom: el.prenom ?? '' })
       }
@@ -680,7 +709,14 @@ export default function PrintViews({ exams, partData, allGroupes, allProfs }) {
         ) : (
           <select className="ctrl-select" value={groupe} onChange={e => { setGroupe(e.target.value); setEleve('') }}>
             <option value="">— Choisir une classe —</option>
-            {allGroupes.map(g => <option key={g} value={g}>{g}</option>)}
+            <optgroup label="Classes officielles">
+              {allGroupes.map(g => <option key={g} value={g}>{g}</option>)}
+            </optgroup>
+            {manuscriptGroupes.length > 0 && (
+              <optgroup label="Classes manuscrites">
+                {manuscriptGroupes.map(g => <option key={g} value={g}>{g}</option>)}
+              </optgroup>
+            )}
           </select>
         )}
 
@@ -707,7 +743,7 @@ export default function PrintViews({ exams, partData, allGroupes, allProfs }) {
 
       {/* Content */}
       <div className="content">
-        {tab === 'classe' && <ViewClasse exams={exams} partData={partData} groupe={groupe} />}
+        {tab === 'classe' && <ViewClasse exams={exams} partData={partData} groupe={groupe} manuscriptGroupes={manuscriptGroupes} />}
         {tab === 'prof'   && <ViewProf   exams={exams} partData={partData} prof={prof}     />}
         {tab === 'eleve'  && <ViewEleve  exams={exams} partData={partData} groupe={groupe} selectedEleve={eleve} onSelectEleve={setEleve} />}
       </div>

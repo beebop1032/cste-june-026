@@ -37,6 +37,19 @@ export default async function PrintPage() {
   const allGroupes = [...new Set(exams.map(e => e.groupe))].sort()
   const allProfs   = [...new Set(exams.map(e => e.profCode))].sort()
 
+  // Collect manuscript classes from student el.classe fields not already in official groups
+  const officialGroupSetUpper = new Set(allGroupes.map(g => g.toUpperCase()))
+  const manuscriptGroupSet = new Set()
+  for (const p of Object.values(partData)) {
+    if (p.type !== 'liste') continue
+    for (const el of p.eleves) {
+      if (!el.classe) continue
+      const norm = el.classe.trim().toUpperCase()
+      if (!officialGroupSetUpper.has(norm)) manuscriptGroupSet.add(norm)
+    }
+  }
+  const manuscriptGroupes = [...manuscriptGroupSet].sort()
+
   return (
     <>
       {/* Classic admin nav — hidden on print */}
@@ -68,7 +81,7 @@ export default async function PrintPage() {
           </nav>
         </div>
       </div>
-      <PrintViews exams={exams} partData={partData} allGroupes={allGroupes} allProfs={allProfs} />
+      <PrintViews exams={exams} partData={partData} allGroupes={allGroupes} allProfs={allProfs} manuscriptGroupes={manuscriptGroupes} />
     </>
   )
 }
