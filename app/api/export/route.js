@@ -386,6 +386,22 @@ export async function GET(request) {
   if (format === 'print-final') {
     const partMap = await buildPartMap()
 
+    const CLASS_SIZES_F = {
+      '1H': 19, '1I': 20, '1J': 21, '1K': 21, '1L': 21, '1M': 21, '1N': 21,
+      '2H': 20, '2I': 23, '2J': 21, '2K': 21, '2L': 21, '2M': 20, '2N': 19,
+      '6H': 25, '6I': 24, '6J': 24, '6K': 24,
+    }
+    const classSizeF = g => CLASS_SIZES_F[g] ?? 25
+
+    // Copies to correct per prof
+    const copiesPerProfF = {}
+    for (const ex of exams) {
+      const p = partMap.get(ex.id)
+      if (!p || p.type === 'annule') continue
+      const n = p.type === 'liste' ? (p.n || 0) : classSizeF(ex.groupe)
+      copiesPerProfF[ex.profCode] = (copiesPerProfF[ex.profCode] || 0) + n
+    }
+
     // Same surv logic as format=print
     const survFlagMapF = new Map()
     for (const f of currentFiles) {
@@ -516,19 +532,20 @@ export async function GET(request) {
       .cp-btn:hover { background:#fde047; color:#1c1917 }
       .cp-btn:active { transform:scale(.95) }
       /* ── Récap sidebar ── */
-      .recap-section { position:fixed; top:56px; right:0; width:200px; height:calc(100vh - 56px); overflow-y:auto; background:#fff; border-left:1px solid #e2dfd8; box-shadow:-3px 0 12px rgba(0,0,0,.06); z-index:100; padding:14px 12px }
+      .recap-section { position:fixed; top:56px; right:0; width:230px; height:calc(100vh - 56px); overflow-y:auto; background:#fff; border-left:1px solid #e2dfd8; box-shadow:-3px 0 12px rgba(0,0,0,.06); z-index:100; padding:14px 12px }
       .recap-title { font-size:12px; font-weight:700; color:#1a3254; margin-bottom:2px }
-      .recap-sub   { font-size:9px; color:#9ca3af; margin-bottom:10px }
+      .recap-sub   { font-size:9px; color:#9ca3af; margin-bottom:6px }
+      .recap-legend { font-size:8px; color:#6b7280; margin-bottom:8px; line-height:1.6 }
       .recap-table { width:100%; border-collapse:collapse; font-size:10px }
-      .recap-table thead th { background:#f0ede6; color:#1a3254; font-size:8px; font-weight:700; text-transform:uppercase; padding:3px 4px; border:1px solid #e2dfd8; text-align:center }
-      .recap-table tbody td { border:1px solid #e8e4db; padding:2px 4px; vertical-align:middle }
-      .rc-prof { font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:600; color:#374151 }
-      .rc-n    { text-align:center; font-weight:700; font-size:10px; min-width:28px }
-      .rc-av   { text-align:center; font-size:9px }
+      .recap-table thead th { background:#f0ede6; color:#1a3254; font-size:7.5px; font-weight:700; text-transform:uppercase; padding:3px 3px; border:1px solid #e2dfd8; text-align:center }
+      .recap-table tbody td { border:1px solid #e8e4db; padding:2px 3px; vertical-align:middle }
+      .rc-prof  { font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:600; color:#374151 }
+      .rc-n     { text-align:center; font-size:9.5px; font-weight:600 }
+      .rc-score { text-align:center; font-size:10px; font-weight:700; min-width:30px }
       .recap-absent { margin-top:14px; padding-top:10px; border-top:1px solid #e2dfd8 }
       .recap-absent-title { font-size:10px; font-weight:700; color:#7c3aed; margin-bottom:6px }
       .absent-badge { display:inline-block; background:#f5f3ff; color:#4c1d95; border:1px solid #ddd6fe; border-radius:3px; font-family:'JetBrains Mono',monospace; font-size:8.5px; font-weight:600; padding:1px 5px; margin:1px 2px }
-      .content { margin-right:210px }
+      .content { margin-right:240px }
       /* ── Print A3 ── */
       .print-hdr { display:none }
       @media print {
@@ -600,43 +617,32 @@ export async function GET(request) {
         const el = document.getElementById('save-status');
         if (el) { el.textContent = msg; clearTimeout(el._t); el._t = setTimeout(() => el.textContent = '', 2000); }
       }
+      const SURV_PTS = 8; // points per 1h supervision
       function updateRecap() {
-        const counts = {};
+        const survCounts = {};
         document.querySelectorAll('.fin-inp').forEach(inp => {
           const v = inp.value.trim().toUpperCase();
-          if (v) counts[v] = (counts[v] || 0) + 1;
+          if (v) survCounts[v] = (survCounts[v] || 0) + 1;
         });
-        // Total active exams per prof (from data-conseil + existing SURV cells)
-        const totalActive = {};
-        document.querySelectorAll('td.ts.ts-ok').forEach(td => {
-          const v = td.textContent.trim().toUpperCase();
-          if (v) totalActive[v] = (totalActive[v] || 0) + 1;
+        // All profs with active exams (from server data)
+        const allProfs = new Set([...Object.keys(COPIES_PER_PROF), ...Object.keys(survCounts)]);
+        const sorted = [...allProfs].sort((a, b) => {
+          const sA = (COPIES_PER_PROF[a] || 0) + (survCounts[a] || 0) * SURV_PTS;
+          const sB = (COPIES_PER_PROF[b] || 0) + (survCounts[b] || 0) * SURV_PTS;
+          return sB - sA;
         });
-        // Count conseil suggestions per prof (who could potentially survey)
-        const conseils = {};
-        document.querySelectorAll('.fin-inp[data-conseil]').forEach(inp => {
-          const v = inp.dataset.conseil.trim().toUpperCase();
-          if (v) conseils[v] = (conseils[v] || 0) + 1;
-        });
-        const allProfs = new Set([...Object.keys(counts), ...Object.keys(conseils)]);
-        const sorted = [...allProfs].sort((a, b) => (counts[b] || 0) - (counts[a] || 0));
         const tbody = document.getElementById('recap-tbody');
         if (!tbody) return;
-        if (sorted.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="3" style="color:#9ca3af;text-align:center;padding:10px;font-style:italic">Aucune assignation saisie</td></tr>';
-          return;
-        }
         tbody.innerHTML = sorted.map(prof => {
-          const assigned = counts[prof] || 0;
-          const available = conseils[prof] || 0;
-          const bar = assigned > 0
-            ? \`<div style="display:inline-block;height:8px;width:\${Math.min(assigned * 14, 120)}px;background:#166534;border-radius:2px;vertical-align:middle;margin-left:5px"></div>\`
-            : '';
-          const cls = assigned === 0 ? 'style="color:#9ca3af"' : (assigned >= 4 ? 'style="color:#991b1b;font-weight:700"' : '');
+          const copies = COPIES_PER_PROF[prof] || 0;
+          const surv   = survCounts[prof] || 0;
+          const score  = copies + surv * SURV_PTS;
+          const scoreColor = score >= 120 ? '#991b1b' : score >= 80 ? '#92400e' : '#166534';
           return \`<tr>
             <td class="rc-prof">\${prof}</td>
-            <td class="rc-n" \${cls}>\${assigned}\${bar}</td>
-            <td class="rc-av" style="color:#6b7280">\${available}</td>
+            <td class="rc-n">\${copies}</td>
+            <td class="rc-n">\${surv > 0 ? surv : '<span style="color:#9ca3af">–</span>'}</td>
+            <td class="rc-score" style="color:\${scoreColor}">\${score}</td>
           </tr>\`;
         }).join('');
       }
@@ -771,25 +777,27 @@ ${datalistHtml}
 
 <div class="recap-section no-print">
   <div class="recap-inner">
-    <h2 class="recap-title">Récap surveillance</h2>
-    <p class="recap-sub">Mis à jour en temps réel · basé sur la colonne Fin.</p>
+    <h2 class="recap-title">Récap charge de travail</h2>
+    <p class="recap-sub">Trié par score décroissant · mis à jour en temps réel</p>
+    <p class="recap-legend">📝 Copies × 1pt &nbsp;·&nbsp; 👁 Surv × 8pts</p>
     <table class="recap-table">
       <thead>
         <tr>
           <th>Prof</th>
-          <th title="Nombre d'examens assignés en Fin.">Assigné</th>
-          <th title="Fois suggéré comme conseil (disponible)">Suggéré</th>
+          <th title="Copies à corriger">📝</th>
+          <th title="Surveillances assignées (colonne Fin.)">👁</th>
+          <th title="Score total (copies + surv×8)">Score</th>
         </tr>
       </thead>
       <tbody id="recap-tbody">
-        <tr><td colspan="3" style="color:#9ca3af;text-align:center;padding:10px;font-style:italic">Aucune assignation saisie</td></tr>
+        <tr><td colspan="4" style="color:#9ca3af;text-align:center;padding:10px;font-style:italic">Chargement…</td></tr>
       </tbody>
     </table>
     ${noRespHtml}
   </div>
 </div>
 
-<script>${jsF}</script></body></html>`
+<script>const COPIES_PER_PROF=${JSON.stringify(copiesPerProfF)};${jsF}</script></body></html>`
     return new Response(htmlF, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
   }
 
