@@ -395,16 +395,6 @@ export async function GET(request) {
         if (ex.surveilleParTitulaire) survFlagMapF.set(ex.id, true)
       }
     }
-    const activeAtSlotF = new Map()
-    const freeAtSlotF   = new Map()
-    for (const ex of exams) {
-      const slot = `${ex.jour}|${ex.periode}`
-      if (!activeAtSlotF.has(slot)) activeAtSlotF.set(slot, new Set())
-      if (!freeAtSlotF.has(slot))   freeAtSlotF.set(slot, [])
-      const p = partMap.get(ex.id)
-      if (!p || p.type === 'annule') freeAtSlotF.get(slot).push(ex.profCode)
-      else activeAtSlotF.get(slot).add(ex.profCode)
-    }
     const profActiveCountF = new Map()
     for (const ex of exams) {
       const p = partMap.get(ex.id)
@@ -412,6 +402,23 @@ export async function GET(request) {
       const key = `${ex.profCode}|${ex.jour}|${ex.periode}`
       profActiveCountF.set(key, (profActiveCountF.get(key) || 0) + 1)
     }
+
+    // Profs who are actively supervising their OWN exam at each slot
+    // (active + asked to supervise + no scheduling conflict) → can co-supervise another exam
+    const survWillingAtSlot = new Map()
+    for (const ex of exams) {
+      const p = partMap.get(ex.id)
+      if (!p || p.type === 'annule') continue
+      if (!survFlagMapF.has(ex.id)) continue
+      if ((profActiveCountF.get(`${ex.profCode}|${ex.jour}|${ex.periode}`) || 0) > 1) continue
+      const slot = `${ex.jour}|${ex.periode}`
+      if (!survWillingAtSlot.has(slot)) survWillingAtSlot.set(slot, [])
+      survWillingAtSlot.get(slot).push(ex.profCode)
+    }
+
+    // Profs with no file at all (never connected)
+    const profsWithFile = new Set(currentFiles.map(f => f.replace(/^prof-/, '').replace(/\.json$/, '')))
+    const profsNoResponse = [...new Set(exams.map(e => e.profCode))].filter(p => !profsWithFile.has(p)).sort()
 
     function survFinalCells(ex) {
       const p = partMap.get(ex.id)
@@ -423,10 +430,10 @@ export async function GET(request) {
       const hasConflict = (profActiveCountF.get(`${ex.profCode}|${ex.jour}|${ex.periode}`) || 0) > 1
       const survVal     = (wantsSurv && !hasConflict) ? ex.profCode : ''
       let conseilVal = ''
-      if (!wantsSurv || hasConflict) {
-        const active = activeAtSlotF.get(slot) || new Set()
-        const free   = (freeAtSlotF.get(slot) || []).filter(pc => !active.has(pc) && pc !== ex.profCode)
-        conseilVal = free[0] ?? ''
+      if (!survVal) {
+        // Suggest a prof who is already present (supervising their own exam) and willing
+        const willing = (survWillingAtSlot.get(slot) || []).filter(pc => pc !== ex.profCode)
+        conseilVal = willing[0] ?? ''
       }
       const cpBtn = conseilVal
         ? `<button class="cp-btn" data-v="${conseilVal}" onclick="cp(this)" title="${conseilVal}">← ${conseilVal}</button>`
@@ -522,6 +529,9 @@ export async function GET(request) {
       .rc-prof { font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:600; color:#374151 }
       .rc-n    { text-align:center; font-weight:700; font-size:10px; min-width:28px }
       .rc-av   { text-align:center; font-size:9px }
+      .recap-absent { margin-top:14px; padding-top:10px; border-top:1px solid #e2dfd8 }
+      .recap-absent-title { font-size:10px; font-weight:700; color:#7c3aed; margin-bottom:6px }
+      .absent-badge { display:inline-block; background:#f5f3ff; color:#4c1d95; border:1px solid #ddd6fe; border-radius:3px; font-family:'JetBrains Mono',monospace; font-size:8.5px; font-weight:600; padding:1px 5px; margin:1px 2px }
       .content { margin-right:210px }
       /* ── Print A3 ── */
       .print-hdr { display:none }
@@ -754,6 +764,13 @@ ${datalistHtml}
       htmlF += `</div>`
     }
 
+    const noRespHtml = profsNoResponse.length
+      ? `<div class="recap-absent">
+    <h3 class="recap-absent-title">Sans réponse (${profsNoResponse.length})</h3>
+    ${profsNoResponse.map(p => `<span class="absent-badge">${p}</span>`).join('')}
+  </div>`
+      : ''
+
     htmlF += `</div>
 
 <div class="recap-section no-print">
@@ -772,6 +789,7 @@ ${datalistHtml}
         <tr><td colspan="3" style="color:#9ca3af;text-align:center;padding:10px;font-style:italic">Aucune assignation saisie</td></tr>
       </tbody>
     </table>
+    ${noRespHtml}
   </div>
 </div>
 
