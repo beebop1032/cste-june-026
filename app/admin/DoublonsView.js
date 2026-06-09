@@ -80,6 +80,9 @@ export default function DoublonsView({ responses, exams, groupeStatuts, examStat
   const [filterNom,    setFilterNom]    = useState('')
   const [isPending,    startTransition] = useTransition()
   const [feedback,     setFeedback]     = useState(null) // { msg, ok }
+  const [editingKey,   setEditingKey]   = useState(null)
+  const [editNom,      setEditNom]      = useState('')
+  const [editPrenom,   setEditPrenom]   = useState('')
 
   const students = useMemo(
     () => buildStudents(responses, exams, groupeStatuts, examStatuts),
@@ -121,6 +124,25 @@ export default function DoublonsView({ responses, exams, groupeStatuts, examStat
   }, [students, filterClasse, filterNom])
 
   const totalFiltered = byClasse.reduce((acc, [, list]) => acc + list.length, 0)
+
+  function startEdit(st) {
+    setEditingKey(st.key)
+    setEditNom(st.nom)
+    setEditPrenom(st.prenom)
+  }
+
+  function handleSaveEdit(st) {
+    const newNom    = editNom.trim()
+    const newPrenom = editPrenom.trim()
+    if (!newNom || (newNom === st.nom && newPrenom === st.prenom)) { setEditingKey(null); return }
+    setFeedback(null)
+    setEditingKey(null)
+    startTransition(async () => {
+      const res = await replaceStudentName(st.nom, st.prenom, newNom, newPrenom)
+      if (res?.error) setFeedback({ msg: 'Erreur lors du renommage', ok: false })
+      else setFeedback({ msg: `${res.count} occurrence${res.count !== 1 ? 's' : ''} renommée${res.count !== 1 ? 's' : ''} → ${newNom} ${newPrenom}`, ok: true })
+    })
+  }
 
   // keep = the correct student, remove = the one to rename
   function handleKeep(keep, remove) {
@@ -243,29 +265,64 @@ export default function DoublonsView({ responses, exams, groupeStatuts, examStat
             <table className="table">
               <thead>
                 <tr>
-                  <th>Nom</th><th>Prénom</th><th>Classe</th><th>Examens à représenter</th>
+                  <th>Nom</th><th>Prénom</th><th>Classe</th><th>Examens à représenter</th><th></th>
                 </tr>
               </thead>
               <tbody>
                 {byClasse.map(([classe, list]) => (
                   <>
                     <tr key={`hdr-${classe}`}>
-                      <td colSpan={4} style={{ background: 'var(--primary-light)', fontWeight: 700, fontSize: 12, color: 'var(--primary)', letterSpacing: '0.05em', padding: '5px 14px', borderBottom: '1px solid var(--border)' }}>
+                      <td colSpan={5} style={{ background: 'var(--primary-light)', fontWeight: 700, fontSize: 12, color: 'var(--primary)', letterSpacing: '0.05em', padding: '5px 14px', borderBottom: '1px solid var(--border)' }}>
                         {classe} — {list.length} élève{list.length !== 1 ? 's' : ''}
                       </td>
                     </tr>
-                    {list.map(st => (
-                      <tr key={st.key}>
-                        <td style={{ fontWeight: 600 }}>{st.nom.toUpperCase()}</td>
-                        <td>{st.prenom}</td>
-                        <td style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--fg-muted)' }}>{st.classe}</td>
-                        <td>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                            {st.exams.map(ex => <ExamPill key={ex.id} ex={ex} />)}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                    {list.map(st => {
+                      const isEditing = editingKey === st.key
+                      return (
+                        <tr key={st.key}>
+                          <td style={{ fontWeight: 600 }}>
+                            {isEditing
+                              ? <input autoFocus value={editNom} onChange={e => setEditNom(e.target.value)}
+                                  onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(st); if (e.key === 'Escape') setEditingKey(null) }}
+                                  style={{ fontSize: 12, padding: '3px 6px', border: '1.5px solid var(--primary)', borderRadius: 5, width: '100%', fontWeight: 600, outline: 'none' }} />
+                              : st.nom.toUpperCase()}
+                          </td>
+                          <td>
+                            {isEditing
+                              ? <input value={editPrenom} onChange={e => setEditPrenom(e.target.value)}
+                                  onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(st); if (e.key === 'Escape') setEditingKey(null) }}
+                                  style={{ fontSize: 12, padding: '3px 6px', border: '1.5px solid var(--primary)', borderRadius: 5, width: '100%', outline: 'none' }} />
+                              : st.prenom}
+                          </td>
+                          <td style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--fg-muted)' }}>{st.classe}</td>
+                          <td>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                              {st.exams.map(ex => <ExamPill key={ex.id} ex={ex} />)}
+                            </div>
+                          </td>
+                          <td style={{ whiteSpace: 'nowrap' }}>
+                            {isEditing ? (
+                              <div style={{ display: 'flex', gap: 4 }}>
+                                <button onClick={() => handleSaveEdit(st)} disabled={isPending}
+                                  className="btn btn-xs" style={{ background: 'var(--primary)', color: '#fff', fontSize: 11, border: 'none' }}>
+                                  ✓
+                                </button>
+                                <button onClick={() => setEditingKey(null)}
+                                  className="btn btn-xs btn-ghost" style={{ fontSize: 11 }}>
+                                  ✕
+                                </button>
+                              </div>
+                            ) : (
+                              <button onClick={() => startEdit(st)} disabled={isPending}
+                                className="btn btn-ghost btn-xs" style={{ fontSize: 11, opacity: 0.5 }}
+                                title="Modifier le nom">
+                                ✏
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </>
                 ))}
               </tbody>
