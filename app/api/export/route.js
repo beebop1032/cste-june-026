@@ -429,9 +429,9 @@ export async function GET(request) {
         conseilVal = free[0] ?? ''
       }
       const cpBtn = conseilVal
-        ? `<button class="cp-btn" data-v="${conseilVal}" onclick="cp(this)" title="Copier : ${conseilVal}">←</button>`
+        ? `<button class="cp-btn" data-v="${conseilVal}" onclick="cp(this)" title="${conseilVal}">← ${conseilVal}</button>`
         : ''
-      return `<td class="ts${survVal ? ' ts-ok' : ''}">${survVal}</td><td class="tfin-cell"><div class="tfin-wrap">${cpBtn}<input class="fin-inp" type="text" data-conseil="${conseilVal}" placeholder="${conseilVal}" /></div></td>`
+      return `<td class="ts${survVal ? ' ts-ok' : ''}">${survVal}</td><td class="tfin-cell"><div class="tfin-wrap">${cpBtn}<input class="fin-inp" type="text" list="profs-dl" data-conseil="${conseilVal}" placeholder="${conseilVal}" autocomplete="off" /></div></td>`
     }
 
     function partBadgeF(ex) {
@@ -494,22 +494,24 @@ export async function GET(request) {
       .ts-an  { background:#f5f5f5 !important; opacity:.3 }
       .surv-hdr { background:#374151 !important; color:#fff !important; font-size:7.5px !important }
       /* ── FIN. editable col ── */
-      .tfin-cell { padding:1px 2px !important; min-width:54px }
-      .tfin-wrap { display:flex; align-items:center; gap:1px; justify-content:center }
+      .tfin-cell { padding:1px 2px !important; min-width:110px }
+      .tfin-wrap { display:flex; align-items:center; gap:2px; justify-content:flex-start }
       .fin-inp {
-        width:42px; border:1px solid #d1d5db; border-radius:2px;
-        padding:1px 3px; font-family:'JetBrains Mono',monospace; font-size:8.5px;
-        color:#374151; background:#fff; text-align:center;
-        transition: background .15s, color .15s;
+        width:54px; border:1px solid #d1d5db; border-radius:3px;
+        padding:2px 4px; font-family:'JetBrains Mono',monospace; font-size:9px;
+        color:#374151; background:#fff; text-align:left; text-transform:uppercase;
+        transition: background .15s, color .15s, border-color .1s;
       }
-      .fin-inp:focus { outline:2px solid #3b82f6; outline-offset:0 }
-      .fin-inp.has-val { background:#f0fdf4 !important; color:#166534 !important; font-weight:700 }
+      .fin-inp:focus { outline:none; border-color:#3b82f6; box-shadow:0 0 0 2px rgba(59,130,246,.25) }
+      .fin-inp.has-val { background:#f0fdf4 !important; color:#166534 !important; font-weight:700; border-color:#86efac }
       .cp-btn {
-        flex-shrink:0; border:none; background:#fefce8; color:#713f12;
-        font-size:9px; cursor:pointer; padding:0px 3px; border-radius:2px;
-        line-height:14px; font-weight:700;
+        flex-shrink:0; border:none; background:#fef9c3; color:#713f12;
+        font-size:8px; cursor:pointer; padding:2px 5px; border-radius:3px;
+        font-weight:700; white-space:nowrap; max-width:60px; overflow:hidden;
+        text-overflow:ellipsis;
       }
-      .cp-btn:hover { background:#fde047 }
+      .cp-btn:hover { background:#fde047; color:#1c1917 }
+      .cp-btn:active { transform:scale(.95) }
       /* ── Récap sidebar ── */
       .recap-section { position:fixed; top:56px; right:0; width:200px; height:calc(100vh - 56px); overflow-y:auto; background:#fff; border-left:1px solid #e2dfd8; box-shadow:-3px 0 12px rgba(0,0,0,.06); z-index:100; padding:14px 12px }
       .recap-title { font-size:12px; font-weight:700; color:#1a3254; margin-bottom:2px }
@@ -545,23 +547,29 @@ export async function GET(request) {
         tbody td { padding:1px 1px }
         .badge { font-size:6px; padding:0 2px }
         .ts { font-size:6.5px; min-width:16px }
-        .tfin-cell { min-width:42px }
+        .tfin-cell { min-width:52px }
         .cp-btn { display:none }
         .fin-inp {
           border:none !important; background:transparent !important;
           width:auto !important; font-size:7px; padding:0 !important;
-          color:#166534; font-weight:700;
+          color:#166534; font-weight:700; text-transform:uppercase;
         }
         .fin-inp::placeholder { color:#9ca3af; font-style:italic; font-weight:400 }
       }
     `
 
     const jsF = `
+      const allInps = () => [...document.querySelectorAll('.fin-inp')];
       function cp(btn) {
         const inp = btn.nextElementSibling;
         inp.value = btn.dataset.v;
         inp.classList.add('has-val');
         save();
+        // Focus next empty input
+        const list = allInps();
+        const idx  = list.indexOf(inp);
+        const next = list.slice(idx + 1).find(i => !i.value);
+        if (next) next.focus();
       }
       function copyAll() {
         document.querySelectorAll('.fin-inp').forEach(inp => {
@@ -627,10 +635,21 @@ export async function GET(request) {
         }).join('');
       }
       document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.fin-inp').forEach(inp => {
+        document.querySelectorAll('.fin-inp').forEach((inp, _, arr) => {
           inp.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
             this.classList.toggle('has-val', this.value.length > 0);
             save();
+          });
+          // Tab/Shift-Tab navigate only between .fin-inp fields
+          inp.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+              e.preventDefault();
+              const list = allInps();
+              const idx  = list.indexOf(this);
+              const next = e.shiftKey ? list[idx - 1] : list[idx + 1];
+              if (next) next.focus();
+            }
           });
         });
         try {
@@ -647,13 +666,16 @@ export async function GET(request) {
       });
     `
 
+    const allProfCodes = [...new Set(exams.map(e => e.profCode))].sort()
+    const datalistHtml = `<datalist id="profs-dl">${allProfCodes.map(c => `<option value="${c}">`).join('')}</datalist>`
+
     let htmlF = `<!DOCTYPE html>
 <html lang="fr"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Tableau final — Surveillance juin 2026</title>
 <style>${cssF}</style>
 </head><body>
-
+${datalistHtml}
 <div class="topbar">
   <div class="topbar-left">
     <h1>Tableau final — Surveillance</h1>
