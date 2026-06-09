@@ -617,7 +617,7 @@ export async function GET(request) {
         const el = document.getElementById('save-status');
         if (el) { el.textContent = msg; clearTimeout(el._t); el._t = setTimeout(() => el.textContent = '', 2000); }
       }
-      const SURV_PTS = 8; // points per 1h supervision
+      const SURV_PTS = 16; // points per 1h supervision
       function updateRecap() {
         const survCounts = {};
         document.querySelectorAll('.fin-inp').forEach(inp => {
@@ -779,7 +779,7 @@ ${datalistHtml}
   <div class="recap-inner">
     <h2 class="recap-title">Récap charge de travail</h2>
     <p class="recap-sub">Trié par score décroissant · mis à jour en temps réel</p>
-    <p class="recap-legend">📝 Copies × 1pt &nbsp;·&nbsp; 👁 Surv × 8pts</p>
+    <p class="recap-legend">📝 Copies × 1pt &nbsp;·&nbsp; 👁 Surv × 16pts</p>
     <table class="recap-table">
       <thead>
         <tr>
