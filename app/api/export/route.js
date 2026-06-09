@@ -310,6 +310,228 @@ export async function GET(request) {
     return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
   }
 
+  // ── Vue imprimable — propositions de fusion ────────────────────────────────
+
+  if (format === 'print-propositions') {
+    const partMap = await buildPartMap()
+
+    // Build fusion groups: same prof, same jour, liste nominative ≤ 10 élèves
+    const FEW_TH = 10
+    const fusionCandidates = []
+    for (const f of currentFiles) {
+      const prof = await read(f)
+      if (!prof) continue
+      for (const ex of prof.examens ?? []) {
+        const meta = exams.find(e => e.id === ex.id)
+        if (!meta) continue
+        if (examStatuts[meta.id] ?? groupeStatuts[meta.groupe]) continue
+        const statut = ex.statut ?? (ex.maintenu === true ? 'maintenu' : null)
+        if (!statut || statut === 'aucun' || statut === 'maintenu' || statut === 'tous') continue
+        const n = (ex.eleves ?? []).filter(e => e.nom || e.prenom).length
+        if (n < 1 || n > FEW_TH) continue
+        fusionCandidates.push({ profCode: prof.profCode, jour: meta.jour, periode: meta.periode, matiere: meta.matiere, groupe: meta.groupe, local: meta.local, copies: n })
+      }
+    }
+    const fusionGroupMap = {}
+    for (const c of fusionCandidates) {
+      const key = `${c.profCode}|${c.jour}`
+      if (!fusionGroupMap[key]) fusionGroupMap[key] = { profCode: c.profCode, jour: c.jour, items: [] }
+      fusionGroupMap[key].items.push(c)
+    }
+    // fusionsByJour[jour] = array of valid fusion groups (≥2 exams)
+    const fusionsByJour = {}
+    for (const g of Object.values(fusionGroupMap)) {
+      if (g.items.length < 2) continue
+      if (!fusionsByJour[g.jour]) fusionsByJour[g.jour] = []
+      fusionsByJour[g.jour].push(g)
+    }
+
+    function partBadge(ex) {
+      const p = partMap.get(ex.id)
+      if (!p) return `<td class="p-ns"><span class="badge b-ns">–</span></td>`
+      if (p.type === 'annule')  return `<td class="p-an"><span class="badge b-an">✕ Annulé</span></td>`
+      if (p.type === 'tous')    return `<td class="p-to"><span class="badge b-to">✓ Tous</span></td>`
+      return `<td class="p-li"><span class="badge b-li">${p.label}</span></td>`
+    }
+
+    const NIV_COLORS_P = ['#1a3254','#1e4976','#1d5fa8','#1a6b8a','#1a7a6e','#236b3e']
+
+    const cssP = `
+      @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Playfair+Display:wght@700&family=JetBrains+Mono:wght@500&display=swap');
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
+      :root { --navy:#1a3254; --gold:#b8893a; --bg:#f4f3ef; --white:#ffffff; --text:#1c1c1c; --muted:#6b7280; --border:#d6d2c8; --fusion:#7c2d12 }
+      body { font-family:'Source Sans 3','Helvetica Neue',sans-serif; font-size:11px; background:var(--bg); color:var(--text); line-height:1.4 }
+      .topbar { background:var(--navy); color:#fff; padding:20px 32px; display:flex; align-items:center; justify-content:space-between; gap:16px }
+      .topbar-left h1 { font-family:'Playfair Display',Georgia,serif; font-size:20px; font-weight:700; letter-spacing:-0.3px }
+      .topbar-left p  { font-size:11px; color:rgba(255,255,255,.55); margin-top:3px }
+      .topbar-right   { display:flex; align-items:center; gap:12px }
+      .print-btn { background:var(--gold); color:#fff; border:none; padding:9px 20px; font-family:inherit; font-size:12px; font-weight:700; cursor:pointer; border-radius:4px; letter-spacing:.4px }
+      .print-btn:hover { opacity:.88 }
+      .legend { display:flex; gap:14px; align-items:center; padding:8px 32px; background:#fff; border-bottom:1px solid var(--border); font-size:10.5px; color:var(--muted) }
+      .leg { display:flex; align-items:center; gap:5px }
+      .leg-dot { width:10px; height:10px; border-radius:2px; flex-shrink:0 }
+      .content { max-width:1600px; margin:0 auto; padding:20px 24px 40px }
+      .day { background:var(--white); border:1px solid var(--border); border-radius:6px; overflow:hidden; margin-bottom:14px; box-shadow:0 1px 6px rgba(0,0,0,.06) }
+      .day-hdr { background:var(--navy); color:#fff; padding:9px 16px; display:flex; align-items:center; justify-content:space-between }
+      .day-name { font-weight:700; font-size:12.5px; letter-spacing:.6px; text-transform:uppercase }
+      .per { padding:10px 16px 12px; border-top:1px solid var(--border) }
+      .per:first-of-type { border-top:none }
+      .per-label { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:var(--navy); margin-bottom:7px; display:flex; align-items:center; gap:7px }
+      .per-label::after { content:''; flex:1; height:1px; background:var(--border) }
+      table { width:100%; border-collapse:collapse }
+      thead tr.niv-row th { padding:3px 4px; font-size:10px; font-weight:700; color:#fff; letter-spacing:.4px; text-align:center; border:1px solid rgba(255,255,255,.2) }
+      thead tr.col-row th { background:#f0ede6; color:var(--navy); font-size:8.5px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; padding:2px 3px; border:1px solid var(--border); text-align:center }
+      thead tr.col-row th.tc { background:#e8e4db }
+      tbody td { border:1px solid #e2dfd8; padding:2px 3px; text-align:center; vertical-align:middle; white-space:nowrap }
+      tbody tr:nth-child(even) td { background:#faf9f6 }
+      .tc { background:#f8f6f1 !important; font-weight:700; font-size:9px; color:var(--navy) }
+      .tm { font-weight:600; color:var(--text) }
+      .tg { font-weight:700; color:var(--navy) }
+      .tp { font-family:'JetBrains Mono','Courier New',monospace; font-size:8.5px; color:var(--muted) }
+      .te { background:#faf9f7 !important }
+      .badge { display:inline-block; padding:1px 5px; border-radius:3px; font-weight:700; font-size:8px; letter-spacing:.15px }
+      .b-an  { background:#fde8e8; color:#991b1b; border:1px solid #fca5a5 }
+      .b-to  { background:#d1fae5; color:#065f46; border:1px solid #6ee7b7 }
+      .b-li  { background:#dbeafe; color:#1e40af; border:1px solid #93c5fd }
+      .b-ns  { color:#9ca3af; font-style:italic; font-weight:400; font-size:8.5px }
+      .p-an td, td.p-an { background:#fff5f5 }
+      .p-to td, td.p-to { background:#f0fff4 }
+      .p-li td, td.p-li { background:#eff6ff }
+      /* ── Fusion column ── */
+      .tf-hdr { background:var(--fusion) !important; color:#fff !important; font-size:9px !important; padding:3px 6px !important; text-align:left !important; white-space:normal !important; min-width:130px; max-width:180px }
+      .tf-cell { background:#fffbeb !important; border-left:2px solid #f59e0b !important; vertical-align:top !important; text-align:left !important; padding:4px 6px !important; white-space:normal !important; min-width:130px }
+      .tf-empty { background:#fafaf8 !important }
+      .fi { display:block; font-size:8px; color:#92400e; margin:2px 0; line-height:1.4 }
+      .fi-prof { font-family:'JetBrains Mono','Courier New',monospace; font-weight:700; margin-right:3px }
+      .fi-arrow { color:#b45309; margin:0 2px }
+      .fi-tot { color:#78350f; font-weight:700 }
+      .fi-none { font-size:8px; color:#9ca3af; font-style:italic }
+      /* ── Print ── */
+      .print-hdr { display:none }
+      @media print {
+        @page { size: A4 landscape; margin: 6mm 8mm }
+        body { background:#fff; font-size:7.5px }
+        .topbar, .legend, .print-btn { display:none }
+        .print-hdr { display:block; text-align:center; margin-bottom:6px; padding-bottom:5px; border-bottom:2px solid var(--navy) }
+        .print-hdr h1 { font-family:'Playfair Display',Georgia,serif; font-size:13px; font-weight:700; color:var(--navy) }
+        .print-hdr p  { font-size:8.5px; color:var(--muted); margin-top:2px }
+        .content { padding:0; max-width:none }
+        .day { box-shadow:none; border-radius:0; border:1px solid #bbb; margin-bottom:6px }
+        .day-hdr { padding:4px 8px }
+        .day-name { font-size:9px }
+        .per { padding:3px 8px 5px }
+        table { font-size:6.5px }
+        thead tr.niv-row th { font-size:7.5px; padding:2px 2px }
+        thead tr.col-row th { font-size:6px; padding:1px 2px }
+        tbody td { padding:1px 2px }
+        .badge { font-size:6px; padding:0 2px }
+        .tf-hdr { min-width:90px !important; max-width:120px !important; font-size:7px !important }
+        .tf-cell { min-width:90px !important; padding:2px 4px !important }
+        .fi { font-size:6.5px; margin:1px 0 }
+      }
+    `
+
+    let htmlP = `<!DOCTYPE html>
+<html lang="fr"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Propositions de fusion — Examens juin 2026</title>
+<style>${cssP}</style>
+</head><body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>Propositions de fusion — Examens juin 2026</h1>
+    <p>Collège des Hayeffes &nbsp;·&nbsp; P1 et P2 traités comme identiques &nbsp;·&nbsp; Seuil : ≤ ${FEW_TH} élèves/examen</p>
+  </div>
+  <div class="topbar-right">
+    <div class="legend">
+      <span class="leg"><span class="leg-dot" style="background:#fde8e8;border:1px solid #fca5a5"></span>Annulé</span>
+      <span class="leg"><span class="leg-dot" style="background:#d1fae5;border:1px solid #6ee7b7"></span>Tous les élèves</span>
+      <span class="leg"><span class="leg-dot" style="background:#dbeafe;border:1px solid #93c5fd"></span>Liste nominative</span>
+      <span class="leg"><span class="leg-dot" style="background:#fffbeb;border:2px solid #f59e0b"></span>Fusion proposée</span>
+    </div>
+    <button class="print-btn" onclick="window.print()">Imprimer / PDF</button>
+  </div>
+</div>
+
+<div class="print-hdr">
+  <h1>Propositions de fusion — Examens juin 2026</h1>
+  <p>Collège des Hayeffes · Imprimé le ${new Date().toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+</div>
+
+<div class="content">
+`
+
+    for (const jour of JOURS) {
+      const dayFusions  = fusionsByJour[jour] ?? []
+      let fusionPrinted = false
+
+      htmlP += `<div class="day">
+  <div class="day-hdr">
+    <span class="day-name">${labelJour(jour)}</span>
+    <span style="font-size:10px;color:rgba(255,255,255,.55)">${dayFusions.length > 0 ? `${dayFusions.length} proposition${dayFusions.length > 1 ? 's' : ''} de fusion` : 'Aucune fusion proposée'}</span>
+  </div>`
+
+      for (const periode of ['P1', 'P2']) {
+        const bloc = examsForBloc(jour, periode)
+        if (!bloc.length) continue
+        const { byNiveau, maxRows } = buildBlocRows(bloc)
+
+        const showFusionContent = !fusionPrinted
+        if (showFusionContent) fusionPrinted = true
+
+        // Build fusion cell HTML
+        let fusionCellHtml = ''
+        if (dayFusions.length === 0) {
+          fusionCellHtml = `<span class="fi-none">–</span>`
+        } else {
+          fusionCellHtml = dayFusions.map(g => {
+            const parts = g.items.map(it => `${it.matiere}&nbsp;${it.groupe}&nbsp;(${it.periode},&nbsp;${it.copies}&nbsp;él.)`)
+            const total = g.items.reduce((s, it) => s + it.copies, 0)
+            return `<span class="fi"><span class="fi-prof">${g.profCode}</span><span class="fi-arrow">↔</span>${parts.join('<span class="fi-arrow"> + </span>')}<span class="fi-arrow"> →</span> <span class="fi-tot">${total}&nbsp;él.</span></span>`
+          }).join('')
+        }
+
+        htmlP += `<div class="per"><div class="per-label">${periode}</div>
+<table>
+<thead>
+<tr class="niv-row"><th class="tc"></th>`
+        NIVEAUX.forEach((_, i) => {
+          htmlP += `<th colspan="4" style="background:${NIV_COLORS_P[i]}">${NIVEAU_LABELS[i]}</th>`
+        })
+        htmlP += `<th rowspan="2" class="tf-hdr">Propositions de fusion</th>`
+        htmlP += `</tr>
+<tr class="col-row"><th class="tc">Pér.</th>`
+        NIVEAUX.forEach(() => {
+          htmlP += `<th>Matière</th><th>Classe</th><th>Prof</th><th>Élèves</th>`
+        })
+        htmlP += `</tr></thead><tbody>`
+
+        for (let i = 0; i < maxRows; i++) {
+          htmlP += `<tr><td class="tc">${i === 0 ? periode : ''}</td>`
+          NIVEAUX.forEach(n => {
+            const ex = byNiveau[n][i]
+            if (!ex) { htmlP += `<td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td>`; return }
+            htmlP += `<td class="tm">${ex.matiere}</td><td class="tg">${ex.groupe}</td><td class="tp">${ex.profCode}</td>${partBadge(ex)}`
+          })
+          if (i === 0) {
+            if (showFusionContent) {
+              htmlP += `<td rowspan="${maxRows}" class="tf-cell">${fusionCellHtml}</td>`
+            } else {
+              htmlP += `<td rowspan="${maxRows}" class="tf-empty"></td>`
+            }
+          }
+          htmlP += `</tr>`
+        }
+        htmlP += `</tbody></table></div>`
+      }
+      htmlP += `</div>`
+    }
+
+    htmlP += `</div></body></html>`
+    return new Response(htmlP, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+  }
+
   if (format === 'cleanup-debug') {
     const { list, del } = await import('@vercel/blob')
     const { blobs } = await list({ prefix: 'debug-probe' })
