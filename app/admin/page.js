@@ -12,6 +12,13 @@ import TempsProfTable from './TempsProfTable'
 
 const MAINTENU_COPIES = 25
 
+const CLASS_SIZES = {
+  '1H': 19, '1I': 20, '1J': 21, '1K': 21, '1L': 21, '1M': 21, '1N': 21,
+  '2H': 20, '2I': 23, '2J': 21, '2K': 21, '2L': 21, '2M': 20, '2N': 19,
+  '6H': 25, '6I': 24, '6J': 24, '6K': 24,
+}
+const classSize = g => CLASS_SIZES[g] ?? MAINTENU_COPIES
+
 function computeTempsProfRows(groupeStatuts, examStatuts, responses) {
   const rows = []
   for (const code of ALL_PROF_CODES) {
@@ -25,7 +32,7 @@ function computeTempsProfRows(groupeStatuts, examStatuts, responses) {
       if (adminStatut === 'annule') {
         annules++
       } else if (adminStatut === 'maintenu') {
-        maintenu++; copies += MAINTENU_COPIES
+        maintenu++; copies += classSize(ex.groupe)
       } else {
         const profEx = profResp?.examens?.find(e => e.id === ex.id)
         if (!profEx) {
@@ -35,7 +42,7 @@ function computeTempsProfRows(groupeStatuts, examStatuts, responses) {
           if (statut === 'aucun') {
             annules++
           } else if (statut === 'maintenu' || statut === 'tous') {
-            maintenu++; copies += MAINTENU_COPIES
+            maintenu++; copies += classSize(ex.groupe)
           } else {
             const n = (profEx.eleves ?? []).filter(e => e.nom || e.prenom).length
             liste++; copiesListe += n; copies += n
@@ -89,14 +96,14 @@ function computeGroupingHints(groupeStatuts, examStatuts, responses) {
 function computeExamDetails(groupeStatuts, examStatuts, responses) {
   return exams.map(ex => {
     const adminStatut = examStatuts[ex.id] ?? groupeStatuts[ex.groupe]
-    if (adminStatut === 'annule')   return { id: ex.id, profCode: ex.profCode, jour: ex.jour, periode: ex.periode, matiere: ex.matiere, groupe: ex.groupe, local: ex.local, copies: 0,             type: 'annule'   }
-    if (adminStatut === 'maintenu') return { id: ex.id, profCode: ex.profCode, jour: ex.jour, periode: ex.periode, matiere: ex.matiere, groupe: ex.groupe, local: ex.local, copies: MAINTENU_COPIES, type: 'maintenu'  }
+    if (adminStatut === 'annule')   return { id: ex.id, profCode: ex.profCode, jour: ex.jour, periode: ex.periode, matiere: ex.matiere, groupe: ex.groupe, local: ex.local, copies: 0,                    type: 'annule'   }
+    if (adminStatut === 'maintenu') return { id: ex.id, profCode: ex.profCode, jour: ex.jour, periode: ex.periode, matiere: ex.matiere, groupe: ex.groupe, local: ex.local, copies: classSize(ex.groupe), type: 'maintenu'  }
     const profResp = Object.values(responses).find(r => r.profCode === ex.profCode)
     const profEx   = profResp?.examens?.find(e => e.id === ex.id)
-    if (!profEx) return { id: ex.id, profCode: ex.profCode, jour: ex.jour, periode: ex.periode, matiere: ex.matiere, groupe: ex.groupe, local: ex.local, copies: null,            type: 'pending'  }
+    if (!profEx) return { id: ex.id, profCode: ex.profCode, jour: ex.jour, periode: ex.periode, matiere: ex.matiere, groupe: ex.groupe, local: ex.local, copies: null,                   type: 'pending'  }
     const statut = profEx.statut ?? (profEx.maintenu === true ? 'maintenu' : null)
-    if (statut === 'aucun')                        return { id: ex.id, profCode: ex.profCode, jour: ex.jour, periode: ex.periode, matiere: ex.matiere, groupe: ex.groupe, local: ex.local, copies: 0,             type: 'annule'   }
-    if (statut === 'maintenu' || statut === 'tous') return { id: ex.id, profCode: ex.profCode, jour: ex.jour, periode: ex.periode, matiere: ex.matiere, groupe: ex.groupe, local: ex.local, copies: MAINTENU_COPIES, type: 'maintenu'  }
+    if (statut === 'aucun')                        return { id: ex.id, profCode: ex.profCode, jour: ex.jour, periode: ex.periode, matiere: ex.matiere, groupe: ex.groupe, local: ex.local, copies: 0,                    type: 'annule'   }
+    if (statut === 'maintenu' || statut === 'tous') return { id: ex.id, profCode: ex.profCode, jour: ex.jour, periode: ex.periode, matiere: ex.matiere, groupe: ex.groupe, local: ex.local, copies: classSize(ex.groupe), type: 'maintenu'  }
     const n = (profEx.eleves ?? []).filter(e => e.nom || e.prenom).length
     return { id: ex.id, profCode: ex.profCode, jour: ex.jour, periode: ex.periode, matiere: ex.matiere, groupe: ex.groupe, local: ex.local, copies: n, type: 'liste' }
   })
