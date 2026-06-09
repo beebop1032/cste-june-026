@@ -386,7 +386,12 @@ function ViewClasse({ exams, partData, groupe, manuscriptGroupes = [] }) {
                   {p?.type === 'liste' && p.eleves.length > 0 && (
                     <div className="student-grid">
                       {p.eleves.map((el, i) => (
-                        <span key={i} className="student-chip">{el.prenom} {el.nom}</span>
+                        <span key={i} className="student-chip">
+                          {el.prenom} {el.nom}
+                          {el.classe && el.classe.trim().toUpperCase() !== groupe.toUpperCase() && (
+                            <span style={{ fontSize: 9, fontWeight: 400, opacity: 0.55, marginLeft: 3 }}>{el.classe}</span>
+                          )}
+                        </span>
                       ))}
                     </div>
                   )}

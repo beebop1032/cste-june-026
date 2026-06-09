@@ -100,9 +100,9 @@ export default function ClasseTable({ exams, niveaux, niveauxMap, groupeStatuts:
         return (
           <div key={n}>
             {/* Niveau header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-              <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--fg)', margin: 0 }}>{n}</h2>
-              <span style={{ fontSize: 12, color: 'var(--fg-muted)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, padding: '6px 10px', background: 'var(--bg-card)', borderRadius: 6, border: '1px solid var(--border)' }}>
+              <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--fg)', margin: 0, letterSpacing: '0.02em' }}>{n}</h2>
+              <span style={{ fontSize: 11, color: 'var(--fg-subtle)', background: 'var(--border)', borderRadius: 999, padding: '1px 7px' }}>
                 {groupesNiveau.length} classe{groupesNiveau.length !== 1 ? 's' : ''}
               </span>
               <div style={{ display: 'flex', gap: 4, marginLeft: 8 }}>
@@ -133,18 +133,28 @@ export default function ClasseTable({ exams, niveaux, niveauxMap, groupeStatuts:
                   .sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode))
                 const isOpen = expanded[g]
 
+                // Per-status counts for nuance
+                const counts = { annule: 0, maintenu: 0, open: 0 }
+                for (const ex of gExams) {
+                  const s = examStatuts[ex.id] ?? groupeStatuts[g] ?? 'open'
+                  counts[s] = (counts[s] || 0) + 1
+                }
+
                 return (
                   <div key={g} style={{ borderRadius: 8, border: `1px solid ${info.border}`, overflow: 'hidden' }}>
                     {/* Groupe row */}
                     <div
-                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', background: info.bg, cursor: 'pointer' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', background: info.bg, cursor: 'pointer', borderLeft: `3px solid ${info.text}` }}
                       onClick={() => setExpanded(prev => ({ ...prev, [g]: !prev[g] }))}
                     >
                       <span style={{ fontSize: 11, color: info.text, opacity: 0.6, transform: isOpen ? 'rotate(90deg)' : 'none', display: 'inline-block', userSelect: 'none' }}>▶</span>
-                      <span style={{ fontWeight: 600, fontSize: 14, color: info.text, minWidth: 60 }}>{g}</span>
-                      <span style={{ fontSize: 12, color: info.text, opacity: 0.7, flex: 1 }}>
-                        {gExams.length} exam{gExams.length !== 1 ? 's' : ''}
-                      </span>
+                      <span style={{ fontWeight: 700, fontSize: 13, color: info.text, minWidth: 56, letterSpacing: '0.03em' }}>{g.toUpperCase()}</span>
+                      <div style={{ flex: 1, display: 'flex', gap: 6, alignItems: 'center' }}>
+                        <span style={{ fontSize: 11, color: info.text, opacity: 0.55 }}>{gExams.length} exam{gExams.length !== 1 ? 's' : ''}</span>
+                        {gs === 'open' && counts.annule > 0  && <span style={{ fontSize: 10, color: '#991B1B', fontWeight: 600 }}>✕{counts.annule}</span>}
+                        {gs === 'open' && counts.maintenu > 0 && <span style={{ fontSize: 10, color: '#1E40AF', fontWeight: 600 }}>↻{counts.maintenu}</span>}
+                        {gs === 'open' && counts.open > 0    && <span style={{ fontSize: 10, color: '#475569' }}>○{counts.open}</span>}
+                      </div>
                       <span className={`badge ${info.badgeClass}`} style={{ fontSize: 11 }}>{info.label}</span>
                       <div style={{ display: 'flex', gap: 3 }} onClick={e => e.stopPropagation()}>
                         {ACTIONS.map(({ statut, label }) => (
