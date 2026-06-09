@@ -144,6 +144,33 @@ export async function getLocksData() {
 
 // ── Student name replacement ──────────────────────────────────────────────────
 
+export async function batchReplaceStudentNames(pairs) {
+  // pairs: [{ fromNom, fromPrenom, toNom, toPrenom }]
+  await requireAdmin()
+  if (!Array.isArray(pairs) || pairs.length === 0) return { error: 'Invalide' }
+  const files = await listFiles('prof-')
+  const currentFiles = files.filter(f => /^prof-[^.]+\.json$/.test(f) && !/-v\d+\.json$/.test(f))
+  let total = 0
+  await Promise.all(currentFiles.map(async f => {
+    const data = await read(f)
+    if (!data) return
+    let changed = false
+    for (const ex of data.examens ?? []) {
+      for (const el of ex.eleves ?? []) {
+        for (const { fromNom, fromPrenom, toNom, toPrenom } of pairs) {
+          if ((el.nom ?? '').trim() === fromNom.trim() && (el.prenom ?? '').trim() === fromPrenom.trim()) {
+            el.nom = toNom; el.prenom = toPrenom
+            changed = true; total++; break
+          }
+        }
+      }
+    }
+    if (changed) await writeFileSafe(f, data)
+  }))
+  revalidatePath('/admin', 'layout')
+  return { ok: true, count: total }
+}
+
 export async function replaceStudentName(fromNom, fromPrenom, toNom, toPrenom) {
   await requireAdmin()
   if (!fromNom || !toNom) return { error: 'Invalide' }

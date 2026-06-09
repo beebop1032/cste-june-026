@@ -24,6 +24,16 @@ function normName(s) {
     .replace(/\s+/g, ' ')
 }
 
+// Prefer mixed case (Title Case) over ALL_CAPS or all_lower
+function betterName(nom1, prenom1, nom2, prenom2) {
+  const isMixed = s => s.length > 1 && s !== s.toUpperCase() && s !== s.toLowerCase()
+  const score1 = (isMixed(nom1) ? 1 : 0) + (isMixed(prenom1) ? 1 : 0)
+  const score2 = (isMixed(nom2) ? 1 : 0) + (isMixed(prenom2) ? 1 : 0)
+  return score2 > score1
+    ? { nom: nom2, prenom: prenom2 }
+    : { nom: nom1, prenom: prenom1 }
+}
+
 function fmtJour(iso) {
   return new Date(iso + 'T12:00:00').toLocaleDateString('fr-BE', { day: 'numeric', month: 'short' })
 }
@@ -72,6 +82,28 @@ function ExamPill({ ex }) {
   )
 }
 
+function StudentCard({ st, color, onKeep, onKeepLabel, isPending, examBg, examColor, examBorder }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ fontWeight: 700, fontSize: 13 }}>
+        {st.nom.toUpperCase()} {st.prenom}
+        {st.classe && <span style={{ fontSize: 11, fontWeight: 400, color, marginLeft: 5 }}>({st.classe})</span>}
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+        {st.exams.map(ex => (
+          <span key={ex.id} style={{ fontSize: 10, padding: '1px 5px', borderRadius: 3, background: examBg, color: examColor, border: `1px solid ${examBorder}` }}>
+            {fmtJour(ex.jour)} · {ex.matiere}
+          </span>
+        ))}
+      </div>
+      <button disabled={isPending} onClick={onKeep}
+        className="btn btn-xs btn-secondary" style={{ alignSelf: 'flex-start', fontSize: 11 }}>
+        {onKeepLabel}
+      </button>
+    </div>
+  )
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function DoublonsView({ responses, exams, groupeStatuts, examStatuts }) {
@@ -79,7 +111,7 @@ export default function DoublonsView({ responses, exams, groupeStatuts, examStat
   const [filterClasse, setFilterClasse] = useState('')
   const [filterNom,    setFilterNom]    = useState('')
   const [isPending,    startTransition] = useTransition()
-  const [feedback,     setFeedback]     = useState(null) // { msg, ok }
+  const [feedback,     setFeedback]     = useState(null)
   const [editingKey,   setEditingKey]   = useState(null)
   const [editNom,      setEditNom]      = useState('')
   const [editPrenom,   setEditPrenom]   = useState('')
@@ -94,17 +126,27 @@ export default function DoublonsView({ responses, exams, groupeStatuts, examStat
     return [...set].sort()
   }, [students])
 
-  const duplicates = useMemo(() => {
-    const pairs = []
+  // Three categories of duplicates
+  const { obvious, inversions, fuzzy } = useMemo(() => {
+    const obvious = [], inversions = [], fuzzy = []
     for (let i = 0; i < students.length; i++) {
       for (let j = i + 1; j < students.length; j++) {
-        const a = normName(`${students[i].nom} ${students[i].prenom}`)
-        const b = normName(`${students[j].nom} ${students[j].prenom}`)
-        const dist = levenshtein(a, b)
-        if (dist > 0 && dist <= threshold) pairs.push({ a: students[i], b: students[j], dist })
+        const a = students[i], b = students[j]
+        const normA = normName(`${a.nom} ${a.prenom}`)
+        const normB = normName(`${b.nom} ${b.prenom}`)
+        const normBInv = normName(`${b.prenom} ${b.nom}`)
+
+        if (normA === normB) {
+          obvious.push({ a, b })
+        } else if (normA === normBInv) {
+          inversions.push({ a, b })
+        } else {
+          const dist = levenshtein(normA, normB)
+          if (dist > 0 && dist <= threshold) fuzzy.push({ a, b, dist })
+        }
       }
     }
-    return pairs.sort((x, y) => x.dist - y.dist)
+    return { obvious, inversions, fuzzy: fuzzy.sort((x, y) => x.dist - y.dist) }
   }, [students, threshold])
 
   const byClasse = useMemo(() => {
@@ -144,7 +186,6 @@ export default function DoublonsView({ responses, exams, groupeStatuts, examStat
     })
   }
 
-  // keep = the correct student, remove = the one to rename
   function handleKeep(keep, remove) {
     setFeedback(null)
     startTransition(async () => {
@@ -154,7 +195,7 @@ export default function DoublonsView({ responses, exams, groupeStatuts, examStat
     })
   }
 
-  return (
+return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
       {/* ── Feedback ── */}
@@ -164,16 +205,84 @@ export default function DoublonsView({ responses, exams, groupeStatuts, examStat
         </div>
       )}
 
-      {/* ── Doublons potentiels ── */}
+      {/* ── Doublons évidents (casse/accents) ── */}
       <div className="card" style={{ padding: '16px 20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: duplicates.length > 0 ? 12 : 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: obvious.length > 0 ? 12 : 0 }}>
           <h2 style={{ fontSize: 13, fontWeight: 700, color: 'var(--fg)', margin: 0 }}>
-            {duplicates.length > 0
-              ? `⚠ Doublons potentiels — ${duplicates.length} paire${duplicates.length !== 1 ? 's' : ''}`
-              : '✓ Aucun doublon potentiel'}
+            {obvious.length > 0
+              ? `Doublons évidents — ${obvious.length} paire${obvious.length !== 1 ? 's' : ''} (casse / accents)`
+              : '✓ Aucun doublon évident (casse/accents)'}
+          </h2>
+          {isPending && <span style={{ fontSize: 11, color: 'var(--primary)', fontStyle: 'italic', marginLeft: 'auto' }}>En cours…</span>}
+        </div>
+
+        {obvious.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {obvious.map(({ a, b }, i) => {
+              const best = betterName(a.nom, a.prenom, b.nom, b.prenom)
+              return (
+                <div key={i} style={{ padding: '12px 14px', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 8 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 12, alignItems: 'start' }}>
+                    <StudentCard st={a} color="#166534" isPending={isPending}
+                      examBg="#DCFCE7" examColor="#166534" examBorder="#BBF7D0"
+                      onKeepLabel="✓ Garder ce nom" onKeep={() => handleKeep(a, b)} />
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, paddingTop: 4 }}>
+                      <span style={{ fontSize: 14, color: '#16A34A' }}>≈</span>
+                      {best.nom === a.nom && best.prenom === a.prenom
+                        ? <span style={{ fontSize: 9, color: '#16A34A', fontWeight: 700, textAlign: 'center' }}>A est mieux</span>
+                        : best.nom === b.nom && best.prenom === b.prenom
+                          ? <span style={{ fontSize: 9, color: '#16A34A', fontWeight: 700, textAlign: 'center' }}>B est mieux</span>
+                          : null}
+                    </div>
+                    <StudentCard st={b} color="#166534" isPending={isPending}
+                      examBg="#DCFCE7" examColor="#166534" examBorder="#BBF7D0"
+                      onKeepLabel="✓ Garder ce nom" onKeep={() => handleKeep(b, a)} />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── Inversions nom/prénom ── */}
+      {inversions.length > 0 && (
+        <div className="card" style={{ padding: '16px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+            <h2 style={{ fontSize: 13, fontWeight: 700, color: 'var(--fg)', margin: 0 }}>
+              Inversions nom/prénom — {inversions.length} paire{inversions.length !== 1 ? 's' : ''}
+            </h2>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {inversions.map(({ a, b }, i) => (
+              <div key={i} style={{ padding: '12px 14px', background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 12, alignItems: 'start' }}>
+                  <StudentCard st={a} color="#9A3412" isPending={isPending}
+                    examBg="#FFEDD5" examColor="#9A3412" examBorder="#FED7AA"
+                    onKeepLabel="✓ Garder ce nom" onKeep={() => handleKeep(a, b)} />
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, paddingTop: 4 }}>
+                    <span style={{ fontSize: 14, color: '#EA580C' }}>⇄</span>
+                    <span style={{ fontSize: 9, color: '#EA580C', fontWeight: 700 }}>inversion</span>
+                  </div>
+                  <StudentCard st={b} color="#9A3412" isPending={isPending}
+                    examBg="#FFEDD5" examColor="#9A3412" examBorder="#FED7AA"
+                    onKeepLabel="✓ Garder ce nom" onKeep={() => handleKeep(b, a)} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Doublons potentiels (typos) ── */}
+      <div className="card" style={{ padding: '16px 20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: fuzzy.length > 0 ? 12 : 0 }}>
+          <h2 style={{ fontSize: 13, fontWeight: 700, color: 'var(--fg)', margin: 0 }}>
+            {fuzzy.length > 0
+              ? `Doublons potentiels (typos) — ${fuzzy.length} paire${fuzzy.length !== 1 ? 's' : ''}`
+              : '✓ Aucun doublon potentiel (typos)'}
           </h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 'auto' }}>
-            {isPending && <span style={{ fontSize: 11, color: 'var(--primary)', fontStyle: 'italic' }}>Renommage…</span>}
             <span style={{ fontSize: 11, color: 'var(--fg-muted)' }}>Distance max :</span>
             {[1, 2, 3].map(v => (
               <button key={v} onClick={() => setThreshold(v)} className="btn btn-xs"
@@ -186,56 +295,21 @@ export default function DoublonsView({ responses, exams, groupeStatuts, examStat
           </div>
         </div>
 
-        {duplicates.length > 0 && (
+        {fuzzy.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {duplicates.map(({ a, b, dist }, i) => (
+            {fuzzy.map(({ a, b, dist }, i) => (
               <div key={i} style={{ padding: '12px 14px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 8 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 12, alignItems: 'start' }}>
-
-                  {/* Côté A */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13 }}>
-                      {a.nom.toUpperCase()} {a.prenom}
-                      {a.classe && <span style={{ fontSize: 11, fontWeight: 400, color: '#92400E', marginLeft: 5 }}>({a.classe})</span>}
-                    </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                      {a.exams.map(ex => (
-                        <span key={ex.id} style={{ fontSize: 10, padding: '1px 5px', borderRadius: 3, background: '#FEF3C7', color: '#92400E', border: '1px solid #FDE68A' }}>
-                          {fmtJour(ex.jour)} · {ex.matiere}
-                        </span>
-                      ))}
-                    </div>
-                    <button disabled={isPending} onClick={() => handleKeep(a, b)}
-                      className="btn btn-xs btn-secondary" style={{ alignSelf: 'flex-start', fontSize: 11 }}>
-                      ✓ Garder ce nom — renommer B
-                    </button>
-                  </div>
-
-                  {/* Séparateur */}
+                  <StudentCard st={a} color="#92400E" isPending={isPending}
+                    examBg="#FEF3C7" examColor="#92400E" examBorder="#FDE68A"
+                    onKeepLabel="✓ Garder ce nom — renommer B" onKeep={() => handleKeep(a, b)} />
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, paddingTop: 4 }}>
                     <span style={{ fontSize: 18, color: '#D97706' }}>↔</span>
                     <span style={{ fontSize: 10, color: '#D97706', fontWeight: 700 }}>dist.{dist}</span>
                   </div>
-
-                  {/* Côté B */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13 }}>
-                      {b.nom.toUpperCase()} {b.prenom}
-                      {b.classe && <span style={{ fontSize: 11, fontWeight: 400, color: '#92400E', marginLeft: 5 }}>({b.classe})</span>}
-                    </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                      {b.exams.map(ex => (
-                        <span key={ex.id} style={{ fontSize: 10, padding: '1px 5px', borderRadius: 3, background: '#FEF3C7', color: '#92400E', border: '1px solid #FDE68A' }}>
-                          {fmtJour(ex.jour)} · {ex.matiere}
-                        </span>
-                      ))}
-                    </div>
-                    <button disabled={isPending} onClick={() => handleKeep(b, a)}
-                      className="btn btn-xs btn-secondary" style={{ alignSelf: 'flex-start', fontSize: 11 }}>
-                      ✓ Garder ce nom — renommer A
-                    </button>
-                  </div>
-
+                  <StudentCard st={b} color="#92400E" isPending={isPending}
+                    examBg="#FEF3C7" examColor="#92400E" examBorder="#FDE68A"
+                    onKeepLabel="✓ Garder ce nom — renommer A" onKeep={() => handleKeep(b, a)} />
                 </div>
               </div>
             ))}
@@ -314,9 +388,9 @@ export default function DoublonsView({ responses, exams, groupeStatuts, examStat
                               </div>
                             ) : (
                               <button onClick={() => startEdit(st)} disabled={isPending}
-                                className="btn btn-ghost btn-xs" style={{ fontSize: 11, opacity: 0.5 }}
+                                className="btn btn-ghost btn-xs" style={{ fontSize: 10, opacity: 0.55 }}
                                 title="Modifier le nom">
-                                ✏
+                                Modifier
                               </button>
                             )}
                           </td>
