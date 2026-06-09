@@ -1,5 +1,6 @@
 'use client'
 import { useMemo, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { replaceStudentName } from '@/actions/admin'
 
 // ── Fuzzy helpers ─────────────────────────────────────────────────────────────
@@ -67,9 +68,9 @@ function buildStudents(responses, exams, groupeStatuts, examStatuts) {
     }
   }
 
-  return [...map.values()].sort(
-    (a, b) => normName(a.nom).localeCompare(normName(b.nom)) || normName(a.prenom).localeCompare(normName(b.prenom))
-  )
+  return [...map.values()]
+    .sort((a, b) => normName(a.nom).localeCompare(normName(b.nom)) || normName(a.prenom).localeCompare(normName(b.prenom)))
+    .map(st => ({ ...st, exams: [...st.exams].sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode)) }))
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -112,6 +113,7 @@ export default function DoublonsView({ responses, exams, groupeStatuts, examStat
   const [filterNom,    setFilterNom]    = useState('')
   const [isPending,    startTransition] = useTransition()
   const [feedback,     setFeedback]     = useState(null)
+  const router = useRouter()
   const [editingKey,   setEditingKey]   = useState(null)
   const [editNom,      setEditNom]      = useState('')
   const [editPrenom,   setEditPrenom]   = useState('')
@@ -182,7 +184,7 @@ export default function DoublonsView({ responses, exams, groupeStatuts, examStat
     startTransition(async () => {
       const res = await replaceStudentName(st.nom, st.prenom, newNom, newPrenom)
       if (res?.error) setFeedback({ msg: 'Erreur lors du renommage', ok: false })
-      else setFeedback({ msg: `${res.count} occurrence${res.count !== 1 ? 's' : ''} renommée${res.count !== 1 ? 's' : ''} → ${newNom} ${newPrenom}`, ok: true })
+      else { setFeedback({ msg: `${res.count} occurrence${res.count !== 1 ? 's' : ''} renommée${res.count !== 1 ? 's' : ''} → ${newNom} ${newPrenom}`, ok: true }); router.refresh() }
     })
   }
 
@@ -191,7 +193,7 @@ export default function DoublonsView({ responses, exams, groupeStatuts, examStat
     startTransition(async () => {
       const res = await replaceStudentName(remove.nom, remove.prenom, keep.nom, keep.prenom)
       if (res?.error) setFeedback({ msg: 'Erreur lors du remplacement', ok: false })
-      else setFeedback({ msg: `${res.count} occurrence${res.count !== 1 ? 's' : ''} renommée${res.count !== 1 ? 's' : ''} → ${keep.nom} ${keep.prenom}`, ok: true })
+      else { setFeedback({ msg: `${res.count} occurrence${res.count !== 1 ? 's' : ''} renommée${res.count !== 1 ? 's' : ''} → ${keep.nom} ${keep.prenom}`, ok: true }); router.refresh() }
     })
   }
 
