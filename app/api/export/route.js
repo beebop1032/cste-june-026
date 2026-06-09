@@ -361,6 +361,66 @@ export async function GET(request) {
     })
   }
 
+  // ── Temps prof CSV ─────────────────────────────────────────────────────────
+
+  if (format === 'temps-prof') {
+    const MAINTENU_COPIES = 25
+    const ALL_PROF_CODES  = [...new Set(exams.map(e => e.profCode))].sort()
+
+    const allResponses = {}
+    for (const f of currentFiles) {
+      const prof = await read(f)
+      if (!prof?.profCode) continue
+      allResponses[prof.profCode] = prof
+    }
+
+    const tpRows = []
+    for (const code of ALL_PROF_CODES) {
+      const profExams = exams.filter(e => e.profCode === code)
+      const profResp  = allResponses[code]
+
+      let copies = 0, annules = 0, maintenu = 0, liste = 0, pending = 0, copiesListe = 0
+
+      for (const ex of profExams) {
+        const adminStatut = examStatuts[ex.id] ?? groupeStatuts[ex.groupe]
+        if (adminStatut === 'annule') {
+          annules++
+        } else if (adminStatut === 'maintenu') {
+          maintenu++; copies += MAINTENU_COPIES
+        } else {
+          const profEx = profResp?.examens?.find(e => e.id === ex.id)
+          if (!profEx) {
+            pending++
+          } else {
+            const statut = profEx.statut ?? (profEx.maintenu === true ? 'maintenu' : null)
+            if (statut === 'aucun') {
+              annules++
+            } else if (statut === 'maintenu' || statut === 'tous') {
+              maintenu++; copies += MAINTENU_COPIES
+            } else {
+              const n = (profEx.eleves ?? []).filter(e => e.nom || e.prenom).length
+              liste++; copiesListe += n; copies += n
+            }
+          }
+        }
+      }
+
+      tpRows.push({ profCode: code, examens: profExams.length, copies, annules, maintenu, liste, copiesListe, pending })
+    }
+    tpRows.sort((a, b) => b.copies - a.copies)
+
+    const TP_COLS    = ['profCode','examens','copies','annules','maintenu','liste','copiesListe','pending']
+    const TP_HEADERS = ['Prof','Nb examens','Copies totales','Annulés','Maintenus/Tous','Liste (nb exam)','Copies liste','En attente']
+    const tpCsvRows  = tpRows.map(r => TP_COLS.map(k => `"${String(r[k] ?? '').replace(/"/g, '""')}"`).join(';'))
+    const tpCsv      = '﻿' + [TP_HEADERS.join(';'), ...tpCsvRows].join('\r\n')
+    return new Response(tpCsv, {
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': 'attachment; filename="temps-prof-juin2026.csv"',
+      }
+    })
+  }
+
   const rows = []
 
   // Helper: build rows for exams governed by admin classe-level status

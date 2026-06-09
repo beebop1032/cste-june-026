@@ -8,6 +8,47 @@ import ElevesTable from './ElevesTable'
 import VerrousJourTable from './VerrousJourTable'
 import ClasseTable from './ClasseTable'
 import DoublonsView from './DoublonsView'
+import TempsProfTable from './TempsProfTable'
+
+const MAINTENU_COPIES = 25
+
+function computeTempsProfRows(groupeStatuts, examStatuts, responses) {
+  const rows = []
+  for (const code of ALL_PROF_CODES) {
+    const profExams = exams.filter(e => e.profCode === code)
+    const profResp  = Object.values(responses).find(r => r.profCode === code)
+
+    let copies = 0, annules = 0, maintenu = 0, liste = 0, pending = 0, copiesListe = 0
+
+    for (const ex of profExams) {
+      const adminStatut = examStatuts[ex.id] ?? groupeStatuts[ex.groupe]
+      if (adminStatut === 'annule') {
+        annules++
+      } else if (adminStatut === 'maintenu') {
+        maintenu++; copies += MAINTENU_COPIES
+      } else {
+        const profEx = profResp?.examens?.find(e => e.id === ex.id)
+        if (!profEx) {
+          pending++
+        } else {
+          const statut = profEx.statut ?? (profEx.maintenu === true ? 'maintenu' : null)
+          if (statut === 'aucun') {
+            annules++
+          } else if (statut === 'maintenu' || statut === 'tous') {
+            maintenu++; copies += MAINTENU_COPIES
+          } else {
+            const n = (profEx.eleves ?? []).filter(e => e.nom || e.prenom).length
+            liste++; copiesListe += n; copies += n
+          }
+        }
+      }
+    }
+
+    rows.push({ profCode: code, examens: profExams.length, copies, annules, maintenu, liste, copiesListe, pending })
+  }
+  rows.sort((a, b) => b.copies - a.copies)
+  return rows
+}
 
 const NIVEAUX = ['1re', '2e', '3e', '4e', '5e', '6e']
 const ALL_PROF_CODES = [...new Set(exams.map(e => e.profCode))].sort()
@@ -89,6 +130,8 @@ export default async function AdminPage({ searchParams }) {
   const elevesGroupes = [...new Set(elevesRows.map(r => r.groupe))].sort()
   const elevesProfs   = [...new Set(elevesRows.map(r => r.prof))].sort()
 
+  const tempsProfRows = computeTempsProfRows(groupeStatuts, examStatuts, responses)
+
   return (
     <>
     {/* ── Sticky top bar ── */}
@@ -106,7 +149,8 @@ export default async function AdminPage({ searchParams }) {
             { name: 'horaire',  label: 'Horaire' },
             { name: 'eleves',   label: 'Élèves' },
             { name: 'verrous',  label: 'Statuts' },
-            { name: 'doublons', label: 'Doublons' },
+            { name: 'doublons',    label: 'Doublons' },
+            { name: 'temps-prof', label: 'Temps prof' },
           ].map(t => (
             <a key={t.name} href={`/admin?tab=${t.name}`} style={{
               padding: '6px 12px', borderRadius: 6, textDecoration: 'none',
@@ -128,6 +172,10 @@ export default async function AdminPage({ searchParams }) {
         <a href="/api/export?format=csv" className="btn btn-secondary btn-xs">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           CSV global
+        </a>
+        <a href="/api/export?format=temps-prof" className="btn btn-secondary btn-xs">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          CSV temps prof
         </a>
         <div style={{ width: 1, height: 16, background: 'var(--border)' }} />
         {[
@@ -283,6 +331,11 @@ export default async function AdminPage({ searchParams }) {
             />
           )}
         </div>
+      )}
+
+      {/* ── Temps prof ─────────────────────────────────────── */}
+      {tab === 'temps-prof' && (
+        <TempsProfTable rows={tempsProfRows} />
       )}
     </main>
     </>
