@@ -141,3 +141,41 @@ export async function getLocksData() {
   await requireAdmin()
   return normalise(await read('admin-locks.json'))
 }
+
+// ── Student merges ────────────────────────────────────────────────────────────
+
+export async function getMerges() {
+  await requireAdmin()
+  return (await read('student-merges.json'))?.merges ?? []
+}
+
+export async function saveMerge(keep, remove) {
+  await requireAdmin()
+  if (!keep?.nom || !remove?.nom) return { error: 'Invalide' }
+  const data = (await read('student-merges.json')) ?? { merges: [] }
+  // Remove any existing entry for this alias
+  for (const m of data.merges) {
+    m.aliases = (m.aliases ?? []).filter(a => !(a.nom === remove.nom && a.prenom === remove.prenom))
+  }
+  data.merges = data.merges.filter(m => (m.aliases ?? []).length > 0)
+  // Add under canonical
+  const idx = data.merges.findIndex(m => m.keep.nom === keep.nom && m.keep.prenom === keep.prenom)
+  if (idx >= 0) {
+    data.merges[idx].aliases.push(remove)
+  } else {
+    data.merges.push({ keep, aliases: [remove] })
+  }
+  try { await write('student-merges.json', data); return { ok: true } }
+  catch (err) { console.error(err); return { error: 'Erreur' } }
+}
+
+export async function deleteMerge(removeNom, removePrenom) {
+  await requireAdmin()
+  const data = (await read('student-merges.json')) ?? { merges: [] }
+  for (const m of data.merges) {
+    m.aliases = (m.aliases ?? []).filter(a => !(a.nom === removeNom && a.prenom === removePrenom))
+  }
+  data.merges = data.merges.filter(m => (m.aliases ?? []).length > 0)
+  try { await write('student-merges.json', data); return { ok: true } }
+  catch (err) { console.error(err); return { error: 'Erreur' } }
+}
