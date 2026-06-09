@@ -510,12 +510,24 @@ export async function GET(request) {
         line-height:14px; font-weight:700;
       }
       .cp-btn:hover { background:#fde047 }
+      /* ── Récap sidebar ── */
+      .recap-section { position:fixed; top:56px; right:0; width:200px; height:calc(100vh - 56px); overflow-y:auto; background:#fff; border-left:1px solid #e2dfd8; box-shadow:-3px 0 12px rgba(0,0,0,.06); z-index:100; padding:14px 12px }
+      .recap-title { font-size:12px; font-weight:700; color:#1a3254; margin-bottom:2px }
+      .recap-sub   { font-size:9px; color:#9ca3af; margin-bottom:10px }
+      .recap-table { width:100%; border-collapse:collapse; font-size:10px }
+      .recap-table thead th { background:#f0ede6; color:#1a3254; font-size:8px; font-weight:700; text-transform:uppercase; padding:3px 4px; border:1px solid #e2dfd8; text-align:center }
+      .recap-table tbody td { border:1px solid #e8e4db; padding:2px 4px; vertical-align:middle }
+      .rc-prof { font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:600; color:#374151 }
+      .rc-n    { text-align:center; font-weight:700; font-size:10px; min-width:28px }
+      .rc-av   { text-align:center; font-size:9px }
+      .content { margin-right:210px }
       /* ── Print A3 ── */
       .print-hdr { display:none }
       @media print {
         @page { size: A3 landscape; margin: 6mm 8mm }
         body { background:#fff; font-size:7.5px }
-        .topbar, .legend, .copy-all-btn, .reset-btn, .save-status, .print-btn { display:none }
+        .topbar, .legend, .copy-all-btn, .reset-btn, .save-status, .print-btn, .recap-section { display:none }
+        .content { margin-right:0 }
         .print-hdr { display:block; text-align:center; margin-bottom:5px; padding-bottom:4px; border-bottom:2px solid var(--navy) }
         .print-hdr h1 { font-family:'Playfair Display',Georgia,serif; font-size:12px; font-weight:700; color:var(--navy) }
         .print-hdr p  { font-size:8px; color:var(--muted); margin-top:2px }
@@ -568,10 +580,51 @@ export async function GET(request) {
         const vals = [...document.querySelectorAll('.fin-inp')].map(i => i.value);
         localStorage.setItem('tf-surv-2026', JSON.stringify(vals));
         showStatus('Sauvegardé ✓');
+        updateRecap();
       }
       function showStatus(msg) {
         const el = document.getElementById('save-status');
         if (el) { el.textContent = msg; clearTimeout(el._t); el._t = setTimeout(() => el.textContent = '', 2000); }
+      }
+      function updateRecap() {
+        const counts = {};
+        document.querySelectorAll('.fin-inp').forEach(inp => {
+          const v = inp.value.trim().toUpperCase();
+          if (v) counts[v] = (counts[v] || 0) + 1;
+        });
+        // Total active exams per prof (from data-conseil + existing SURV cells)
+        const totalActive = {};
+        document.querySelectorAll('td.ts.ts-ok').forEach(td => {
+          const v = td.textContent.trim().toUpperCase();
+          if (v) totalActive[v] = (totalActive[v] || 0) + 1;
+        });
+        // Count conseil suggestions per prof (who could potentially survey)
+        const conseils = {};
+        document.querySelectorAll('.fin-inp[data-conseil]').forEach(inp => {
+          const v = inp.dataset.conseil.trim().toUpperCase();
+          if (v) conseils[v] = (conseils[v] || 0) + 1;
+        });
+        const allProfs = new Set([...Object.keys(counts), ...Object.keys(conseils)]);
+        const sorted = [...allProfs].sort((a, b) => (counts[b] || 0) - (counts[a] || 0));
+        const tbody = document.getElementById('recap-tbody');
+        if (!tbody) return;
+        if (sorted.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="3" style="color:#9ca3af;text-align:center;padding:10px;font-style:italic">Aucune assignation saisie</td></tr>';
+          return;
+        }
+        tbody.innerHTML = sorted.map(prof => {
+          const assigned = counts[prof] || 0;
+          const available = conseils[prof] || 0;
+          const bar = assigned > 0
+            ? \`<div style="display:inline-block;height:8px;width:\${Math.min(assigned * 14, 120)}px;background:#166534;border-radius:2px;vertical-align:middle;margin-left:5px"></div>\`
+            : '';
+          const cls = assigned === 0 ? 'style="color:#9ca3af"' : (assigned >= 4 ? 'style="color:#991b1b;font-weight:700"' : '');
+          return \`<tr>
+            <td class="rc-prof">\${prof}</td>
+            <td class="rc-n" \${cls}>\${assigned}\${bar}</td>
+            <td class="rc-av" style="color:#6b7280">\${available}</td>
+          </tr>\`;
+        }).join('');
       }
       document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.fin-inp').forEach(inp => {
@@ -590,6 +643,7 @@ export async function GET(request) {
             showStatus('Chargé ✓');
           }
         } catch(e) {}
+        updateRecap();
       });
     `
 
@@ -678,7 +732,28 @@ export async function GET(request) {
       htmlF += `</div>`
     }
 
-    htmlF += `</div><script>${jsF}</script></body></html>`
+    htmlF += `</div>
+
+<div class="recap-section no-print">
+  <div class="recap-inner">
+    <h2 class="recap-title">Récap surveillance</h2>
+    <p class="recap-sub">Mis à jour en temps réel · basé sur la colonne Fin.</p>
+    <table class="recap-table">
+      <thead>
+        <tr>
+          <th>Prof</th>
+          <th title="Nombre d'examens assignés en Fin.">Assigné</th>
+          <th title="Fois suggéré comme conseil (disponible)">Suggéré</th>
+        </tr>
+      </thead>
+      <tbody id="recap-tbody">
+        <tr><td colspan="3" style="color:#9ca3af;text-align:center;padding:10px;font-style:italic">Aucune assignation saisie</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>${jsF}</script></body></html>`
     return new Response(htmlF, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
   }
 
