@@ -531,6 +531,15 @@ export async function GET(request) {
       }
       .cp-btn:hover { background:#fde047; color:#1c1917 }
       .cp-btn:active { transform:scale(.95) }
+      /* ── Récap final (bas de page, imprimable) ── */
+      .recap-final { margin-top:12px; padding:9px 13px; background:#f8f6f1; border:1px solid #e2dfd8; border-radius:4px; page-break-inside:avoid }
+      .rf-title { font-size:10px; font-weight:700; color:#1a3254; margin-bottom:7px; text-transform:uppercase; letter-spacing:.5px }
+      .rf-grid { display:flex; flex-direction:column; gap:4px }
+      .rf-niv { display:flex; align-items:center; gap:4px; flex-wrap:wrap }
+      .rf-niv-label { font-size:8px; font-weight:700; color:#6b7280; min-width:38px; text-transform:uppercase; letter-spacing:.5px }
+      .rf-item { display:inline-flex; align-items:center; gap:3px; background:#fff; border:1px solid #d6d2c8; border-radius:3px; padding:1px 5px }
+      .rf-groupe { font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; color:#1a3254 }
+      .rf-count { font-size:8px; color:#6b7280 }
       /* ── Récap sidebar ── */
       .recap-section { position:fixed; top:56px; right:0; width:230px; height:calc(100vh - 56px); overflow-y:auto; background:#fff; border-left:1px solid #e2dfd8; box-shadow:-3px 0 12px rgba(0,0,0,.06); z-index:100; padding:14px 12px }
       .recap-title { font-size:12px; font-weight:700; color:#1a3254; margin-bottom:2px }
@@ -766,6 +775,32 @@ ${datalistHtml}
       htmlF += `</div>`
     }
 
+    // Count active exam periods per groupe/niveau
+    const activeByGroupe = {}
+    let totalActiveF = 0
+    for (const ex of exams) {
+      const p = partMap.get(ex.id)
+      if (!p || p.type === 'annule') continue
+      totalActiveF++
+      activeByGroupe[ex.groupe] = (activeByGroupe[ex.groupe] || 0) + 1
+    }
+
+    const recapFinalHtml = `<div class="recap-final">
+  <div class="rf-title">Récapitulatif — ${totalActiveF} période${totalActiveF > 1 ? 's' : ''} à surveiller</div>
+  <div class="rf-grid">
+    ${NIVEAUX.map((n, ni) => {
+      const groups = [...new Set(exams.filter(e => e.niveau === n).map(e => e.groupe))].sort()
+      const items = groups.map(g => {
+        const count = activeByGroupe[g] || 0
+        if (!count) return ''
+        return `<span class="rf-item"><span class="rf-groupe">${g}</span><span class="rf-count">${count}</span></span>`
+      }).filter(Boolean).join('')
+      if (!items) return ''
+      return `<div class="rf-niv"><span class="rf-niv-label">${NIVEAU_LABELS[ni]}</span>${items}</div>`
+    }).filter(Boolean).join('')}
+  </div>
+</div>`
+
     const noRespHtml = profsNoResponse.length
       ? `<div class="recap-absent">
     <h3 class="recap-absent-title">Sans réponse (${profsNoResponse.length})</h3>
@@ -773,7 +808,7 @@ ${datalistHtml}
   </div>`
       : ''
 
-    htmlF += `</div>
+    htmlF += recapFinalHtml + `</div>
 
 <div class="recap-section no-print">
   <div class="recap-inner">
