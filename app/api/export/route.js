@@ -381,6 +381,307 @@ export async function GET(request) {
     return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
   }
 
+  // ── Tableau final — éditable, SURV + Fin. (conseil + input) ───────────────
+
+  if (format === 'print-final') {
+    const partMap = await buildPartMap()
+
+    // Same surv logic as format=print
+    const survFlagMapF = new Map()
+    for (const f of currentFiles) {
+      const prof = await read(f)
+      if (!prof) continue
+      for (const ex of prof.examens ?? []) {
+        if (ex.surveilleParTitulaire) survFlagMapF.set(ex.id, true)
+      }
+    }
+    const activeAtSlotF = new Map()
+    const freeAtSlotF   = new Map()
+    for (const ex of exams) {
+      const slot = `${ex.jour}|${ex.periode}`
+      if (!activeAtSlotF.has(slot)) activeAtSlotF.set(slot, new Set())
+      if (!freeAtSlotF.has(slot))   freeAtSlotF.set(slot, [])
+      const p = partMap.get(ex.id)
+      if (!p || p.type === 'annule') freeAtSlotF.get(slot).push(ex.profCode)
+      else activeAtSlotF.get(slot).add(ex.profCode)
+    }
+    const profActiveCountF = new Map()
+    for (const ex of exams) {
+      const p = partMap.get(ex.id)
+      if (!p || p.type === 'annule') continue
+      const key = `${ex.profCode}|${ex.jour}|${ex.periode}`
+      profActiveCountF.set(key, (profActiveCountF.get(key) || 0) + 1)
+    }
+
+    function survFinalCells(ex) {
+      const p = partMap.get(ex.id)
+      if (!p || p.type === 'annule') {
+        return `<td class="ts-an"></td><td class="tfin-cell ts-an"></td>`
+      }
+      const slot        = `${ex.jour}|${ex.periode}`
+      const wantsSurv   = survFlagMapF.get(ex.id) ?? false
+      const hasConflict = (profActiveCountF.get(`${ex.profCode}|${ex.jour}|${ex.periode}`) || 0) > 1
+      const survVal     = (wantsSurv && !hasConflict) ? ex.profCode : ''
+      let conseilVal = ''
+      if (!wantsSurv || hasConflict) {
+        const active = activeAtSlotF.get(slot) || new Set()
+        const free   = (freeAtSlotF.get(slot) || []).filter(pc => !active.has(pc) && pc !== ex.profCode)
+        conseilVal = free[0] ?? ''
+      }
+      const cpBtn = conseilVal
+        ? `<button class="cp-btn" data-v="${conseilVal}" onclick="cp(this)" title="Copier : ${conseilVal}">←</button>`
+        : ''
+      return `<td class="ts${survVal ? ' ts-ok' : ''}">${survVal}</td><td class="tfin-cell"><div class="tfin-wrap">${cpBtn}<input class="fin-inp" type="text" data-conseil="${conseilVal}" placeholder="${conseilVal}" /></div></td>`
+    }
+
+    function partBadgeF(ex) {
+      const p = partMap.get(ex.id)
+      if (!p) return `<td class="p-ns"><span class="badge b-ns">–</span></td>`
+      if (p.type === 'annule')  return `<td class="p-an"><span class="badge b-an">✕</span></td>`
+      if (p.type === 'tous')    return `<td class="p-to"><span class="badge b-to">✓</span></td>`
+      return `<td class="p-li"><span class="badge b-li">${p.label}</span></td>`
+    }
+
+    const NIV_COLORS_F = ['#1a3254','#1e4976','#1d5fa8','#1a6b8a','#1a7a6e','#236b3e']
+
+    const cssF = `
+      @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Playfair+Display:wght@700&family=JetBrains+Mono:wght@500&display=swap');
+      *, *::before, *::after { box-sizing:border-box; margin:0; padding:0 }
+      :root { --navy:#1a3254; --gold:#b8893a; --bg:#f4f3ef; --white:#fff; --text:#1c1c1c; --muted:#6b7280; --border:#d6d2c8 }
+      body { font-family:'Source Sans 3','Helvetica Neue',sans-serif; font-size:11px; background:var(--bg); color:var(--text); line-height:1.4 }
+      .topbar { background:var(--navy); color:#fff; padding:14px 28px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap }
+      .topbar-left h1 { font-family:'Playfair Display',Georgia,serif; font-size:18px; font-weight:700 }
+      .topbar-left p  { font-size:10px; color:rgba(255,255,255,.55); margin-top:2px }
+      .topbar-right   { display:flex; align-items:center; gap:8px; flex-wrap:wrap }
+      .print-btn  { background:var(--gold); color:#fff; border:none; padding:7px 16px; font-family:inherit; font-size:11.5px; font-weight:700; cursor:pointer; border-radius:4px }
+      .copy-all-btn { background:#374151; color:#fff; border:none; padding:7px 14px; font-family:inherit; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px }
+      .reset-btn    { background:transparent; color:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.25); padding:6px 12px; font-family:inherit; font-size:10.5px; cursor:pointer; border-radius:4px }
+      .save-status  { font-size:10px; color:rgba(255,255,255,.5); min-width:80px }
+      .legend { display:flex; gap:12px; align-items:center; padding:7px 28px; background:#fff; border-bottom:1px solid var(--border); font-size:10px; color:var(--muted); flex-wrap:wrap }
+      .leg { display:flex; align-items:center; gap:4px }
+      .leg-dot { width:9px; height:9px; border-radius:2px; flex-shrink:0 }
+      .content { max-width:1700px; margin:0 auto; padding:14px 18px 32px }
+      .day { background:var(--white); border:1px solid var(--border); border-radius:6px; overflow:hidden; margin-bottom:10px; box-shadow:0 1px 5px rgba(0,0,0,.05) }
+      .day-hdr { background:var(--navy); color:#fff; padding:7px 13px; display:flex; align-items:center; justify-content:space-between }
+      .day-name { font-weight:700; font-size:11.5px; letter-spacing:.5px; text-transform:uppercase }
+      .per { padding:7px 13px 9px; border-top:1px solid var(--border) }
+      .per:first-of-type { border-top:none }
+      .per-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:var(--navy); margin-bottom:5px; display:flex; align-items:center; gap:6px }
+      .per-label::after { content:''; flex:1; height:1px; background:var(--border) }
+      .half-gap { height:4px }
+      table { width:100%; border-collapse:collapse }
+      thead tr.niv-row th { padding:3px 3px; font-size:9.5px; font-weight:700; color:#fff; letter-spacing:.3px; text-align:center; border:1px solid rgba(255,255,255,.2) }
+      thead tr.col-row th { background:#f0ede6; color:var(--navy); font-size:7.5px; font-weight:700; text-transform:uppercase; padding:2px 2px; border:1px solid var(--border); text-align:center }
+      thead tr.col-row th.tc { background:#e8e4db }
+      tbody td { border:1px solid #e2dfd8; padding:2px 2px; text-align:center; vertical-align:middle; white-space:nowrap }
+      tbody tr:nth-child(even) td { background:#faf9f6 }
+      .tc  { background:#f8f6f1 !important; font-weight:700; font-size:8.5px; color:var(--navy) }
+      .tm  { font-weight:600; font-size:9px }
+      .tg  { font-weight:700; font-size:9px; color:var(--navy) }
+      .tp  { font-family:'JetBrains Mono',monospace; font-size:8px; color:var(--muted) }
+      .te  { background:#faf9f7 !important }
+      .badge { display:inline-block; padding:1px 3px; border-radius:2px; font-weight:700; font-size:7.5px }
+      .b-an { background:#fde8e8; color:#991b1b }
+      .b-to { background:#d1fae5; color:#065f46 }
+      .b-li { background:#dbeafe; color:#1e40af }
+      .b-ns { color:#9ca3af; font-style:italic; font-weight:400 }
+      .p-an td, td.p-an { background:#fff5f5 }
+      .p-to td, td.p-to { background:#f0fff4 }
+      .p-li td, td.p-li { background:#eff6ff }
+      /* ── SURV col ── */
+      .ts     { font-family:'JetBrains Mono',monospace; font-size:8.5px; min-width:24px; padding:1px 3px !important; text-align:center }
+      .ts-ok  { background:#f0fdf4 !important; color:#166534; font-weight:700 }
+      .ts-an  { background:#f5f5f5 !important; opacity:.3 }
+      .surv-hdr { background:#374151 !important; color:#fff !important; font-size:7.5px !important }
+      /* ── FIN. editable col ── */
+      .tfin-cell { padding:1px 2px !important; min-width:54px }
+      .tfin-wrap { display:flex; align-items:center; gap:1px; justify-content:center }
+      .fin-inp {
+        width:42px; border:1px solid #d1d5db; border-radius:2px;
+        padding:1px 3px; font-family:'JetBrains Mono',monospace; font-size:8.5px;
+        color:#374151; background:#fff; text-align:center;
+        transition: background .15s, color .15s;
+      }
+      .fin-inp:focus { outline:2px solid #3b82f6; outline-offset:0 }
+      .fin-inp.has-val { background:#f0fdf4 !important; color:#166534 !important; font-weight:700 }
+      .cp-btn {
+        flex-shrink:0; border:none; background:#fefce8; color:#713f12;
+        font-size:9px; cursor:pointer; padding:0px 3px; border-radius:2px;
+        line-height:14px; font-weight:700;
+      }
+      .cp-btn:hover { background:#fde047 }
+      /* ── Print A3 ── */
+      .print-hdr { display:none }
+      @media print {
+        @page { size: A3 landscape; margin: 6mm 8mm }
+        body { background:#fff; font-size:7.5px }
+        .topbar, .legend, .copy-all-btn, .reset-btn, .save-status, .print-btn { display:none }
+        .print-hdr { display:block; text-align:center; margin-bottom:5px; padding-bottom:4px; border-bottom:2px solid var(--navy) }
+        .print-hdr h1 { font-family:'Playfair Display',Georgia,serif; font-size:12px; font-weight:700; color:var(--navy) }
+        .print-hdr p  { font-size:8px; color:var(--muted); margin-top:2px }
+        .content { padding:0; max-width:none }
+        .day  { box-shadow:none; border-radius:0; border:1px solid #bbb; margin-bottom:5px }
+        .day-hdr { padding:3px 7px }
+        .day-name { font-size:9px }
+        .per  { padding:2px 7px 4px }
+        .half-gap { height:2px }
+        table { font-size:7px }
+        .tm, .tg { font-size:7px }
+        .tp { font-size:6.5px }
+        thead tr.niv-row th { font-size:8px; padding:2px 2px }
+        thead tr.col-row th { font-size:6px; padding:1px 1px }
+        tbody td { padding:1px 1px }
+        .badge { font-size:6px; padding:0 2px }
+        .ts { font-size:6.5px; min-width:16px }
+        .tfin-cell { min-width:42px }
+        .cp-btn { display:none }
+        .fin-inp {
+          border:none !important; background:transparent !important;
+          width:auto !important; font-size:7px; padding:0 !important;
+          color:#166534; font-weight:700;
+        }
+        .fin-inp::placeholder { color:#9ca3af; font-style:italic; font-weight:400 }
+      }
+    `
+
+    const jsF = `
+      function cp(btn) {
+        const inp = btn.nextElementSibling;
+        inp.value = btn.dataset.v;
+        inp.classList.add('has-val');
+        save();
+      }
+      function copyAll() {
+        document.querySelectorAll('.fin-inp').forEach(inp => {
+          const c = inp.dataset.conseil;
+          if (c && !inp.value) { inp.value = c; inp.classList.add('has-val'); }
+        });
+        save();
+      }
+      function resetAll() {
+        if (!confirm('Effacer toutes les valeurs saisies ?')) return;
+        document.querySelectorAll('.fin-inp').forEach(inp => { inp.value = ''; inp.classList.remove('has-val'); });
+        localStorage.removeItem('tf-surv-2026');
+        showStatus('Réinitialisé');
+      }
+      function save() {
+        const vals = [...document.querySelectorAll('.fin-inp')].map(i => i.value);
+        localStorage.setItem('tf-surv-2026', JSON.stringify(vals));
+        showStatus('Sauvegardé ✓');
+      }
+      function showStatus(msg) {
+        const el = document.getElementById('save-status');
+        if (el) { el.textContent = msg; clearTimeout(el._t); el._t = setTimeout(() => el.textContent = '', 2000); }
+      }
+      document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.fin-inp').forEach(inp => {
+          inp.addEventListener('input', function() {
+            this.classList.toggle('has-val', this.value.length > 0);
+            save();
+          });
+        });
+        try {
+          const saved = localStorage.getItem('tf-surv-2026');
+          if (saved) {
+            const vals = JSON.parse(saved);
+            document.querySelectorAll('.fin-inp').forEach((inp, i) => {
+              if (vals[i]) { inp.value = vals[i]; inp.classList.add('has-val'); }
+            });
+            showStatus('Chargé ✓');
+          }
+        } catch(e) {}
+      });
+    `
+
+    let htmlF = `<!DOCTYPE html>
+<html lang="fr"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tableau final — Surveillance juin 2026</title>
+<style>${cssF}</style>
+</head><body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>Tableau final — Surveillance</h1>
+    <p>Collège des Hayeffes &nbsp;·&nbsp; Juin 2026 &nbsp;·&nbsp; Les saisies sont sauvegardées automatiquement</p>
+  </div>
+  <div class="topbar-right">
+    <span class="save-status" id="save-status"></span>
+    <button class="copy-all-btn" onclick="copyAll()">↙ Copier toutes les suggestions</button>
+    <button class="reset-btn" onclick="resetAll()">Réinitialiser</button>
+    <button class="print-btn" onclick="window.print()">Imprimer A3 / PDF</button>
+  </div>
+</div>
+
+<div class="print-hdr">
+  <h1>Tableau de surveillance — Juin 2026</h1>
+  <p>Collège des Hayeffes · Imprimé le ${new Date().toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+</div>
+
+<div class="legend">
+  <span class="leg"><span class="leg-dot" style="background:#f0fdf4;border:1px solid #86efac"></span>SURV confirmée (titulaire)</span>
+  <span class="leg"><span class="leg-dot" style="background:#fefce8;border:1px solid #fde047"></span>← suggestion auto (prof libre)</span>
+  <span class="leg"><span class="leg-dot" style="background:#fde8e8;border:1px solid #fca5a5"></span>Annulé</span>
+  <span class="leg"><span class="leg-dot" style="background:#d1fae5;border:1px solid #6ee7b7"></span>Tous les élèves</span>
+  <span class="leg"><span class="leg-dot" style="background:#dbeafe;border:1px solid #93c5fd"></span>Liste nominative</span>
+</div>
+
+<div class="content">
+`
+
+    for (const jour of JOURS) {
+      htmlF += `<div class="day">
+  <div class="day-hdr"><span class="day-name">${labelJour(jour)}</span></div>`
+
+      for (const periode of ['P1', 'P2']) {
+        const bloc = examsForBloc(jour, periode)
+        if (!bloc.length) continue
+        const { byNiveau, maxRows } = buildBlocRows(bloc)
+        const HALVES_F = [[0,1,2],[3,4,5]]
+
+        htmlF += `<div class="per"><div class="per-label">${periode}</div>`
+
+        HALVES_F.forEach((indices, hi) => {
+          const halfNiveaux = indices.map(i => NIVEAUX[i])
+          const halfLabels  = indices.map(i => NIVEAU_LABELS[i])
+          const halfColors  = indices.map(i => NIV_COLORS_F[i])
+
+          if (hi > 0) htmlF += `<div class="half-gap"></div>`
+
+          htmlF += `<table><thead>
+<tr class="niv-row"><th class="tc"></th>`
+          halfNiveaux.forEach((_, i) => {
+            htmlF += `<th colspan="6" style="background:${halfColors[i]}">${halfLabels[i]}</th>`
+          })
+          htmlF += `</tr><tr class="col-row"><th class="tc">Pér.</th>`
+          halfNiveaux.forEach(() => {
+            htmlF += `<th>Mat.</th><th>Cl.</th><th>Prof</th><th>Él.</th><th class="surv-hdr">SURV</th><th class="surv-hdr">Fin.</th>`
+          })
+          htmlF += `</tr></thead><tbody>`
+
+          for (let i = 0; i < maxRows; i++) {
+            htmlF += `<tr><td class="tc">${i === 0 ? periode : ''}</td>`
+            halfNiveaux.forEach(n => {
+              const ex = byNiveau[n][i]
+              if (!ex) {
+                htmlF += `<td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td>`
+                return
+              }
+              htmlF += `<td class="tm">${ex.matiere}</td><td class="tg">${ex.groupe}</td><td class="tp">${ex.profCode}</td>${partBadgeF(ex)}${survFinalCells(ex)}`
+            })
+            htmlF += `</tr>`
+          }
+          htmlF += `</tbody></table>`
+        })
+        htmlF += `</div>`
+      }
+      htmlF += `</div>`
+    }
+
+    htmlF += `</div><script>${jsF}</script></body></html>`
+    return new Response(htmlF, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+  }
+
   // ── Vue imprimable — propositions de fusion ────────────────────────────────
 
   if (format === 'print-propositions') {
