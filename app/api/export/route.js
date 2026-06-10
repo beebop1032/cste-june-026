@@ -402,14 +402,24 @@ export async function GET(request) {
       copiesPerProfF[ex.profCode] = (copiesPerProfF[ex.profCode] || 0) + n
     }
 
-    // Planned surveillances from "Surveillance exam juin2026.xlsx" (original timetable)
-    const excelSurvF = {
-      JAQ:11,PAY:10,DKS:10,DEST:10,SMO:10,PIEJ:9,ORF:8,PERS:8,FOF:8,PEC:8,
-      DEBS:8,VBG:8,LMC:8,BAL:8,DEMN:7,VERM:7,IVE:7,EVR:7,ROD:7,DRAY:7,
-      DELF:6,ENS:6,PHM:6,MEL:6,BLOA:6,DVT:6,DANB:6,GOD:6,CAR:6,DT:5,
-      DESI:5,LNB:5,KOT:5,VDS:5,HE:5,SAR:5,ANM:5,JY:5,JOR:5,CARO:5,
-      DOM:5,DMI:5,MYN:5,TAIL:4,BERS:4,GAU:4,HEK:4,BALJ:4,MRS:4,CP:3,
-      VERS:3,BAU:2,TAC:2,CLO:2,
+    // Données répartitions.xlsx : heures surv prévues + copies initiales
+    const repDataF = {
+      ANM:{s:14,c:7},   BALJ:{s:14,c:59},  BAL:{s:14,c:129}, BAU:{s:6,c:11},
+      BERS:{s:14,c:57}, BIE:{s:8,c:0},     BLOA:{s:14,c:28}, BUC:{s:14,c:0},
+      CAR:{s:12,c:68},  CARO:{s:12,c:51},  CP:{s:8,c:62},    CLO:{s:8,c:50},
+      COL:{s:14,c:0},   CORE:{s:4,c:0},    DANB:{s:12,c:15}, SMO:{s:12,c:57},
+      DVT:{s:12,c:39},  DEBS:{s:12,c:52},  DKS:{s:9,c:175},  DELF:{s:12,c:106},
+      DMI:{s:12,c:81},  DEMN:{s:14,c:9},   DESI:{s:11,c:105},DEST:{s:12,c:62},
+      DOM:{s:14,c:57},  DRAY:{s:13,c:70},  DT:{s:12,c:0},    ENS:{s:14,c:53},
+      EVR:{s:14,c:42},  FR:{s:11,c:0},     FOF:{s:13,c:83},  GAU:{s:10,c:18},
+      GOD:{s:14,c:39},  HEK:{s:4,c:43},    HE:{s:10,c:15},   IVE:{s:12,c:5},
+      JY:{s:8,c:0},     JAQ:{s:12,c:0},    JOR:{s:11,c:80},  KOT:{s:12,c:69},
+      LAY:{s:4,c:0},    LMC:{s:10,c:62},   LNB:{s:14,c:6},   MEL:{s:12,c:13},
+      MRS:{s:11,c:0},   MYN:{s:8,c:4},     PHM:{s:12,c:4},   ORF:{s:12,c:22},
+      PAY:{s:12,c:0},   PEC:{s:13,c:158},  PERS:{s:12,c:32}, PIEJ:{s:13,c:90},
+      ROD:{s:12,c:111}, RSV:{s:7,c:0},     SAR:{s:10,c:26},  SHE:{s:7,c:0},
+      TAB:{s:14,c:0},   TAC:{s:4,c:10},    TAIL:{s:14,c:7},  VDS:{s:12,c:19},
+      VHM:{s:12,c:0},   VBG:{s:14,c:139},  VERM:{s:14,c:43}, VERS:{s:10,c:11},
     }
 
     // Same surv logic as format=print
@@ -561,6 +571,8 @@ export async function GET(request) {
       .rc-prof  { font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:600; color:#374151 }
       .rc-n     { text-align:center; font-size:9px; font-weight:600; min-width:22px }
       .rc-cible { text-align:center; font-size:9px; font-weight:700; min-width:28px; background:#f8f6f1 }
+      .autofill-btn { width:100%; margin:6px 0 8px; background:#1a3254; color:#fff; border:none; padding:6px 10px; font-family:inherit; font-size:10px; font-weight:700; cursor:pointer; border-radius:4px; text-align:center }
+      .autofill-btn:hover { background:#1e4976 }
       .recap-absent { margin-top:14px; padding-top:10px; border-top:1px solid #e2dfd8 }
       .recap-absent-title { font-size:10px; font-weight:700; color:#7c3aed; margin-bottom:6px }
       .absent-badge { display:inline-block; background:#f5f3ff; color:#4c1d95; border:1px solid #ddd6fe; border-radius:3px; font-family:'JetBrains Mono',monospace; font-size:8.5px; font-weight:600; padding:1px 5px; margin:1px 2px }
@@ -637,39 +649,66 @@ export async function GET(request) {
         if (el) { el.textContent = msg; clearTimeout(el._t); el._t = setTimeout(() => el.textContent = '', 2000); }
       }
       const SURV_PTS = 16;
-      function updateRecap() {
-        const survCounts = {};
+      function getCounts() {
+        const c = {};
         document.querySelectorAll('.fin-inp').forEach(inp => {
           const v = inp.value.trim().toUpperCase();
-          if (v) survCounts[v] = (survCounts[v] || 0) + 1;
+          if (v) c[v] = (c[v] || 0) + 1;
         });
-        const allProfs = new Set([...Object.keys(COPIES_PER_PROF), ...Object.keys(EXCEL_SURV), ...Object.keys(survCounts)]);
-        // Sort by cible desc (reference level), then score desc
-        const sorted = [...allProfs].sort((a, b) => {
-          const cA = (COPIES_PER_PROF[a] || 0) + (EXCEL_SURV[a] || 0) * SURV_PTS;
-          const cB = (COPIES_PER_PROF[b] || 0) + (EXCEL_SURV[b] || 0) * SURV_PTS;
-          return cB - cA;
-        });
+        return c;
+      }
+      function getReste(prof, nouv) {
+        const d = REP_DATA[prof];
+        if (!d) return 0;
+        const cible = d.c + d.s * SURV_PTS;
+        const score = (COPIES_PER_PROF[prof] || 0) + nouv * SURV_PTS;
+        return cible - score;
+      }
+      function updateRecap() {
+        const survCounts = getCounts();
+        const allProfs = Object.keys(REP_DATA);
+        allProfs.sort((a, b) => getReste(b, survCounts[b]||0) - getReste(a, survCounts[a]||0));
         const tbody = document.getElementById('recap-tbody');
         if (!tbody) return;
-        tbody.innerHTML = sorted.map(prof => {
+        tbody.innerHTML = allProfs.map(prof => {
+          const d      = REP_DATA[prof];
           const copies = COPIES_PER_PROF[prof] || 0;
-          const prevu  = EXCEL_SURV[prof] || 0;
           const nouv   = survCounts[prof] || 0;
           const score  = copies + nouv * SURV_PTS;
-          const cible  = copies + prevu * SURV_PTS;
-          const ratio  = cible > 0 ? score / cible : 1;
-          const scoreColor = ratio >= 1 ? '#166534' : ratio >= 0.75 ? '#b45309' : '#991b1b';
-          const cibleColor = ratio >= 1 ? '#166534' : ratio >= 0.75 ? '#b45309' : '#991b1b';
-          const nd = v => v > 0 ? v : \`<span style="color:#9ca3af">–</span>\`;
-          return \`<tr title="\${copies} copies × 1pt + \${prevu} surv prévues × 16 = cible \${cible}">
+          const cible  = d.c + d.s * SURV_PTS;
+          const reste  = cible - score;
+          const rc = reste <= 0 ? '#166534' : reste <= 48 ? '#b45309' : '#991b1b';
+          const nd = v => v > 0 ? v : \`<span style="color:#d1d5db">–</span>\`;
+          const resteCell = reste <= 0
+            ? \`<span style="color:#166534;font-weight:700">✓</span>\`
+            : \`<span style="color:\${rc};font-weight:700">\${reste}</span>\`;
+          return \`<tr title="Copies initial: \${d.c} · Surv prévues: \${d.s}h · Cible: \${cible}">
             <td class="rc-prof">\${prof}</td>
-            <td class="rc-n" style="color:\${scoreColor}">\${score}</td>
-            <td class="rc-n">\${nd(prevu)}</td>
+            <td class="rc-n">\${score}</td>
+            <td class="rc-n">\${nd(d.s)}</td>
             <td class="rc-n">\${nd(nouv)}</td>
-            <td class="rc-cible" style="color:\${cibleColor}">\${cible}</td>
+            <td class="rc-cible">\${resteCell}</td>
           </tr>\`;
         }).join('');
+      }
+      function autoFill() {
+        const inputs = [...document.querySelectorAll('.fin-inp')].filter(i => !i.value);
+        if (!inputs.length) { alert('Tous les champs sont déjà remplis.'); return; }
+        const counts = getCounts();
+        inputs.forEach(inp => {
+          const examProf = inp.closest('tr')?.querySelector('.tp')?.textContent.trim().toUpperCase() || '';
+          // Pick prof with highest reste who isn't the exam's own prof
+          const best = Object.keys(REP_DATA)
+            .filter(p => p !== examProf)
+            .sort((a, b) => getReste(b, counts[b]||0) - getReste(a, counts[a]||0))
+            .find(p => getReste(p, counts[p]||0) > 0);
+          if (best) {
+            inp.value = best;
+            inp.classList.add('has-val');
+            counts[best] = (counts[best] || 0) + 1;
+          }
+        });
+        save();
       }
       document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.fin-inp').forEach((inp, _, arr) => {
@@ -830,15 +869,16 @@ ${datalistHtml}
   <div class="recap-inner">
     <h2 class="recap-title">Récap charge de travail</h2>
     <p class="recap-sub">Trié par score décroissant · mis à jour en temps réel</p>
-    <p class="recap-legend">Score = copies + nouvelles surv × 16<br>Cible = copies + surv prévues (avant) × 16<br><span style="color:#166534">■</span> ≥ cible &nbsp;<span style="color:#b45309">■</span> -25% &nbsp;<span style="color:#991b1b">■</span> en dessous</p>
+    <p class="recap-legend">Score = copies actuelles + nouv × 16<br>Cible = copies initiales + H.prév × 16<br>Reste = Cible − Score &nbsp;<span style="color:#166534">✓</span>=atteint</p>
+    <button class="autofill-btn" onclick="autoFill()">⚖ Auto-répartir équitablement</button>
     <table class="recap-table">
       <thead>
         <tr>
           <th>Prof</th>
-          <th title="Score actuel : copies + nouvelles surv × 16">Score</th>
-          <th title="Heures de surv prévues dans l'ancien planning">Prév</th>
-          <th title="Nouvelles heures assignées (colonne Fin.)">Nouv</th>
-          <th title="Score cible : copies + surv prévues × 16">Cible</th>
+          <th title="Score actuel = copies + nouv surv × 16">Score</th>
+          <th title="Heures surv prévues (répartitions initiales)">H.Prév</th>
+          <th title="Nouvelles heures assignées (Fin.)">Nouv</th>
+          <th title="Reste à atteindre pour égaler la cible (Cible − Score)">Reste</th>
         </tr>
       </thead>
       <tbody id="recap-tbody">
@@ -849,7 +889,7 @@ ${datalistHtml}
   </div>
 </div>
 
-<script>const COPIES_PER_PROF=${JSON.stringify(copiesPerProfF)};const EXCEL_SURV=${JSON.stringify(excelSurvF)};${jsF}</script></body></html>`
+<script>const COPIES_PER_PROF=${JSON.stringify(copiesPerProfF)};const REP_DATA=${JSON.stringify(repDataF)};${jsF}</script></body></html>`
     return new Response(htmlF, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
   }
 
