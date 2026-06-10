@@ -472,7 +472,8 @@ export async function GET(request) {
       // 1re/2e : examens inchangés → local pré-encodé avec l'ancien local
       const preLocal = (ex.niveau === '1re' || ex.niveau === '2e') ? (ex.local ?? '') : ''
       const locInput = `<input class="loc-inp${preLocal ? ' has-val' : ''}" type="text" data-exid="${ex.id}" data-default="${preLocal}" value="${preLocal}" placeholder="${ex.local ?? ''}" autocomplete="off" />`
-      return `<td class="ts${survVal ? ' ts-ok' : ''}">${survVal}</td><td class="tfin-cell"><div class="tfin-wrap"><input class="fin-inp" type="text" list="profs-dl" data-conseil="${conseilVal}" data-slot="${slot}" data-exid="${ex.id}" placeholder="${conseilVal}" autocomplete="off" />${cpBtn}</div></td><td class="tloc-cell">${locInput}</td>`
+      const lnkBtn = `<button class="lnk-btn" data-exid="${ex.id}" data-slot="${slot}" onclick="lnk(this)" title="Lier à un autre examen de la même plage (fusion prévue)">🔗</button>`
+      return `<td class="ts${survVal ? ' ts-ok' : ''}">${survVal}</td><td class="tfin-cell"><div class="tfin-wrap"><input class="fin-inp" type="text" list="profs-dl" data-conseil="${conseilVal}" data-slot="${slot}" data-exid="${ex.id}" placeholder="${conseilVal}" autocomplete="off" />${cpBtn}</div></td><td class="tloc-cell"><div class="tloc-wrap">${locInput}${lnkBtn}</div></td>`
     }
 
     function partBadgeF(ex) {
@@ -566,6 +567,14 @@ export async function GET(request) {
       .fin-inp.fused-warn, .loc-inp.fused-warn { border-color:#d97706 !important; box-shadow:0 0 0 1.5px rgba(217,119,6,.45); background:#fffbeb !important }
       .fuse-badge { flex-shrink:0; font-size:9px; cursor:help; line-height:1 }
       .fuse-badge.warn { filter:hue-rotate(160deg) }
+      /* ── Liaison manuelle (fusion prévue, avant saisie prof/local) ── */
+      .tloc-wrap { display:flex; align-items:center; gap:2px }
+      .lnk-btn { flex-shrink:0; border:none; background:none; cursor:pointer; font-size:8px; opacity:.22; padding:0 1px; line-height:1 }
+      .lnk-btn:hover { opacity:1 }
+      .lnk-btn.lnk-on { opacity:1 }
+      .lnk-btn.lnk-pending { opacity:1; outline:2px dashed #0d9488; border-radius:3px; background:#ccfbf1 }
+      .lnk-btn[data-grp]::after { content:attr(data-grp); font-size:7px; font-weight:700; color:#0d9488; vertical-align:super }
+      .fin-inp.linked-grp, .loc-inp.linked-grp { outline:2px dashed #0d9488; outline-offset:1px }
       .cp-btn {
         flex-shrink:0; border:none; background:#fef9c3; color:#713f12;
         font-size:8px; cursor:pointer; padding:2px 5px; border-radius:3px;
@@ -633,7 +642,7 @@ export async function GET(request) {
         .badge { font-size:6px; padding:0 2px }
         .ts { font-size:6.5px; min-width:16px }
         .tfin-cell { min-width:52px }
-        .cp-btn { display:none }
+        .cp-btn, .lnk-btn { display:none }
         .fin-inp, .loc-inp {
           border:none !important; background:transparent !important;
           width:auto !important; font-size:7px; padding:0 !important;
@@ -764,7 +773,7 @@ export async function GET(request) {
           const r = await fetch('/api/final', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ surveillants, locaux }),
+            body: JSON.stringify({ surveillants, locaux, liaisons: LIAISONS }),
           });
           showStatus(r.ok ? 'Synchronisé ☁' : 'Erreur de sync serveur');
         } catch (e) {
@@ -791,16 +800,95 @@ export async function GET(request) {
         });
         return c;
       }
+      // Liaisons manuelles : examId → id de groupe (fusion prévue avant saisie prof/local)
+      let LIAISONS = {};
+      let pendingLink = null;
+      function lnk(btn) {
+        const id = btn.dataset.exid, slot = btn.dataset.slot;
+        if (pendingLink && pendingLink.id === id) {
+          pendingLink = null;
+          renderLiaisons();
+          showStatus('Liaison annulée');
+        } else if (pendingLink && pendingLink.slot === slot) {
+          const gid = LIAISONS[id] || LIAISONS[pendingLink.id] || ('L' + Date.now());
+          LIAISONS[id] = gid;
+          LIAISONS[pendingLink.id] = gid;
+          pendingLink = null;
+          afterLiaisonChange('Examens liés 🔗 — fusion prévue');
+        } else if (pendingLink) {
+          pendingLink = { id, slot };
+          renderLiaisons();
+          showStatus('Autre plage — nouvelle liaison : choisis un examen de la même plage');
+        } else if (LIAISONS[id]) {
+          const gid = LIAISONS[id];
+          delete LIAISONS[id];
+          const rest = Object.keys(LIAISONS).filter(k => LIAISONS[k] === gid);
+          if (rest.length === 1) delete LIAISONS[rest[0]];
+          afterLiaisonChange('Liaison retirée');
+        } else {
+          pendingLink = { id, slot };
+          renderLiaisons();
+          showStatus('Choisis un autre examen de la même plage à lier…');
+        }
+      }
+      function afterLiaisonChange(msg) {
+        renderLiaisons();
+        scheduleSync();
+        updateRecap();
+        showStatus(msg);
+      }
+      function renderLiaisons() {
+        document.querySelectorAll('.lnk-btn').forEach(btn => {
+          btn.classList.remove('lnk-on', 'lnk-pending');
+          btn.removeAttribute('data-grp');
+          btn.title = 'Lier à un autre examen de la même plage (fusion prévue)';
+        });
+        document.querySelectorAll('.fin-inp, .loc-inp').forEach(i => i.classList.remove('linked-grp'));
+        const slotGroups = {};
+        Object.keys(LIAISONS).forEach(id => {
+          const btn = document.querySelector('.lnk-btn[data-exid="' + id + '"]');
+          if (!btn) { delete LIAISONS[id]; return; }
+          const slot = btn.dataset.slot, gid = LIAISONS[id];
+          slotGroups[slot] = slotGroups[slot] || {};
+          if (!(gid in slotGroups[slot])) slotGroups[slot][gid] = Object.keys(slotGroups[slot]).length + 1;
+          const n = slotGroups[slot][gid];
+          btn.classList.add('lnk-on');
+          btn.setAttribute('data-grp', n);
+          btn.title = 'Liaison ' + n + ' — fusion prévue (cliquer pour délier)';
+          ['fin-inp', 'loc-inp'].forEach(c => {
+            const inp = document.querySelector('.' + c + '[data-exid="' + id + '"]');
+            if (inp) inp.classList.add('linked-grp');
+          });
+        });
+        if (pendingLink) {
+          const b = document.querySelector('.lnk-btn[data-exid="' + pendingLink.id + '"]');
+          if (b) b.classList.add('lnk-pending');
+        }
+      }
       // Total de plages à pourvoir : les cellules vides comptent 1 chacune, les
-      // cellules remplies fusionnent par (prof, plage) → le total diminue à chaque fusion.
+      // cellules remplies fusionnent par (prof, plage), et un groupe lié manuellement
+      // compte pour 1 plage même vide → le total diminue à chaque fusion/liaison.
       function totalPlages() {
         const seen = new Set();
         let total = 0;
-        document.querySelectorAll('.fin-inp').forEach(inp => {
+        const groupHasFilled = {};
+        document.querySelectorAll('.fin-inp[data-exid]').forEach(inp => {
+          const gid = LIAISONS[inp.dataset.exid];
+          if (gid && inp.value.trim()) groupHasFilled[gid] = true;
+        });
+        document.querySelectorAll('.fin-inp[data-exid]').forEach(inp => {
           const v = inp.value.trim().toUpperCase();
-          if (!v) { total++; return; }
-          const key = v + '|' + (inp.dataset.slot || '');
-          if (!seen.has(key)) { seen.add(key); total++; }
+          const gid = LIAISONS[inp.dataset.exid];
+          if (v) {
+            const key = v + '|' + (inp.dataset.slot || '');
+            if (!seen.has(key)) { seen.add(key); total++; }
+          } else if (gid) {
+            // Vide mais lié : couvert par le membre rempli du groupe, sinon 1 plage pour tout le groupe
+            if (groupHasFilled[gid]) return;
+            if (!seen.has('LIA|' + gid)) { seen.add('LIA|' + gid); total++; }
+          } else {
+            total++;
+          }
         });
         return total;
       }
@@ -927,6 +1015,8 @@ export async function GET(request) {
         // Données serveur (clé = id d'examen) : locaux prioritaires, surveillants en complément
         fetch('/api/final').then(r => r.ok ? r.json() : null).then(data => {
           if (!data) return;
+          LIAISONS = data.liaisons || {};
+          renderLiaisons();
           document.querySelectorAll('.loc-inp').forEach(inp => {
             const v = (data.locaux || {})[inp.dataset.exid];
             if (v) { inp.value = v; inp.classList.add('has-val'); }
@@ -979,6 +1069,7 @@ ${datalistHtml}
   <span class="leg"><span class="leg-dot" style="background:#dbeafe;border:1px solid #93c5fd"></span>Liste nominative</span>
   <span class="leg">🔗 <span style="color:#7c3aed;font-weight:600">Fusion</span> (même surveillant + même local sur la plage)</span>
   <span class="leg">🔗 <span style="color:#d97706;font-weight:600">à vérifier</span> (même surveillant, locaux différents/manquants)</span>
+  <span class="leg"><span style="display:inline-block;width:9px;height:9px;border:2px dashed #0d9488;border-radius:2px"></span><span style="color:#0d9488;font-weight:600">Liaison manuelle</span> (clic 🔗 sur deux examens d'une même plage = 1 plage à caser)</span>
   <span class="leg-sep"></span>
   <label class="leg leg-filter"><input type="checkbox" checked onchange="document.body.classList.toggle('hide-annule', !this.checked)" /> Afficher les examens annulés</label>
   <label class="leg leg-filter"><input type="checkbox" checked onchange="document.body.classList.toggle('hide-filled', !this.checked)" /> Afficher les examens remplis (Prof + Local)</label>
