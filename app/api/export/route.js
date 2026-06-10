@@ -561,6 +561,11 @@ export async function GET(request) {
       }
       .loc-inp:focus { outline:none; border-color:#8b5cf6; box-shadow:0 0 0 2px rgba(139,92,246,.25) }
       .loc-inp.has-val { background:#f5f3ff !important; color:#5b21b6 !important; font-weight:700; border-color:#c4b5fd }
+      /* ── Fusion (même surveillant, même plage) ── */
+      .fin-inp.fused-ok,  .loc-inp.fused-ok  { border-color:#7c3aed !important; box-shadow:0 0 0 1.5px rgba(124,58,237,.35) }
+      .fin-inp.fused-warn, .loc-inp.fused-warn { border-color:#d97706 !important; box-shadow:0 0 0 1.5px rgba(217,119,6,.45); background:#fffbeb !important }
+      .fuse-badge { flex-shrink:0; font-size:9px; cursor:help; line-height:1 }
+      .fuse-badge.warn { filter:hue-rotate(160deg) }
       .cp-btn {
         flex-shrink:0; border:none; background:#fef9c3; color:#713f12;
         font-size:8px; cursor:pointer; padding:2px 5px; border-radius:3px;
@@ -695,6 +700,51 @@ export async function GET(request) {
             else td.removeAttribute('data-filled');
           });
         });
+        updateFusionMarks();
+      }
+      // Fusion : un même surveillant sur plusieurs examens d'une même plage.
+      // Local identique partout → liaison OK (violet) ; locaux différents ou
+      // manquants → à vérifier (orange, le surveillant ne peut pas être à deux endroits).
+      function updateFusionMarks() {
+        document.querySelectorAll('.fin-inp, .loc-inp').forEach(inp => {
+          inp.classList.remove('fused-ok', 'fused-warn');
+          if (inp.classList.contains('fin-inp')) inp.removeAttribute('title');
+        });
+        document.querySelectorAll('.fuse-badge').forEach(b => b.remove());
+        const locByEx = {};
+        document.querySelectorAll('.loc-inp[data-exid]').forEach(i => { locByEx[i.dataset.exid] = i.value.trim().toUpperCase(); });
+        const groups = {};
+        document.querySelectorAll('.fin-inp[data-exid]').forEach(inp => {
+          const v = inp.value.trim().toUpperCase();
+          if (!v) return;
+          const key = (inp.dataset.slot || '') + '|' + v;
+          (groups[key] = groups[key] || []).push(inp);
+        });
+        for (const key in groups) {
+          const inps = groups[key];
+          if (inps.length < 2) continue;
+          const prof = key.split('|')[2] || '';
+          const locs = inps.map(i => locByEx[i.dataset.exid] || '');
+          const allSame = locs.every(l => l && l === locs[0]);
+          const cls = allSame ? 'fused-ok' : 'fused-warn';
+          const title = allSame
+            ? 'Fusion : ' + inps.length + ' examens · ' + prof + ' · local ' + locs[0]
+            : prof + ' surveille ' + inps.length + ' examens sur cette plage — locaux différents ou manquants';
+          inps.forEach(inp => {
+            inp.classList.add(cls);
+            inp.title = title;
+            const loc = document.querySelector('.loc-inp[data-exid="' + inp.dataset.exid + '"]');
+            if (loc) loc.classList.add(cls);
+            const w = inp.closest('.tfin-wrap');
+            if (w && !w.querySelector('.fuse-badge')) {
+              const b = document.createElement('span');
+              b.className = 'fuse-badge' + (allSame ? '' : ' warn');
+              b.textContent = '🔗';
+              b.title = title;
+              w.insertBefore(b, inp);
+            }
+          });
+        }
       }
       // Sync serveur (Blob) : surveillants + locaux par examen — utilisé par les vues imprimables
       let syncT = null;
@@ -927,6 +977,8 @@ ${datalistHtml}
   <span class="leg"><span class="leg-dot" style="background:#fde8e8;border:1px solid #fca5a5"></span>Annulé</span>
   <span class="leg"><span class="leg-dot" style="background:#d1fae5;border:1px solid #6ee7b7"></span>Tous les élèves</span>
   <span class="leg"><span class="leg-dot" style="background:#dbeafe;border:1px solid #93c5fd"></span>Liste nominative</span>
+  <span class="leg">🔗 <span style="color:#7c3aed;font-weight:600">Fusion</span> (même surveillant + même local sur la plage)</span>
+  <span class="leg">🔗 <span style="color:#d97706;font-weight:600">à vérifier</span> (même surveillant, locaux différents/manquants)</span>
   <span class="leg-sep"></span>
   <label class="leg leg-filter"><input type="checkbox" checked onchange="document.body.classList.toggle('hide-annule', !this.checked)" /> Afficher les examens annulés</label>
   <label class="leg leg-filter"><input type="checkbox" checked onchange="document.body.classList.toggle('hide-filled', !this.checked)" /> Afficher les examens remplis (Prof + Local)</label>
