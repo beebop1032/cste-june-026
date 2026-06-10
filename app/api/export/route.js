@@ -806,36 +806,76 @@ export async function GET(request) {
       function lnk(btn) {
         const id = btn.dataset.exid, slot = btn.dataset.slot;
         if (pendingLink && pendingLink.id === id) {
-          pendingLink = null;
-          renderLiaisons();
-          showStatus('Liaison annulée');
+          // Re-clic sur le même examen : délier (si lié), sinon annuler la sélection
+          if (LIAISONS[id]) {
+            const gid = LIAISONS[id];
+            delete LIAISONS[id];
+            const rest = Object.keys(LIAISONS).filter(k => LIAISONS[k] === gid);
+            if (rest.length === 1) delete LIAISONS[rest[0]];
+            pendingLink = null;
+            afterLiaisonChange('Liaison retirée');
+          } else {
+            pendingLink = null;
+            renderLiaisons();
+            showStatus('Liaison annulée');
+          }
         } else if (pendingLink && pendingLink.slot === slot) {
+          // Deuxième clic même plage : lier (rejoint un groupe existant le cas échéant)
           const gid = LIAISONS[id] || LIAISONS[pendingLink.id] || ('L' + Date.now());
           LIAISONS[id] = gid;
           LIAISONS[pendingLink.id] = gid;
           pendingLink = null;
-          afterLiaisonChange('Examens liés 🔗 — fusion prévue');
+          afterLiaisonChange('Examens liés 🔗 — clique 🔗 sur le groupe puis sur un autre examen pour agrandir', gid);
         } else if (pendingLink) {
           pendingLink = { id, slot };
           renderLiaisons();
-          showStatus('Autre plage — nouvelle liaison : choisis un examen de la même plage');
-        } else if (LIAISONS[id]) {
-          const gid = LIAISONS[id];
-          delete LIAISONS[id];
-          const rest = Object.keys(LIAISONS).filter(k => LIAISONS[k] === gid);
-          if (rest.length === 1) delete LIAISONS[rest[0]];
-          afterLiaisonChange('Liaison retirée');
+          showStatus('Autre plage — nouvelle sélection : choisis un examen de la même plage');
         } else {
+          // Premier clic : sélection (un examen déjà lié permet d agrandir son groupe)
           pendingLink = { id, slot };
           renderLiaisons();
-          showStatus('Choisis un autre examen de la même plage à lier…');
+          showStatus(LIAISONS[id]
+            ? 'Groupe sélectionné — clique un examen de la même plage pour le rejoindre, ou re-clique pour délier'
+            : 'Choisis un autre examen de la même plage à lier…');
         }
       }
-      function afterLiaisonChange(msg) {
+      function afterLiaisonChange(msg, gid) {
+        if (gid) propagateLiaison(gid);
         renderLiaisons();
-        scheduleSync();
-        updateRecap();
+        save();
         showStatus(msg);
+      }
+      // À la liaison : copie du prof (Fin.) et du local depuis le membre le plus haut
+      // du groupe (premier non vide, priorité à l ordre du tableau) vers les autres
+      function propagateLiaison(gid) {
+        const ids = [...document.querySelectorAll('.fin-inp[data-exid]')]
+          .map(i => i.dataset.exid)
+          .filter(id => LIAISONS[id] === gid);
+        if (ids.length < 2) return;
+        ['fin-inp', 'loc-inp'].forEach(c => {
+          const inps = ids.map(id => document.querySelector('.' + c + '[data-exid="' + id + '"]')).filter(Boolean);
+          const src = inps.find(i => i.value.trim());
+          if (!src) return;
+          const v = src.value.trim().toUpperCase();
+          inps.forEach(i => {
+            if (i.value.trim().toUpperCase() !== v) {
+              i.value = v;
+              i.classList.add('has-val');
+            }
+          });
+        });
+      }
+      // Saisie sur un membre d un groupe lié : miroir vers les autres membres
+      function mirrorToGroup(inp, cls) {
+        const gid = LIAISONS[inp.dataset.exid];
+        if (!gid) return;
+        const v = inp.value.trim().toUpperCase();
+        document.querySelectorAll('.' + cls + '[data-exid]').forEach(o => {
+          if (o !== inp && LIAISONS[o.dataset.exid] === gid && o.value !== v) {
+            o.value = v;
+            o.classList.toggle('has-val', v.length > 0);
+          }
+        });
       }
       function renderLiaisons() {
         document.querySelectorAll('.lnk-btn').forEach(btn => {
@@ -975,6 +1015,7 @@ export async function GET(request) {
           inp.addEventListener('input', function() {
             this.value = this.value.toUpperCase();
             this.classList.toggle('has-val', this.value.length > 0);
+            mirrorToGroup(this, 'fin-inp');
             save();
           });
           // Tab/Shift-Tab navigate only between .fin-inp fields
@@ -997,6 +1038,7 @@ export async function GET(request) {
           inp.addEventListener('input', function() {
             this.value = this.value.toUpperCase();
             this.classList.toggle('has-val', this.value.length > 0);
+            mirrorToGroup(this, 'loc-inp');
             scheduleSync();
             updateFilledMarks();
             showStatus('Sauvegardé ✓');
