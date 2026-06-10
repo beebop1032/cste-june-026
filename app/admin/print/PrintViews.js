@@ -274,6 +274,73 @@ body {
 .empty p   { font-size: 14px; margin-bottom: 5px; }
 .empty small { font-size: 12px; color: var(--subtle); }
 
+/* ── PDF Page (A4 preview) ─────────────────────────────── */
+.pdf-wrap { background: var(--bg); padding: 24px 0 80px; }
+
+.pdf-page {
+  width: 210mm; min-height: 297mm;
+  margin: 0 auto 32px;
+  padding: 22mm 22mm 18mm;
+  background: #fff;
+  box-shadow: 0 4px 20px rgba(0,0,0,.13), 0 1px 4px rgba(0,0,0,.07);
+  display: flex; flex-direction: column; position: relative;
+}
+
+.pdf-school-hdr {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  border-bottom: 2.5px solid var(--navy); padding-bottom: 10px; margin-bottom: 20px;
+}
+.pdf-school-name { font-size: 15px; font-weight: 700; color: var(--navy); letter-spacing: -.3px; }
+.pdf-school-sub  { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.pdf-school-date { font-size: 10px; color: var(--muted); text-align: right; padding-top: 2px; }
+
+.pdf-subject { margin-bottom: 14px; }
+.pdf-subject-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); margin-bottom: 4px; }
+.pdf-subject-value { font-size: 24px; font-weight: 700; color: var(--navy); font-family: 'Playfair Display', Georgia, serif; line-height: 1.15; }
+.pdf-subject-meta  { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+.pdf-notice {
+  background: #fdfaf4; border-left: 3px solid var(--gold);
+  padding: 9px 13px; border-radius: 0 4px 4px 0;
+  font-size: 11.5px; color: var(--muted); margin-bottom: 18px; line-height: 1.65; font-style: italic;
+}
+
+.pdf-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+.pdf-table th {
+  padding: 7px 10px; text-align: left; background: var(--navy);
+  color: #fff; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.pdf-table td { padding: 8px 10px; border-bottom: 1px solid var(--border-light); font-size: 12px; vertical-align: top; }
+.pdf-table tbody tr:nth-child(even) td { background: #fafaf8; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+.pdf-students { display: flex; flex-wrap: wrap; gap: 3px 4px; margin-top: 5px; }
+.pdf-student-chip {
+  font-size: 9.5px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af;
+  border-radius: 3px; padding: 1px 5px;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+
+.pdf-signature {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  margin-top: 28px; padding-top: 16px;
+}
+.pdf-signature-block { font-size: 10.5px; color: var(--muted); }
+.pdf-signature-line {
+  width: 130px; border-bottom: 1px solid #aaa;
+  margin-top: 28px; font-size: 9px; color: var(--subtle); text-align: center; padding-top: 3px;
+}
+
+.pdf-footer {
+  margin-top: auto; padding-top: 14px;
+  border-top: 1px solid var(--border); font-size: 9.5px; color: var(--subtle); line-height: 1.5;
+}
+
+.pdf-count-badge {
+  background: var(--navy); color: #fff; border-radius: 20px;
+  padding: 3px 12px; font-size: 11px; font-weight: 600;
+}
+
 /* ── Print media ───────────────────────────────────────── */
 @media print {
   @page { size: A4 portrait; margin: 12mm 15mm; }
@@ -300,6 +367,14 @@ body {
 
   .prof-table th, .prof-table td { padding: 4px 10px; }
   .prof-table tbody tr:hover td  { background: none; }
+
+  /* PDF pages */
+  .pdf-wrap { background: none; padding: 0; }
+  .pdf-page {
+    width: 100%; min-height: 0; margin: 0; padding: 0;
+    box-shadow: none; break-after: page; page-break-after: always;
+  }
+  .pdf-page:last-child { break-after: avoid; page-break-after: avoid; }
 }
 `
 
@@ -587,12 +662,210 @@ function ViewEleve({ exams, partData, groupe, selectedEleve, onSelectEleve }) {
   )
 }
 
+// ── View: PDF par Classe ──────────────────────────────────────────────────────
+
+const PDF_DATE = new Date().toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })
+
+function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] }) {
+  const pages = useMemo(() => {
+    const allGroups = [...allGroupes, ...manuscriptGroupes]
+    return allGroups.map(groupe => {
+      const upper = groupe.toUpperCase()
+      const gExams = []
+      for (const ex of exams) {
+        const p = partData[ex.id]
+        if (!keep(p)) continue
+        if (ex.groupe.toUpperCase() !== upper) continue
+        gExams.push({ ex, p })
+      }
+      gExams.sort((a, b) => a.ex.jour.localeCompare(b.ex.jour) || a.ex.periode.localeCompare(b.ex.periode))
+      return { groupe, exams: gExams }
+    }).filter(g => g.exams.length > 0)
+  }, [exams, partData, allGroupes, manuscriptGroupes])
+
+  if (pages.length === 0) return (
+    <div className="empty"><p>Aucune donnée disponible.</p><small>En attente des soumissions.</small></div>
+  )
+
+  return (
+    <div className="pdf-wrap">
+      {pages.map(({ groupe, exams: gExams }) => (
+        <div key={groupe} className="pdf-page">
+          <div className="pdf-school-hdr">
+            <div>
+              <div className="pdf-school-name">Collège des Hayeffes</div>
+              <div className="pdf-school-sub">Session d'examens — Juin 2026</div>
+            </div>
+            <div className="pdf-school-date">{PDF_DATE}</div>
+          </div>
+
+          <div className="pdf-subject">
+            <div className="pdf-subject-label">Examens maintenus</div>
+            <div className="pdf-subject-value">Classe {groupe}</div>
+            <div className="pdf-subject-meta">{gExams.length} examen{gExams.length !== 1 ? 's' : ''} lors de la session de juin 2026</div>
+          </div>
+
+          <div className="pdf-notice">
+            Vous trouverez ci-dessous la liste des examens maintenus pour votre classe lors de la session de juin 2026.
+            Prière de vous présenter à l'heure indiquée. Toute absence doit être signalée préalablement.
+            <br /><em>[Texte à compléter — instructions spécifiques, remarques générales, etc.]</em>
+          </div>
+
+          <table className="pdf-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Pér.</th>
+                <th>Matière</th>
+                <th>Prof</th>
+                <th>Élèves concernés</th>
+              </tr>
+            </thead>
+            <tbody>
+              {gExams.map(({ ex, p }) => (
+                <tr key={ex.id}>
+                  <td style={{ whiteSpace: 'nowrap' }}>{fmtJour(ex.jour)}</td>
+                  <td style={{ fontWeight: 700 }}>{ex.periode}</td>
+                  <td style={{ fontWeight: 600 }}>{ex.matiere}</td>
+                  <td><span className="mono">{ex.profCode}</span></td>
+                  <td>
+                    {p.type === 'tous' ? (
+                      <span style={{ color: '#065f46', fontWeight: 600 }}>Toute la classe</span>
+                    ) : (
+                      <>
+                        <span style={{ color: '#1e40af', fontWeight: 600 }}>{p.nEleves} élève{p.nEleves !== 1 ? 's' : ''}</span>
+                        {p.eleves?.length > 0 && (
+                          <div className="pdf-students">
+                            {p.eleves.map((el, i) => (
+                              <span key={i} className="pdf-student-chip">{el.prenom} {el.nom}</span>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="pdf-footer">
+            Collège des Hayeffes — Session de juin 2026 — Document réservé à usage interne
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ── View: PDF par Élève ───────────────────────────────────────────────────────
+
+function ViewPdfEleves({ exams, partData, allGroupes, manuscriptGroupes = [] }) {
+  const pages = useMemo(() => {
+    const students = []
+    const studentMap = new Map()
+
+    const sortedExams = [...exams].sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode))
+
+    for (const ex of sortedExams) {
+      const p = partData[ex.id]
+      if (!p || p.type === 'annule' || p.type !== 'liste') continue
+      if (!p.eleves?.length) continue
+
+      for (const el of p.eleves) {
+        const classe = (el.classe?.trim().toUpperCase()) || ex.groupe.toUpperCase()
+        const key = `${(el.nom || '').toUpperCase()}||${(el.prenom || '').toLowerCase()}||${classe}`
+        if (!studentMap.has(key)) {
+          studentMap.set(key, students.length)
+          students.push({ nom: el.nom ?? '', prenom: el.prenom ?? '', classe, exams: [] })
+        }
+        students[studentMap.get(key)].exams.push(ex)
+      }
+    }
+
+    return students.sort((a, b) => a.classe.localeCompare(b.classe) || a.nom.localeCompare(b.nom) || a.prenom.localeCompare(b.prenom))
+  }, [exams, partData])
+
+  if (pages.length === 0) return (
+    <div className="empty">
+      <p>Aucune liste nominative disponible.</p>
+      <small>Les convocations individuelles nécessitent des examens avec liste nominative d'élèves.</small>
+    </div>
+  )
+
+  return (
+    <div className="pdf-wrap">
+      {pages.map((st, i) => (
+        <div key={i} className="pdf-page">
+          <div className="pdf-school-hdr">
+            <div>
+              <div className="pdf-school-name">Collège des Hayeffes</div>
+              <div className="pdf-school-sub">Convocation individuelle — Session de juin 2026</div>
+            </div>
+            <div className="pdf-school-date">{PDF_DATE}</div>
+          </div>
+
+          <div className="pdf-subject">
+            <div className="pdf-subject-label">Convocation individuelle</div>
+            <div className="pdf-subject-value">{st.prenom} {st.nom}</div>
+            <div className="pdf-subject-meta">Classe {st.classe} — {st.exams.length} examen{st.exams.length !== 1 ? 's' : ''} à repasser</div>
+          </div>
+
+          <div className="pdf-notice">
+            Cher(ère) élève, vous êtes convoqué(e) aux examens suivants lors de la session de juin 2026.
+            Prière de vous présenter ponctuellement, muni(e) de votre matériel scolaire habituel.
+            <br /><em>[Texte à compléter — consignes spécifiques, local, etc.]</em>
+          </div>
+
+          <table className="pdf-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Période</th>
+                <th>Matière</th>
+                <th>Professeur</th>
+              </tr>
+            </thead>
+            <tbody>
+              {st.exams.map(ex => (
+                <tr key={ex.id}>
+                  <td style={{ whiteSpace: 'nowrap' }}>{fmtJour(ex.jour)}</td>
+                  <td style={{ fontWeight: 700 }}>{ex.periode}</td>
+                  <td style={{ fontWeight: 600 }}>{ex.matiere}</td>
+                  <td><span className="mono">{ex.profCode}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="pdf-signature">
+            <div className="pdf-signature-block">
+              <div>La Direction</div>
+              <div className="pdf-signature-line">Signature</div>
+            </div>
+            <div className="pdf-signature-block" style={{ textAlign: 'right' }}>
+              <div>Lu et approuvé</div>
+              <div className="pdf-signature-line">Élève / Parent</div>
+            </div>
+          </div>
+
+          <div className="pdf-footer">
+            Collège des Hayeffes — Session de juin 2026 — Convocation individuelle confidentielle
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 const TABS = [
-  { id: 'classe', label: 'Par classe' },
-  { id: 'prof',   label: 'Par prof'   },
-  { id: 'eleve',  label: 'Par élève'  },
+  { id: 'classe',      label: 'Par classe'   },
+  { id: 'prof',        label: 'Par prof'     },
+  { id: 'eleve',       label: 'Par élève'    },
+  { id: 'pdf-classes', label: 'PDF — Classes' },
+  { id: 'pdf-eleves',  label: 'PDF — Élèves'  },
 ]
 
 const PrintIcon = () => (
@@ -691,6 +964,8 @@ export default function PrintViews({ exams, partData, allGroupes, allProfs, manu
     }
   }
 
+  const isPdfTab = tab === 'pdf-classes' || tab === 'pdf-eleves'
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: STYLES }} />
@@ -706,12 +981,14 @@ export default function PrintViews({ exams, partData, allGroupes, allProfs, manu
 
         <div className="ctrl-sep" />
 
-        {tab === 'prof' ? (
+        {!isPdfTab && tab === 'prof' && (
           <select className="ctrl-select" value={prof} onChange={e => setProf(e.target.value)}>
             <option value="">— Choisir un professeur —</option>
             {allProfs.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
-        ) : (
+        )}
+
+        {!isPdfTab && tab !== 'prof' && (
           <select className="ctrl-select" value={groupe} onChange={e => { setGroupe(e.target.value); setEleve('') }}>
             <option value="">— Choisir une classe —</option>
             <optgroup label="Classes officielles">
@@ -735,7 +1012,7 @@ export default function PrintViews({ exams, partData, allGroupes, allProfs, manu
           </select>
         )}
 
-        {currentKey && (
+        {!isPdfTab && currentKey && (
           <button className="print-btn" style={{ background: '#2d6a4f', marginLeft: 0 }} onClick={handleDownloadCSV}>
             <DownloadIcon /> CSV
           </button>
@@ -746,12 +1023,18 @@ export default function PrintViews({ exams, partData, allGroupes, allProfs, manu
         </button>
       </div>
 
-      {/* Content */}
-      <div className="content">
-        {tab === 'classe' && <ViewClasse exams={exams} partData={partData} groupe={groupe} manuscriptGroupes={manuscriptGroupes} />}
-        {tab === 'prof'   && <ViewProf   exams={exams} partData={partData} prof={prof}     />}
-        {tab === 'eleve'  && <ViewEleve  exams={exams} partData={partData} groupe={groupe} selectedEleve={eleve} onSelectEleve={setEleve} />}
-      </div>
+      {/* Content — classic views */}
+      {!isPdfTab && (
+        <div className="content">
+          {tab === 'classe' && <ViewClasse exams={exams} partData={partData} groupe={groupe} manuscriptGroupes={manuscriptGroupes} />}
+          {tab === 'prof'   && <ViewProf   exams={exams} partData={partData} prof={prof}     />}
+          {tab === 'eleve'  && <ViewEleve  exams={exams} partData={partData} groupe={groupe} selectedEleve={eleve} onSelectEleve={setEleve} />}
+        </div>
+      )}
+
+      {/* PDF views — full width, one A4 page per item */}
+      {tab === 'pdf-classes' && <ViewPdfClasses exams={exams} partData={partData} allGroupes={allGroupes} manuscriptGroupes={manuscriptGroupes} />}
+      {tab === 'pdf-eleves'  && <ViewPdfEleves  exams={exams} partData={partData} allGroupes={allGroupes} manuscriptGroupes={manuscriptGroupes} />}
     </>
   )
 }
