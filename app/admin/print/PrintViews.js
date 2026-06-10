@@ -714,7 +714,8 @@ const PDF_DATE = new Date().toLocaleDateString('fr-BE', { day: 'numeric', month:
 
 function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] }) {
   const pages = useMemo(() => {
-    const allGroups = [...allGroupes, ...manuscriptGroupes].filter(g => !/^[12]/i.test(g))
+    // Garder uniquement les classes officielles (chiffre + lettre) — exclut 1e/2e et groupes de langues (A4-1, N4-2…)
+    const allGroups = [...allGroupes, ...manuscriptGroupes].filter(g => /^\d[A-Z]/i.test(g) && !/^[12]/i.test(g))
     const sortedExams = [...exams].sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode))
 
     return allGroups.map(groupe => {
@@ -726,29 +727,12 @@ function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] })
       for (const ex of sortedExams) {
         const p = partData[ex.id]
         if (!keep(p)) continue
-        const isOfficialMatch = ex.groupe.toUpperCase() === upper
+        if (ex.groupe.toUpperCase() !== upper) continue
 
-        if (isOfficialMatch) {
-          if (p.type === 'tous') {
-            tousExams.push(ex)
-          } else if (p.type === 'liste' && p.eleves?.length) {
-            for (const el of p.eleves) {
-              const key = studentKey(el.nom, el.prenom)
-              if (!studentMap.has(key)) {
-                studentMap.set(key, { nom: el.nom ?? '', prenom: el.prenom ?? '', exams: [] })
-                studentExamSets.set(key, new Set())
-              }
-              if (!studentExamSets.get(key).has(ex.id)) {
-                studentExamSets.get(key).add(ex.id)
-                studentMap.get(key).exams.push(ex)
-              }
-            }
-          }
+        if (p.type === 'tous') {
+          tousExams.push(ex)
         } else if (p.type === 'liste' && p.eleves?.length) {
-          // Cross-class: élèves d'un autre groupe (ex: Lg1 oral, groupe A4-1)
-          // dont el.classe correspond à cette classe
           for (const el of p.eleves) {
-            if ((el.classe?.trim().toUpperCase().replace(/\s+/g, '')) !== upper) continue
             const key = studentKey(el.nom, el.prenom)
             if (!studentMap.has(key)) {
               studentMap.set(key, { nom: el.nom ?? '', prenom: el.prenom ?? '', exams: [] })
