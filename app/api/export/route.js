@@ -459,7 +459,7 @@ export async function GET(request) {
     function survFinalCells(ex) {
       const p = partMap.get(ex.id)
       if (!p || p.type === 'annule') {
-        return `<td class="ts-an"></td><td class="tfin-cell ts-an"></td>`
+        return `<td class="ts-an"></td><td class="tfin-cell ts-an"></td><td class="tloc-cell ts-an"></td>`
       }
       const slot        = `${ex.jour}|${ex.periode}`
       const wantsSurv   = survFlagMapF.get(ex.id) ?? false
@@ -470,7 +470,10 @@ export async function GET(request) {
       const cpBtn = conseilVal
         ? `<button class="cp-btn" data-v="${conseilVal}" onclick="cp(this)" title="${conseilVal}">← ${conseilVal}</button>`
         : ''
-      return `<td class="ts${survVal ? ' ts-ok' : ''}">${survVal}</td><td class="tfin-cell"><div class="tfin-wrap"><input class="fin-inp" type="text" list="profs-dl" data-conseil="${conseilVal}" data-slot="${slot}" placeholder="${conseilVal}" autocomplete="off" />${cpBtn}</div></td>`
+      // 1re/2e : examens inchangés → local pré-encodé avec l'ancien local
+      const preLocal = (ex.niveau === '1re' || ex.niveau === '2e') ? (ex.local ?? '') : ''
+      const locInput = `<input class="loc-inp${preLocal ? ' has-val' : ''}" type="text" data-exid="${ex.id}" data-default="${preLocal}" value="${preLocal}" placeholder="${ex.local ?? ''}" autocomplete="off" />`
+      return `<td class="ts${survVal ? ' ts-ok' : ''}">${survVal}</td><td class="tfin-cell"><div class="tfin-wrap"><input class="fin-inp" type="text" list="profs-dl" data-conseil="${conseilVal}" data-slot="${slot}" data-exid="${ex.id}" placeholder="${conseilVal}" autocomplete="off" />${cpBtn}</div></td><td class="tloc-cell">${locInput}</td>`
     }
 
     function partBadgeF(ex) {
@@ -543,6 +546,16 @@ export async function GET(request) {
       }
       .fin-inp:focus { outline:none; border-color:#3b82f6; box-shadow:0 0 0 2px rgba(59,130,246,.25) }
       .fin-inp.has-val { background:#f0fdf4 !important; color:#166534 !important; font-weight:700; border-color:#86efac }
+      /* ── LOC. editable col ── */
+      .tloc-cell { padding:1px 2px !important; min-width:52px }
+      .loc-inp {
+        width:46px; border:1px solid #d1d5db; border-radius:3px;
+        padding:2px 4px; font-family:'JetBrains Mono',monospace; font-size:9px;
+        color:#374151; background:#fff; text-align:left; text-transform:uppercase;
+        transition: background .15s, color .15s, border-color .1s;
+      }
+      .loc-inp:focus { outline:none; border-color:#8b5cf6; box-shadow:0 0 0 2px rgba(139,92,246,.25) }
+      .loc-inp.has-val { background:#f5f3ff !important; color:#5b21b6 !important; font-weight:700; border-color:#c4b5fd }
       .cp-btn {
         flex-shrink:0; border:none; background:#fef9c3; color:#713f12;
         font-size:8px; cursor:pointer; padding:2px 5px; border-radius:3px;
@@ -611,12 +624,13 @@ export async function GET(request) {
         .ts { font-size:6.5px; min-width:16px }
         .tfin-cell { min-width:52px }
         .cp-btn { display:none }
-        .fin-inp {
+        .fin-inp, .loc-inp {
           border:none !important; background:transparent !important;
           width:auto !important; font-size:7px; padding:0 !important;
           color:#166534; font-weight:700; text-transform:uppercase;
         }
-        .fin-inp::placeholder { color:#9ca3af; font-style:italic; font-weight:400 }
+        .loc-inp { color:#5b21b6 }
+        .fin-inp::placeholder, .loc-inp::placeholder { color:#9ca3af; font-style:italic; font-weight:400 }
       }
     `
 
@@ -643,14 +657,46 @@ export async function GET(request) {
       function resetAll() {
         if (!confirm('Effacer toutes les valeurs saisies ?')) return;
         document.querySelectorAll('.fin-inp').forEach(inp => { inp.value = ''; inp.classList.remove('has-val'); });
+        // Locaux : retour à la valeur pré-encodée (1re/2e) ou vide
+        document.querySelectorAll('.loc-inp').forEach(inp => {
+          inp.value = inp.dataset.default || '';
+          inp.classList.toggle('has-val', inp.value.length > 0);
+        });
         localStorage.removeItem('tf-surv-2026');
+        scheduleSync();
         showStatus('Réinitialisé');
       }
       function save() {
         const vals = [...document.querySelectorAll('.fin-inp')].map(i => i.value);
         localStorage.setItem('tf-surv-2026', JSON.stringify(vals));
         showStatus('Sauvegardé ✓');
+        scheduleSync();
         updateRecap();
+      }
+      // Sync serveur (Blob) : surveillants + locaux par examen — utilisé par les vues imprimables
+      let syncT = null;
+      function scheduleSync() {
+        clearTimeout(syncT);
+        syncT = setTimeout(syncServer, 800);
+      }
+      async function syncServer() {
+        const surveillants = {}, locaux = {};
+        document.querySelectorAll('.fin-inp').forEach(i => {
+          if (i.value.trim() && i.dataset.exid) surveillants[i.dataset.exid] = i.value.trim().toUpperCase();
+        });
+        document.querySelectorAll('.loc-inp').forEach(i => {
+          if (i.value.trim() && i.dataset.exid) locaux[i.dataset.exid] = i.value.trim().toUpperCase();
+        });
+        try {
+          const r = await fetch('/api/final', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ surveillants, locaux }),
+          });
+          showStatus(r.ok ? 'Synchronisé ☁' : 'Erreur de sync serveur');
+        } catch (e) {
+          showStatus('Hors-ligne — sauvé en local');
+        }
       }
       function showStatus(msg) {
         const el = document.getElementById('save-status');
@@ -781,6 +827,14 @@ export async function GET(request) {
             }
           });
         });
+        document.querySelectorAll('.loc-inp').forEach(inp => {
+          inp.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+            this.classList.toggle('has-val', this.value.length > 0);
+            scheduleSync();
+            showStatus('Sauvegardé ✓');
+          });
+        });
         try {
           const saved = localStorage.getItem('tf-surv-2026');
           if (saved) {
@@ -791,6 +845,19 @@ export async function GET(request) {
             showStatus('Chargé ✓');
           }
         } catch(e) {}
+        // Données serveur (clé = id d'examen) : locaux prioritaires, surveillants en complément
+        fetch('/api/final').then(r => r.ok ? r.json() : null).then(data => {
+          if (!data) return;
+          document.querySelectorAll('.loc-inp').forEach(inp => {
+            const v = (data.locaux || {})[inp.dataset.exid];
+            if (v) { inp.value = v; inp.classList.add('has-val'); }
+          });
+          document.querySelectorAll('.fin-inp').forEach(inp => {
+            const v = (data.surveillants || {})[inp.dataset.exid];
+            if (v && !inp.value) { inp.value = v; inp.classList.add('has-val'); }
+          });
+          updateRecap();
+        }).catch(() => {});
         updateRecap();
       });
     `
@@ -856,11 +923,11 @@ ${datalistHtml}
           htmlF += `<table><thead>
 <tr class="niv-row"><th class="tc"></th>`
           halfNiveaux.forEach((_, i) => {
-            htmlF += `<th colspan="6" style="background:${halfColors[i]}">${halfLabels[i]}</th>`
+            htmlF += `<th colspan="7" style="background:${halfColors[i]}">${halfLabels[i]}</th>`
           })
           htmlF += `</tr><tr class="col-row"><th class="tc">Pér.</th>`
           halfNiveaux.forEach(() => {
-            htmlF += `<th>Mat.</th><th>Cl.</th><th>Prof</th><th>Él.</th><th class="surv-hdr">SURV</th><th class="surv-hdr">Fin.</th>`
+            htmlF += `<th>Mat.</th><th>Cl.</th><th>Prof</th><th>Él.</th><th class="surv-hdr">SURV</th><th class="surv-hdr">Fin.</th><th class="surv-hdr">Loc.</th>`
           })
           htmlF += `</tr></thead><tbody>`
 
@@ -869,7 +936,7 @@ ${datalistHtml}
             halfNiveaux.forEach(n => {
               const ex = byNiveau[n][i]
               if (!ex) {
-                htmlF += `<td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td>`
+                htmlF += `<td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td>`
                 return
               }
               htmlF += `<td class="tm">${ex.matiere}</td><td class="tg">${ex.groupe}</td><td class="tp">${ex.profCode}</td>${partBadgeF(ex)}${survFinalCells(ex)}`

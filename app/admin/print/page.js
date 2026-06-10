@@ -1,12 +1,19 @@
 import { requireAdmin } from '@/lib/auth'
 import { getAllResponses, getLocksData } from '@/actions/admin'
+import { read } from '@/lib/storage'
 import exams from '@/lib/exams.json'
 import PrintViews from './PrintViews'
 
 export default async function PrintPage() {
   await requireAdmin()
 
-  const [responses, locksData] = await Promise.all([getAllResponses(), getLocksData()])
+  const [responses, locksData, finalData] = await Promise.all([
+    getAllResponses(),
+    getLocksData(),
+    read('final-locaux.json'),
+  ])
+  // Locaux saisis dans le Tableau Final — priorité sur le local d'origine de l'horaire
+  const locauxFinal = finalData?.locaux ?? {}
   const groupeStatuts = locksData.groupeStatuts ?? {}
   const examStatuts   = locksData.examStatuts   ?? {}
 
@@ -81,7 +88,7 @@ export default async function PrintPage() {
           </nav>
         </div>
       </div>
-      <PrintViews exams={exams} partData={partData} allGroupes={allGroupes} allProfs={allProfs} manuscriptGroupes={manuscriptGroupes} />
+      <PrintViews exams={exams} partData={partData} allGroupes={allGroupes} allProfs={allProfs} manuscriptGroupes={manuscriptGroupes} locaux={locauxFinal} />
     </>
   )
 }

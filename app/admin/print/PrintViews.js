@@ -348,7 +348,7 @@ body {
   -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
 .pdf-exam-line {
-  display: grid; grid-template-columns: 90px 40px 1fr 36px;
+  display: grid; grid-template-columns: 90px 40px 1fr 44px 36px;
   gap: 3px; padding: 3px 8px; font-size: 9.5px;
   border-bottom: 1px solid var(--border-light);
 }
@@ -356,6 +356,7 @@ body {
 .pdf-exam-date { color: var(--muted); white-space: nowrap; }
 .pdf-exam-per  { font-weight: 700; color: var(--navy-light); }
 .pdf-exam-mat  { font-weight: 600; }
+.pdf-exam-loc  { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; color: var(--navy-light); white-space: nowrap; }
 .pdf-exam-prof { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; color: var(--muted); text-align: right; }
 
 @media print {
@@ -435,6 +436,11 @@ body {
 
 function keep(p) { return p && p.type !== 'annule' }
 
+// Local effectif : celui saisi dans le Tableau Final prime sur celui de l'horaire d'origine
+function makeLocalOf(locaux) {
+  return ex => (locaux && locaux[ex.id]) || ex.local || ''
+}
+
 // Normalise un nom pour servir de clé de déduplication (accents, tirets, casse)
 function normKey(s) {
   return (s || '').trim()
@@ -451,7 +457,8 @@ function studentKey(nom, prenom) {
 
 // ── View: Par Classe ──────────────────────────────────────────────────────────
 
-function ViewClasse({ exams, partData, groupe, manuscriptGroupes = [] }) {
+function ViewClasse({ exams, partData, groupe, manuscriptGroupes = [], locaux }) {
+  const localOf = makeLocalOf(locaux)
   // Build entries: official groupe match (case-insensitive) + cross-match via el.classe
   const gEntries = useMemo(() => {
     if (!groupe) return []
@@ -522,6 +529,7 @@ function ViewClasse({ exams, partData, groupe, manuscriptGroupes = [] }) {
                   <div className="exam-title">{ex.matiere}</div>
                   <div className="exam-meta">
                     <span>Prof <span className="mono">{ex.profCode}</span></span>
+                    {localOf(ex) && <span>Local <span className="mono">{localOf(ex)}</span></span>}
                     {fromOtherGroupe && <span className="mono" style={{ color: 'var(--gold)' }}>→ {fromOtherGroupe}</span>}
                     {p?.surveilleParTitulaire && <span className="surv-tag">Surveillé par le titulaire</span>}
                   </div>
@@ -619,7 +627,8 @@ function ViewProf({ exams, partData, prof }) {
 
 // ── View: Par Élève ───────────────────────────────────────────────────────────
 
-function ViewEleve({ exams, partData, groupe, selectedEleve, onSelectEleve }) {
+function ViewEleve({ exams, partData, groupe, selectedEleve, onSelectEleve, locaux }) {
+  const localOf = makeLocalOf(locaux)
   const allStudents = useMemo(() => {
     if (!groupe) return []
     const upper = groupe.toUpperCase()
@@ -716,6 +725,7 @@ function ViewEleve({ exams, partData, groupe, selectedEleve, onSelectEleve }) {
                       <div key={ex.id} className="conv-exam">
                         <span className="cdate">{fmtJourCourt(ex.jour)} <strong>{ex.periode}</strong></span>
                         <span className="cmat">{ex.matiere}</span>
+                        {localOf(ex) && <span className="croom">{localOf(ex)}</span>}
                       </div>
                     ))}
                   </div>
@@ -733,7 +743,8 @@ function ViewEleve({ exams, partData, groupe, selectedEleve, onSelectEleve }) {
 
 const PDF_DATE = new Date().toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })
 
-function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] }) {
+function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [], locaux }) {
+  const localOf = makeLocalOf(locaux)
   const pages = useMemo(() => {
     // Garder uniquement les classes officielles (chiffre + une lettre, rien d'autre) —
     // exclut 1e/2e et tous les groupes de langues (A4-1, N4-2, 3J-A4, 6J-N4…)
@@ -833,6 +844,7 @@ function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] })
                         {ex.matiere}
                         {ex.fromGroupe && <span style={{ fontSize: 8.5, fontWeight: 400, color: 'var(--muted)' }}> ({ex.fromGroupe})</span>}
                       </span>
+                      <span className="pdf-exam-loc">{localOf(ex)}</span>
                       <span className="pdf-exam-prof">{ex.profCode}</span>
                     </div>
                   ))}
@@ -844,13 +856,14 @@ function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] })
           {/* Fallback: only tous-type exams, no named students */}
           {tousOnly.length > 0 && (
             <table className="pdf-table" style={{ marginTop: 12 }}>
-              <thead><tr><th>Date</th><th>Pér.</th><th>Matière</th><th>Prof</th></tr></thead>
+              <thead><tr><th>Date</th><th>Pér.</th><th>Matière</th><th>Local</th><th>Prof</th></tr></thead>
               <tbody>
                 {tousOnly.map(ex => (
                   <tr key={ex.id}>
                     <td style={{ whiteSpace: 'nowrap' }}>{fmtJour(ex.jour)}</td>
                     <td style={{ fontWeight: 700 }}>{ex.periode}</td>
                     <td style={{ fontWeight: 600 }}>{ex.matiere}</td>
+                    <td><span className="mono">{localOf(ex) || '—'}</span></td>
                     <td><span className="mono">{ex.profCode}</span></td>
                   </tr>
                 ))}
@@ -869,7 +882,8 @@ function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] })
 
 // ── View: PDF par Élève ───────────────────────────────────────────────────────
 
-function ViewPdfEleves({ exams, partData, allGroupes, manuscriptGroupes = [] }) {
+function ViewPdfEleves({ exams, partData, allGroupes, manuscriptGroupes = [], locaux }) {
+  const localOf = makeLocalOf(locaux)
   const pages = useMemo(() => {
     const students = []
     const studentMap = new Map()
@@ -960,6 +974,7 @@ function ViewPdfEleves({ exams, partData, allGroupes, manuscriptGroupes = [] }) 
                 <th>Date</th>
                 <th>Période</th>
                 <th>Matière</th>
+                <th>Local</th>
                 <th>Professeur</th>
               </tr>
             </thead>
@@ -969,6 +984,7 @@ function ViewPdfEleves({ exams, partData, allGroupes, manuscriptGroupes = [] }) 
                   <td style={{ whiteSpace: 'nowrap' }}>{fmtJour(ex.jour)}</td>
                   <td style={{ fontWeight: 700 }}>{ex.periode}</td>
                   <td style={{ fontWeight: 600 }}>{ex.matiere}</td>
+                  <td><span className="mono">{localOf(ex) || '—'}</span></td>
                   <td><span className="mono">{ex.profCode}</span></td>
                 </tr>
               ))}
@@ -986,12 +1002,13 @@ function ViewPdfEleves({ exams, partData, allGroupes, manuscriptGroupes = [] }) 
 
 // ── View: PDF Surveillances ───────────────────────────────────────────────────
 
-function ViewPdfSurveillances({ exams, partData, jourFilter }) {
+function ViewPdfSurveillances({ exams, partData, jourFilter, locaux }) {
+  const localOf = makeLocalOf(locaux)
   const pages = useMemo(() => {
     return exams
       .filter(ex => keep(partData[ex.id]))
       .filter(ex => !jourFilter || ex.jour === jourFilter)
-      .sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode) || (a.local || '').localeCompare(b.local || ''))
+      .sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode) || localOf(a).localeCompare(localOf(b)))
       .map(ex => {
         const p = partData[ex.id]
         const eleves = p.type === 'liste'
@@ -999,7 +1016,7 @@ function ViewPdfSurveillances({ exams, partData, jourFilter }) {
           : []
         return { ex, p, eleves }
       })
-  }, [exams, partData, jourFilter])
+  }, [exams, partData, jourFilter, locaux])
 
   if (pages.length === 0) return (
     <div className="empty">
@@ -1047,7 +1064,7 @@ function ViewPdfSurveillances({ exams, partData, jourFilter }) {
             </div>
             <div className="pdf-surv-meta-item">
               <div className="lbl">Local</div>
-              <div className="val">{ex.local || '—'}</div>
+              <div className="val">{localOf(ex) || '—'}</div>
             </div>
             <div className="pdf-surv-meta-item">
               <div className="lbl">Professeur</div>
@@ -1098,7 +1115,7 @@ function ViewPdfSurveillances({ exams, partData, jourFilter }) {
           </div>
 
           <div className="pdf-footer">
-            Collège des Hayeffes — Session de juin 2026 — Fiche de surveillance ({fmtJourCourt(ex.jour)} · {ex.periode} · {ex.local || '—'})
+            Collège des Hayeffes — Session de juin 2026 — Fiche de surveillance ({fmtJourCourt(ex.jour)} · {ex.periode} · {localOf(ex) || '—'})
           </div>
         </div>
       ))}
@@ -1168,7 +1185,7 @@ function buildCsvRows(exams, partData, filterFn) {
   return rows
 }
 
-export default function PrintViews({ exams, partData, allGroupes, allProfs, manuscriptGroupes = [] }) {
+export default function PrintViews({ exams, partData, allGroupes, allProfs, manuscriptGroupes = [], locaux = {} }) {
   const [tab,     setTab]     = useState('classe')
   const [groupe,  setGroupe]  = useState('')
   const [prof,    setProf]    = useState('')
@@ -1285,16 +1302,16 @@ export default function PrintViews({ exams, partData, allGroupes, allProfs, manu
       {/* Content — classic views */}
       {!isPdfTab && (
         <div className="content">
-          {tab === 'classe' && <ViewClasse exams={exams} partData={partData} groupe={groupe} manuscriptGroupes={manuscriptGroupes} />}
+          {tab === 'classe' && <ViewClasse exams={exams} partData={partData} groupe={groupe} manuscriptGroupes={manuscriptGroupes} locaux={locaux} />}
           {tab === 'prof'   && <ViewProf   exams={exams} partData={partData} prof={prof}     />}
-          {tab === 'eleve'  && <ViewEleve  exams={exams} partData={partData} groupe={groupe} selectedEleve={eleve} onSelectEleve={setEleve} />}
+          {tab === 'eleve'  && <ViewEleve  exams={exams} partData={partData} groupe={groupe} selectedEleve={eleve} onSelectEleve={setEleve} locaux={locaux} />}
         </div>
       )}
 
       {/* PDF views — full width, one A4 page per item */}
-      {tab === 'pdf-classes' && <ViewPdfClasses exams={exams} partData={partData} allGroupes={allGroupes} manuscriptGroupes={manuscriptGroupes} />}
-      {tab === 'pdf-eleves'  && <ViewPdfEleves  exams={exams} partData={partData} allGroupes={allGroupes} manuscriptGroupes={manuscriptGroupes} />}
-      {tab === 'pdf-surv'    && <ViewPdfSurveillances exams={exams} partData={partData} jourFilter={jourPdf} />}
+      {tab === 'pdf-classes' && <ViewPdfClasses exams={exams} partData={partData} allGroupes={allGroupes} manuscriptGroupes={manuscriptGroupes} locaux={locaux} />}
+      {tab === 'pdf-eleves'  && <ViewPdfEleves  exams={exams} partData={partData} allGroupes={allGroupes} manuscriptGroupes={manuscriptGroupes} locaux={locaux} />}
+      {tab === 'pdf-surv'    && <ViewPdfSurveillances exams={exams} partData={partData} jourFilter={jourPdf} locaux={locaux} />}
     </>
   )
 }
