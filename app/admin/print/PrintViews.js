@@ -422,6 +422,11 @@ function normKey(s) {
     .trim()
     .toUpperCase()
 }
+// Clé triée : insensible à l'inversion nom/prénom (ex: "Gloria Alexis" = "Alexis Gloria")
+function studentKey(nom, prenom) {
+  const a = normKey(nom), b = normKey(prenom)
+  return a <= b ? `${a}||${b}` : `${b}||${a}`
+}
 
 // ── View: Par Classe ──────────────────────────────────────────────────────────
 
@@ -727,7 +732,7 @@ function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] })
           tousExams.push(ex)
         } else if (p.type === 'liste' && p.eleves?.length) {
           for (const el of p.eleves) {
-            const key = `${normKey(el.nom)}||${normKey(el.prenom)}`
+            const key = studentKey(el.nom, el.prenom)
             if (!studentMap.has(key)) {
               studentMap.set(key, { nom: el.nom ?? '', prenom: el.prenom ?? '', exams: [] })
               studentExamSets.set(key, new Set())
@@ -742,7 +747,7 @@ function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] })
 
       // Add tous exams to each named student
       const students = [...studentMap.values()].map(st => {
-        const key = `${normKey(st.nom)}||${normKey(st.prenom)}`
+        const key = studentKey(st.nom, st.prenom)
         const set = studentExamSets.get(key)
         const extra = tousExams.filter(ex => !set?.has(ex.id))
         return { ...st, exams: [...st.exams, ...extra].sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode)) }
@@ -840,7 +845,7 @@ function ViewPdfEleves({ exams, partData, allGroupes, manuscriptGroupes = [] }) 
       if (!p || p.type !== 'liste' || !p.eleves?.length) continue
       for (const el of p.eleves) {
         const classe = (el.classe?.trim().toUpperCase().replace(/\s+/g, '')) || ex.groupe.toUpperCase()
-        const key = `${normKey(el.nom)}||${normKey(el.prenom)}||${classe}`
+        const key = `${studentKey(el.nom, el.prenom)}||${classe}`
         if (!studentMap.has(key)) {
           studentMap.set(key, students.length)
           studentExamSets.set(key, new Set())
