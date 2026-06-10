@@ -700,9 +700,11 @@ function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] })
           </div>
 
           <div className="pdf-subject">
-            <div className="pdf-subject-label">Examens maintenus</div>
+            <div className="pdf-subject-label">Examens maintenus — Session de juin 2026</div>
             <div className="pdf-subject-value">Classe {groupe}</div>
-            <div className="pdf-subject-meta">{gExams.length} examen{gExams.length !== 1 ? 's' : ''} lors de la session de juin 2026</div>
+            <div style={{ marginTop: 8 }}>
+              <span className="pdf-count-badge">{gExams.length} examen{gExams.length !== 1 ? 's' : ''}</span>
+            </div>
           </div>
 
           <div className="pdf-notice">
@@ -764,23 +766,45 @@ function ViewPdfEleves({ exams, partData, allGroupes, manuscriptGroupes = [] }) 
   const pages = useMemo(() => {
     const students = []
     const studentMap = new Map()
+    const studentExamSets = new Map()
 
     const sortedExams = [...exams].sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode))
 
+    // Pass 1: build students from liste exams
     for (const ex of sortedExams) {
       const p = partData[ex.id]
-      if (!p || p.type === 'annule' || p.type !== 'liste') continue
-      if (!p.eleves?.length) continue
-
+      if (!p || p.type !== 'liste' || !p.eleves?.length) continue
       for (const el of p.eleves) {
         const classe = (el.classe?.trim().toUpperCase()) || ex.groupe.toUpperCase()
         const key = `${(el.nom || '').toUpperCase()}||${(el.prenom || '').toLowerCase()}||${classe}`
         if (!studentMap.has(key)) {
           studentMap.set(key, students.length)
+          studentExamSets.set(key, new Set())
           students.push({ nom: el.nom ?? '', prenom: el.prenom ?? '', classe, exams: [] })
         }
-        students[studentMap.get(key)].exams.push(ex)
+        const idx = studentMap.get(key)
+        if (!studentExamSets.get(key).has(ex.id)) {
+          studentExamSets.get(key).add(ex.id)
+          students[idx].exams.push({ ex, isTous: false })
+        }
       }
+    }
+
+    // Pass 2: add 'tous' exams for each student's class
+    for (const ex of sortedExams) {
+      const p = partData[ex.id]
+      if (!p || p.type !== 'tous') continue
+      const groupeUpper = ex.groupe.toUpperCase()
+      for (const [key, idx] of studentMap.entries()) {
+        if (students[idx].classe === groupeUpper && !studentExamSets.get(key).has(ex.id)) {
+          studentExamSets.get(key).add(ex.id)
+          students[idx].exams.push({ ex, isTous: true })
+        }
+      }
+    }
+
+    for (const st of students) {
+      st.exams.sort((a, b) => a.ex.jour.localeCompare(b.ex.jour) || a.ex.periode.localeCompare(b.ex.periode))
     }
 
     return students.sort((a, b) => a.classe.localeCompare(b.classe) || a.nom.localeCompare(b.nom) || a.prenom.localeCompare(b.prenom))
@@ -808,7 +832,10 @@ function ViewPdfEleves({ exams, partData, allGroupes, manuscriptGroupes = [] }) 
           <div className="pdf-subject">
             <div className="pdf-subject-label">Convocation individuelle</div>
             <div className="pdf-subject-value">{st.prenom} {st.nom}</div>
-            <div className="pdf-subject-meta">Classe {st.classe} — {st.exams.length} examen{st.exams.length !== 1 ? 's' : ''} à repasser</div>
+            <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span className="pdf-count-badge">Classe {st.classe}</span>
+              <span style={{ fontSize: 11, color: 'var(--muted)' }}>{st.exams.length} examen{st.exams.length !== 1 ? 's' : ''}</span>
+            </div>
           </div>
 
           <div className="pdf-notice">
@@ -824,33 +851,26 @@ function ViewPdfEleves({ exams, partData, allGroupes, manuscriptGroupes = [] }) 
                 <th>Période</th>
                 <th>Matière</th>
                 <th>Professeur</th>
+                <th>Participation</th>
               </tr>
             </thead>
             <tbody>
-              {st.exams.map(ex => (
+              {st.exams.map(({ ex, isTous }) => (
                 <tr key={ex.id}>
                   <td style={{ whiteSpace: 'nowrap' }}>{fmtJour(ex.jour)}</td>
                   <td style={{ fontWeight: 700 }}>{ex.periode}</td>
                   <td style={{ fontWeight: 600 }}>{ex.matiere}</td>
                   <td><span className="mono">{ex.profCode}</span></td>
+                  <td style={{ fontSize: 10.5, color: isTous ? '#065f46' : '#1e40af' }}>
+                    {isTous ? 'Toute la classe' : 'Liste nominative'}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
 
-          <div className="pdf-signature">
-            <div className="pdf-signature-block">
-              <div>La Direction</div>
-              <div className="pdf-signature-line">Signature</div>
-            </div>
-            <div className="pdf-signature-block" style={{ textAlign: 'right' }}>
-              <div>Lu et approuvé</div>
-              <div className="pdf-signature-line">Élève / Parent</div>
-            </div>
-          </div>
-
           <div className="pdf-footer">
-            Collège des Hayeffes — Session de juin 2026 — Convocation individuelle confidentielle
+            Collège des Hayeffes — Session de juin 2026 — Convocation individuelle
           </div>
         </div>
       ))}
