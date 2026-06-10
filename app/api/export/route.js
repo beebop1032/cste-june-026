@@ -20,6 +20,11 @@ export async function GET(request) {
   const allFiles     = await listFiles('prof-')
   const currentFiles = allFiles.filter(f => /^prof-[^.]+\.json$/.test(f) && !/-v\d+\.json$/.test(f))
 
+  // Lecture unique et parallèle de tous les fichiers profs : les lectures Blob
+  // séquentielles (2 appels réseau chacune, répétées par certains formats)
+  // rendaient les pages très lentes à charger
+  const profDatas = (await Promise.all(currentFiles.map(f => read(f)))).filter(Boolean)
+
   // ── Shared helpers for briefing + print ────────────────────────────────────
 
   function labelJour(dateStr) {
@@ -39,9 +44,7 @@ export async function GET(request) {
       if (s === 'annule')   map.set(ex.id, { label: 'Annulé', type: 'annule' })
       else if (s === 'maintenu') map.set(ex.id, { label: 'Tous', type: 'tous' })
     }
-    for (const f of currentFiles) {
-      const prof = await read(f)
-      if (!prof) continue
+    for (const prof of profDatas) {
       for (const ex of prof.examens ?? []) {
         if (map.has(ex.id)) continue
         const statut = ex.statut ?? (ex.maintenu === true ? 'maintenu' : null)
@@ -151,9 +154,7 @@ export async function GET(request) {
     // ── Surv data ────────────────────────────────────────────────────────────
     // survFlagMap: examId → true if prof requested to supervise
     const survFlagMap = new Map()
-    for (const f of currentFiles) {
-      const prof = await read(f)
-      if (!prof) continue
+    for (const prof of profDatas) {
       for (const ex of prof.examens ?? []) {
         if (ex.surveilleParTitulaire) survFlagMap.set(ex.id, true)
       }
@@ -424,9 +425,7 @@ export async function GET(request) {
 
     // Same surv logic as format=print
     const survFlagMapF = new Map()
-    for (const f of currentFiles) {
-      const prof = await read(f)
-      if (!prof) continue
+    for (const prof of profDatas) {
       for (const ex of prof.examens ?? []) {
         if (ex.surveilleParTitulaire) survFlagMapF.set(ex.id, true)
       }
@@ -1027,9 +1026,7 @@ ${datalistHtml}
     // Build fusion groups: same prof, same jour, liste nominative ≤ 10 élèves
     const FEW_TH = 10
     const fusionCandidates = []
-    for (const f of currentFiles) {
-      const prof = await read(f)
-      if (!prof) continue
+    for (const prof of profDatas) {
       for (const ex of prof.examens ?? []) {
         const meta = exams.find(e => e.id === ex.id)
         if (!meta) continue
@@ -1299,8 +1296,7 @@ ${datalistHtml}
     const ALL_PROF_CODES  = [...new Set(exams.map(e => e.profCode))].sort()
 
     const allResponses = {}
-    for (const f of currentFiles) {
-      const prof = await read(f)
+    for (const prof of profDatas) {
       if (!prof?.profCode) continue
       allResponses[prof.profCode] = prof
     }
@@ -1377,9 +1373,7 @@ ${datalistHtml}
   }
 
   // Prof-submitted data for open groupes
-  for (const f of currentFiles) {
-    const prof = await read(f)
-    if (!prof) continue
+  for (const prof of profDatas) {
     if (profFilter && prof.profCode !== profFilter) continue
 
     for (const ex of prof.examens ?? []) {
