@@ -656,7 +656,6 @@ export async function GET(request) {
         const el = document.getElementById('save-status');
         if (el) { el.textContent = msg; clearTimeout(el._t); el._t = setTimeout(() => el.textContent = '', 2000); }
       }
-      const SURV_PTS = 16;          // points de charge par heure de surveillance
       const HEURES_PAR_PLAGE = 2;   // répartitions.xlsx compte en heures : 1 plage (P1/P2) = 2h
       function getCounts() {
         const c = {};
@@ -666,14 +665,14 @@ export async function GET(request) {
         });
         return c;
       }
-      // Score = copies + heures de surveillance × SURV_PTS
-      // Avant : répartitions initiales (c + s×16) · Après : copies recalculées + plages Fin. ×2h×16
+      // Score = copies + heures de surveillance
+      // Avant : répartitions initiales · Après : copies recalculées + plages Fin. ×2h
       function scoreAvant(prof) {
         const d = REP_DATA[prof];
-        return d.c + d.s * SURV_PTS;
+        return d.c + d.s;
       }
       function scoreApres(prof, nouv) {
-        return (COPIES_PER_PROF[prof] || 0) + nouv * HEURES_PAR_PLAGE * SURV_PTS;
+        return (COPIES_PER_PROF[prof] || 0) + nouv * HEURES_PAR_PLAGE;
       }
       function updateRecap() {
         const survCounts = getCounts();
@@ -891,7 +890,7 @@ ${datalistHtml}
     <h2 class="recap-title">Récap charge de travail</h2>
     <p class="recap-sub">Trié par Score (équité après/avant) · mis à jour en temps réel</p>
     <p class="recap-legend">
-      Score = copies + 16 pts/h de surveillance (1 plage = 2h)<br>
+      Score = copies + heures de surveillance (1 plage = 2h)<br>
       Avant = répartitions initiales · Après = copies recalculées + surv. attribuées (Fin.)<br>
       % = Après/Avant — équité : un % similaire pour tous
       (<span style="color:#166534">■</span> proche de la moyenne, <span style="color:#b45309">■</span>/<span style="color:#991b1b">■</span> s'en écarte)
@@ -901,8 +900,8 @@ ${datalistHtml}
         <tr>
           <th>Prof</th>
           <th title="Plages de surveillance attribuées (Fin.) / total des plages à surveiller">Surv.</th>
-          <th title="Score avant = copies initiales + heures surv prévues ×16 (répartitions.xlsx)">Avant</th>
-          <th title="Score après = copies recalculées + plages attribuées ×2h ×16">Après</th>
+          <th title="Score avant = copies initiales + heures surv prévues (répartitions.xlsx)">Avant</th>
+          <th title="Score après = copies recalculées + plages attribuées ×2h">Après</th>
           <th title="Équité = Score après / Score avant">%</th>
         </tr>
       </thead>
