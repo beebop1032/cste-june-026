@@ -22,6 +22,7 @@ function levenshtein(a, b) {
 function normName(s) {
   return (s || '').toLowerCase().trim()
     .normalize('NFD').replace(/\p{Diacritic}/gu, '')
+    .replace(/[-]/g, ' ')
     .replace(/\s+/g, ' ')
 }
 

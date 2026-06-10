@@ -670,9 +670,8 @@ export async function GET(request) {
         if (!tbody) return;
         tbody.innerHTML = allProfs.map(prof => {
           const d      = REP_DATA[prof];
-          const copies = COPIES_PER_PROF[prof] || 0;
           const nouv   = survCounts[prof] || 0;
-          const score  = copies + nouv * SURV_PTS;
+          const score  = d.c + nouv * SURV_PTS;
           const cible  = d.c + d.s * SURV_PTS;
           const ratio  = cible > 0 ? score / cible : 1;
           const pct    = Math.round(ratio * 100);
@@ -681,7 +680,7 @@ export async function GET(request) {
           const ratioCell = ratio >= 1
             ? \`<span style="color:#166534;font-weight:700">✓</span>\`
             : \`<span style="color:\${rc};font-weight:700">\${pct}%</span>\`;
-          return \`<tr title="Score: \${score} · Cible: \${cible} · Copies init: \${d.c} · Surv prév: \${d.s}h">
+          return \`<tr title="Copies (répart.): \${d.c} · Surv prévues: \${d.s}h · Cible: \${cible} · Sans surv: \${Math.round(d.c/cible*100)||0}%">
             <td class="rc-prof">\${prof}</td>
             <td class="rc-n">\${score}</td>
             <td class="rc-n">\${nd(d.s)}</td>
@@ -695,7 +694,7 @@ export async function GET(request) {
         if (!d) return 1;
         const cible = d.c + d.s * SURV_PTS;
         if (cible === 0) return 1;
-        return ((COPIES_PER_PROF[prof] || 0) + nouv * SURV_PTS) / cible;
+        return (d.c + nouv * SURV_PTS) / cible;
       }
       function autoFill() {
         const inputs = [...document.querySelectorAll('.fin-inp')].filter(i => !i.value);
