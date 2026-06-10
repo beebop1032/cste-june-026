@@ -287,8 +287,14 @@ body {
 }
 
 .pdf-school-hdr {
-  display: flex; align-items: center; gap: 14px; justify-content: space-between;
-  border-bottom: 2.5px solid var(--navy); padding-bottom: 10px; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 16px; justify-content: space-between;
+  border-bottom: 2.5px solid var(--navy); padding-bottom: 12px; margin-bottom: 20px;
+}
+.pdf-logo-box {
+  background: var(--navy); border-radius: 6px;
+  padding: 6px 10px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
 .pdf-school-name { font-size: 15px; font-weight: 700; color: var(--navy); letter-spacing: -.3px; }
 .pdf-school-sub  { font-size: 10px; color: var(--muted); margin-top: 2px; }
@@ -331,27 +337,33 @@ body {
   margin-top: 28px; font-size: 9px; color: var(--subtle); text-align: center; padding-top: 3px;
 }
 
-.pdf-student-list { display: flex; flex-direction: column; gap: 0; margin-top: 4px; }
-.pdf-student-block { margin-bottom: 8px; }
+.pdf-student-list {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px; margin-top: 12px; align-items: start;
+}
+.pdf-student-block {
+  border: 1px solid var(--border); border-radius: 5px; overflow: hidden;
+}
 .pdf-student-name {
-  font-weight: 700; font-size: 11.5px; color: var(--navy);
-  padding: 4px 0 3px; border-bottom: 1.5px solid var(--navy-light); margin-bottom: 1px;
+  font-weight: 700; font-size: 11px; color: #fff;
+  background: var(--navy-light); padding: 5px 9px;
   letter-spacing: -.1px;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
 .pdf-exam-line {
-  display: grid; grid-template-columns: 120px 55px 1fr 44px;
-  gap: 4px; padding: 2.5px 4px; font-size: 10.5px;
+  display: grid; grid-template-columns: 90px 40px 1fr 36px;
+  gap: 3px; padding: 3px 8px; font-size: 9.5px;
   border-bottom: 1px solid var(--border-light);
 }
 .pdf-exam-line:last-child { border-bottom: none; }
 .pdf-exam-date { color: var(--muted); white-space: nowrap; }
 .pdf-exam-per  { font-weight: 700; color: var(--navy-light); }
 .pdf-exam-mat  { font-weight: 600; }
-.pdf-exam-prof { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--muted); text-align: right; }
+.pdf-exam-prof { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; color: var(--muted); text-align: right; }
 
 @media print {
   .pdf-student-block { break-inside: avoid; }
-  .pdf-exam-line { padding: 2px 2px; font-size: 9.5px; }
+  .pdf-exam-line { padding: 2px 6px; }
 }
 
 .pdf-footer {
@@ -743,7 +755,9 @@ function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] })
       {pages.map(({ groupe, students, tousOnly }) => (
         <div key={groupe} className="pdf-page">
           <div className="pdf-school-hdr">
-            <img src="/logo.png" alt="" style={{ height: 44, width: 'auto', objectFit: 'contain', flexShrink: 0 }} />
+            <div className="pdf-logo-box">
+              <img src="/logo.png" alt="" style={{ height: 56, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+            </div>
             <div style={{ flex: 1 }}>
               <div className="pdf-school-name">Collège des Hayeffes</div>
               <div className="pdf-school-sub">Session d'examens — Juin 2026</div>
@@ -866,7 +880,9 @@ function ViewPdfEleves({ exams, partData, allGroupes, manuscriptGroupes = [] }) 
       {pages.map((st, i) => (
         <div key={i} className="pdf-page">
           <div className="pdf-school-hdr">
-            <img src="/logo.png" alt="" style={{ height: 44, width: 'auto', objectFit: 'contain', flexShrink: 0 }} />
+            <div className="pdf-logo-box">
+              <img src="/logo.png" alt="" style={{ height: 56, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+            </div>
             <div style={{ flex: 1 }}>
               <div className="pdf-school-name">Collège des Hayeffes</div>
               <div className="pdf-school-sub">Session d'examens — Juin 2026</div>
