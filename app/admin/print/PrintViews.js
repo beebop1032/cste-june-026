@@ -414,6 +414,15 @@ body {
 
 function keep(p) { return p && p.type !== 'annule' }
 
+// Normalise un nom pour servir de clé de déduplication (accents, tirets, casse)
+function normKey(s) {
+  return (s || '').trim()
+    .normalize('NFD').replace(/\p{Diacritic}/gu, '')
+    .replace(/[-\s]+/g, ' ')
+    .trim()
+    .toUpperCase()
+}
+
 // ── View: Par Classe ──────────────────────────────────────────────────────────
 
 function ViewClasse({ exams, partData, groupe, manuscriptGroupes = [] }) {
@@ -718,7 +727,7 @@ function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] })
           tousExams.push(ex)
         } else if (p.type === 'liste' && p.eleves?.length) {
           for (const el of p.eleves) {
-            const key = `${(el.nom || '').toUpperCase()}||${(el.prenom || '').toLowerCase()}`
+            const key = `${normKey(el.nom)}||${normKey(el.prenom)}`
             if (!studentMap.has(key)) {
               studentMap.set(key, { nom: el.nom ?? '', prenom: el.prenom ?? '', exams: [] })
               studentExamSets.set(key, new Set())
@@ -733,7 +742,7 @@ function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] })
 
       // Add tous exams to each named student
       const students = [...studentMap.values()].map(st => {
-        const key = `${st.nom.toUpperCase()}||${st.prenom.toLowerCase()}`
+        const key = `${normKey(st.nom)}||${normKey(st.prenom)}`
         const set = studentExamSets.get(key)
         const extra = tousExams.filter(ex => !set?.has(ex.id))
         return { ...st, exams: [...st.exams, ...extra].sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode)) }
@@ -830,8 +839,8 @@ function ViewPdfEleves({ exams, partData, allGroupes, manuscriptGroupes = [] }) 
       const p = partData[ex.id]
       if (!p || p.type !== 'liste' || !p.eleves?.length) continue
       for (const el of p.eleves) {
-        const classe = (el.classe?.trim().toUpperCase()) || ex.groupe.toUpperCase()
-        const key = `${(el.nom || '').toUpperCase()}||${(el.prenom || '').toLowerCase()}||${classe}`
+        const classe = (el.classe?.trim().toUpperCase().replace(/\s+/g, '')) || ex.groupe.toUpperCase()
+        const key = `${normKey(el.nom)}||${normKey(el.prenom)}||${classe}`
         if (!studentMap.has(key)) {
           studentMap.set(key, students.length)
           studentExamSets.set(key, new Set())
