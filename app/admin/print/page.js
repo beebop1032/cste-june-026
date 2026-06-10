@@ -12,9 +12,10 @@ export default async function PrintPage() {
     getLocksData(),
     read('final-locaux.json'),
   ])
-  // Locaux et surveillants saisis dans le Tableau Final
+  // Locaux, surveillants et liaisons (fusions) saisis dans le Tableau Final
   const locauxFinal       = finalData?.locaux ?? {}
   const surveillantsFinal = finalData?.surveillants ?? {}
+  const liaisonsFinal     = finalData?.liaisons ?? {}
   const groupeStatuts = locksData.groupeStatuts ?? {}
   const examStatuts   = locksData.examStatuts   ?? {}
 
@@ -89,7 +90,7 @@ export default async function PrintPage() {
           </nav>
         </div>
       </div>
-      <PrintViews exams={exams} partData={partData} allGroupes={allGroupes} allProfs={allProfs} manuscriptGroupes={manuscriptGroupes} locaux={locauxFinal} surveillants={surveillantsFinal} />
+      <PrintViews exams={exams} partData={partData} allGroupes={allGroupes} allProfs={allProfs} manuscriptGroupes={manuscriptGroupes} locaux={locauxFinal} surveillants={surveillantsFinal} liaisons={liaisonsFinal} />
     </>
   )
 }
