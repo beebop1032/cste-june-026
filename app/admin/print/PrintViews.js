@@ -287,7 +287,7 @@ body {
 }
 
 .pdf-school-hdr {
-  display: flex; align-items: flex-start; justify-content: space-between;
+  display: flex; align-items: center; gap: 14px; justify-content: space-between;
   border-bottom: 2.5px solid var(--navy); padding-bottom: 10px; margin-bottom: 20px;
 }
 .pdf-school-name { font-size: 15px; font-weight: 700; color: var(--navy); letter-spacing: -.3px; }
@@ -680,7 +680,7 @@ function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] })
       }
       gExams.sort((a, b) => a.ex.jour.localeCompare(b.ex.jour) || a.ex.periode.localeCompare(b.ex.periode))
       return { groupe, exams: gExams }
-    }).filter(g => g.exams.length > 0)
+    }).filter(g => g.exams.length > 0 && !/^[12]/i.test(g.groupe))
   }, [exams, partData, allGroupes, manuscriptGroupes])
 
   if (pages.length === 0) return (
@@ -692,7 +692,8 @@ function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] })
       {pages.map(({ groupe, exams: gExams }) => (
         <div key={groupe} className="pdf-page">
           <div className="pdf-school-hdr">
-            <div>
+            <img src="/logo.png" alt="" style={{ height: 44, width: 'auto', objectFit: 'contain', flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
               <div className="pdf-school-name">Collège des Hayeffes</div>
               <div className="pdf-school-sub">Session d'examens — Juin 2026</div>
             </div>
@@ -822,9 +823,10 @@ function ViewPdfEleves({ exams, partData, allGroupes, manuscriptGroupes = [] }) 
       {pages.map((st, i) => (
         <div key={i} className="pdf-page">
           <div className="pdf-school-hdr">
-            <div>
+            <img src="/logo.png" alt="" style={{ height: 44, width: 'auto', objectFit: 'contain', flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
               <div className="pdf-school-name">Collège des Hayeffes</div>
-              <div className="pdf-school-sub">Convocation individuelle — Session de juin 2026</div>
+              <div className="pdf-school-sub">Session d'examens — Juin 2026</div>
             </div>
             <div className="pdf-school-date">{PDF_DATE}</div>
           </div>
@@ -839,9 +841,9 @@ function ViewPdfEleves({ exams, partData, allGroupes, manuscriptGroupes = [] }) 
           </div>
 
           <div className="pdf-notice">
-            Cher(ère) élève, vous êtes convoqué(e) aux examens suivants lors de la session de juin 2026.
-            Prière de vous présenter ponctuellement, muni(e) de votre matériel scolaire habituel.
-            <br /><em>[Texte à compléter — consignes spécifiques, local, etc.]</em>
+            Voici le récapitulatif des examens que tu devras présenter en session.<br />
+            Cette opportunité est l'occasion de montrer tout ce dont tu es capable.<br />
+            Prépare-toi avec sérieux et confiance.
           </div>
 
           <table className="pdf-table">
@@ -851,19 +853,15 @@ function ViewPdfEleves({ exams, partData, allGroupes, manuscriptGroupes = [] }) 
                 <th>Période</th>
                 <th>Matière</th>
                 <th>Professeur</th>
-                <th>Participation</th>
               </tr>
             </thead>
             <tbody>
-              {st.exams.map(({ ex, isTous }) => (
+              {st.exams.map(({ ex }) => (
                 <tr key={ex.id}>
                   <td style={{ whiteSpace: 'nowrap' }}>{fmtJour(ex.jour)}</td>
                   <td style={{ fontWeight: 700 }}>{ex.periode}</td>
                   <td style={{ fontWeight: 600 }}>{ex.matiere}</td>
                   <td><span className="mono">{ex.profCode}</span></td>
-                  <td style={{ fontSize: 10.5, color: isTous ? '#065f46' : '#1e40af' }}>
-                    {isTous ? 'Toute la classe' : 'Liste nominative'}
-                  </td>
                 </tr>
               ))}
             </tbody>
