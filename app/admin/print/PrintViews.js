@@ -726,12 +726,29 @@ function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] })
       for (const ex of sortedExams) {
         const p = partData[ex.id]
         if (!keep(p)) continue
-        if (ex.groupe.toUpperCase() !== upper) continue
+        const isOfficialMatch = ex.groupe.toUpperCase() === upper
 
-        if (p.type === 'tous') {
-          tousExams.push(ex)
+        if (isOfficialMatch) {
+          if (p.type === 'tous') {
+            tousExams.push(ex)
+          } else if (p.type === 'liste' && p.eleves?.length) {
+            for (const el of p.eleves) {
+              const key = studentKey(el.nom, el.prenom)
+              if (!studentMap.has(key)) {
+                studentMap.set(key, { nom: el.nom ?? '', prenom: el.prenom ?? '', exams: [] })
+                studentExamSets.set(key, new Set())
+              }
+              if (!studentExamSets.get(key).has(ex.id)) {
+                studentExamSets.get(key).add(ex.id)
+                studentMap.get(key).exams.push(ex)
+              }
+            }
+          }
         } else if (p.type === 'liste' && p.eleves?.length) {
+          // Cross-class: élèves d'un autre groupe (ex: Lg1 oral, groupe A4-1)
+          // dont el.classe correspond à cette classe
           for (const el of p.eleves) {
+            if ((el.classe?.trim().toUpperCase().replace(/\s+/g, '')) !== upper) continue
             const key = studentKey(el.nom, el.prenom)
             if (!studentMap.has(key)) {
               studentMap.set(key, { nom: el.nom ?? '', prenom: el.prenom ?? '', exams: [] })
