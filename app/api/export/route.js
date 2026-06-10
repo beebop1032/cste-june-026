@@ -656,7 +656,8 @@ export async function GET(request) {
         const el = document.getElementById('save-status');
         if (el) { el.textContent = msg; clearTimeout(el._t); el._t = setTimeout(() => el.textContent = '', 2000); }
       }
-      const SURV_PTS = 16;
+      const SURV_PTS = 16;          // points de charge par heure de surveillance
+      const HEURES_PAR_PLAGE = 2;   // répartitions.xlsx compte en heures : 1 plage (P1/P2) = 2h
       function getCounts() {
         const c = {};
         document.querySelectorAll('.fin-inp').forEach(inp => {
@@ -665,51 +666,51 @@ export async function GET(request) {
         });
         return c;
       }
+      // Score = copies + heures de surveillance × SURV_PTS
+      // Avant : répartitions initiales (c + s×16) · Après : copies recalculées + plages Fin. ×2h×16
+      function scoreAvant(prof) {
+        const d = REP_DATA[prof];
+        return d.c + d.s * SURV_PTS;
+      }
+      function scoreApres(prof, nouv) {
+        return (COPIES_PER_PROF[prof] || 0) + nouv * HEURES_PAR_PLAGE * SURV_PTS;
+      }
       function updateRecap() {
         const survCounts = getCounts();
-        const allProfs = Object.keys(REP_DATA);
-        // Sort by surv ratio asc: most behind on surveillance first
-        allProfs.sort((a, b) => {
-          const da = REP_DATA[a], db = REP_DATA[b];
-          const ra = da.s > 0 ? (survCounts[a]||0) / da.s : 1;
-          const rb = db.s > 0 ? (survCounts[b]||0) / db.s : 1;
-          return ra - rb;
-        });
-        const maxCopies = Math.max(...allProfs.map(p => REP_DATA[p].c), 1);
+        const totalSurv  = document.querySelectorAll('.fin-inp').length;
+        const allProfs   = Object.keys(REP_DATA);
+        const ratio = p => {
+          const av = scoreAvant(p);
+          return av > 0 ? scoreApres(p, survCounts[p] || 0) / av : (scoreApres(p, survCounts[p] || 0) > 0 ? 1 : 0);
+        };
+        // Tri par Score (équité après/avant) : les profs les moins chargés en premier
+        allProfs.sort((a, b) => ratio(a) - ratio(b));
+        const meanRatio = allProfs.length ? allProfs.reduce((s, p) => s + ratio(p), 0) / allProfs.length : 0;
         const tbody = document.getElementById('recap-tbody');
         if (!tbody) return;
         tbody.innerHTML = allProfs.map(prof => {
           const d    = REP_DATA[prof];
           const nouv = survCounts[prof] || 0;
-          const copyPct = Math.round(d.c / maxCopies * 100);
-          const survPct = d.s > 0 ? Math.min(100, Math.round(nouv / d.s * 100)) : (nouv > 0 ? 100 : 0);
-          const diff    = nouv - d.s;
-          const barCls  = diff >= 0 ? 'rc-bar-ok' : diff >= -2 ? 'rc-bar-warn' : 'rc-bar-low';
-          const diffCol = diff >= 0 ? '#166534' : diff >= -2 ? '#b45309' : '#991b1b';
-          const diffTxt = diff === 0
-            ? \`<span style="color:#166534">✓</span>\`
-            : diff > 0
-              ? \`<span style="color:#166534">+\${diff}</span>\`
-              : \`<span style="color:\${diffCol}">\${diff}</span>\`;
-          return \`<tr title="\${prof} · copies: \${d.c} · surv prévue: \${d.s}h · attribuée: \${nouv}h">
+          const av   = Math.round(scoreAvant(prof));
+          const ap   = Math.round(scoreApres(prof, nouv));
+          const r    = ratio(prof);
+          const pct  = Math.round(r * 100);
+          const dev  = Math.abs(r - meanRatio);
+          const col  = dev <= 0.05 ? '#166534' : dev <= 0.15 ? '#b45309' : '#991b1b';
+          return \`<tr title="\${prof} · surv attribuées: \${nouv} plage\${nouv > 1 ? 's' : ''} (prévu: \${d.s}h = \${d.s / HEURES_PAR_PLAGE} plages) · copies: \${COPIES_PER_PROF[prof] || 0} (avant: \${d.c}) · Score après/avant: \${ap}/\${av}">
             <td class="rc-prof">\${prof}</td>
-            <td><div class="rc-bar-row"><span class="rc-val">\${d.c||'–'}</span><div class="rc-bar"><div class="rc-bar-fill rc-bar-copy" style="width:\${copyPct}%"></div></div></div></td>
-            <td><div class="rc-bar-row"><span class="rc-val">\${nouv}<span class="rc-denom">/\${d.s}</span></span><div class="rc-bar"><div class="rc-bar-fill \${barCls}" style="width:\${survPct}%"></div></div></div></td>
-            <td class="rc-diff">\${diffTxt}</td>
+            <td><span class="rc-val">\${nouv}<span class="rc-denom">/\${totalSurv}</span></span></td>
+            <td class="rc-val">\${av}</td>
+            <td class="rc-val">\${ap}</td>
+            <td style="font-weight:700;font-size:9px;color:\${col};white-space:nowrap">\${pct}%</td>
           </tr>\`;
         }).join('');
-      }
-      function ratioOf(prof, nouv) {
-        const d = REP_DATA[prof];
-        if (!d) return 1;
-        const cible = d.c + d.s * SURV_PTS;
-        if (cible === 0) return 1;
-        return (d.c + nouv * SURV_PTS) / cible;
       }
       function getReste(prof, nouv) {
         const d = REP_DATA[prof];
         if (!d) return 0;
-        return Math.max(0, d.s - nouv);
+        // s est en heures, nouv en plages (1 plage = 2h)
+        return Math.max(0, d.s / HEURES_PAR_PLAGE - nouv);
       }
       function autoFill() {
         const inputs = [...document.querySelectorAll('.fin-inp')].filter(i => !i.value);
@@ -888,23 +889,25 @@ ${datalistHtml}
 <div class="recap-section no-print">
   <div class="recap-inner">
     <h2 class="recap-title">Récap charge de travail</h2>
-    <p class="recap-sub">Trié par surv. la plus en retard · mis à jour en temps réel</p>
+    <p class="recap-sub">Trié par Score (équité après/avant) · mis à jour en temps réel</p>
     <p class="recap-legend">
-      <span style="display:inline-block;width:8px;height:4px;background:#94a3b8;border-radius:1px;vertical-align:middle;margin-right:3px"></span>Copies à corriger (répartitions initiales)<br>
-      <span style="display:inline-block;width:8px;height:4px;background:#16a34a;border-radius:1px;vertical-align:middle;margin-right:3px"></span>Surv. attrib. / prévue (Fin. / répartitions)<br>
-      Δ = attrib. − prévu &nbsp;<span style="color:#166534">✓</span>=atteint
+      Score = copies + 16 pts/h de surveillance (1 plage = 2h)<br>
+      Avant = répartitions initiales · Après = copies recalculées + surv. attribuées (Fin.)<br>
+      % = Après/Avant — équité : un % similaire pour tous
+      (<span style="color:#166534">■</span> proche de la moyenne, <span style="color:#b45309">■</span>/<span style="color:#991b1b">■</span> s'en écarte)
     </p>
     <table class="recap-table">
       <thead>
         <tr>
           <th>Prof</th>
-          <th title="Copies à corriger (depuis répartitions.xlsx)">Copies</th>
-          <th title="Surv. attribuées (Fin.) / prévues (répartitions) — barre = attrib/prévu">Surv.</th>
-          <th title="Différence attribuée − prévue">Δ</th>
+          <th title="Plages de surveillance attribuées (Fin.) / total des plages à surveiller">Surv.</th>
+          <th title="Score avant = copies initiales + heures surv prévues ×16 (répartitions.xlsx)">Avant</th>
+          <th title="Score après = copies recalculées + plages attribuées ×2h ×16">Après</th>
+          <th title="Équité = Score après / Score avant">%</th>
         </tr>
       </thead>
       <tbody id="recap-tbody">
-        <tr><td colspan="4" style="color:#9ca3af;text-align:center;padding:10px;font-style:italic">Chargement…</td></tr>
+        <tr><td colspan="5" style="color:#9ca3af;text-align:center;padding:10px;font-style:italic">Chargement…</td></tr>
       </tbody>
     </table>
     ${noRespHtml}
