@@ -368,6 +368,27 @@ body {
   border-top: 1px solid var(--border); font-size: 9.5px; color: var(--subtle); line-height: 1.5;
 }
 
+/* ── PDF Surveillance ──────────────────────────────────── */
+.pdf-surv-meta {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 10px; margin-bottom: 16px;
+}
+.pdf-surv-meta-item {
+  border: 1px solid var(--border); border-radius: 5px;
+  padding: 7px 10px; background: var(--off-white);
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.pdf-surv-meta-item .lbl {
+  font-size: 8.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .8px; color: var(--muted); margin-bottom: 2px;
+}
+.pdf-surv-meta-item .val { font-size: 13px; font-weight: 700; color: var(--navy); }
+.pdf-check {
+  display: inline-block; width: 13px; height: 13px;
+  border: 1.5px solid var(--navy-light); border-radius: 3px; vertical-align: middle;
+}
+.pdf-surv-num { color: var(--subtle); font-size: 10.5px; width: 30px; }
+
 .pdf-count-badge {
   background: var(--navy); color: #fff; border-radius: 20px;
   padding: 3px 12px; font-size: 11px; font-weight: 600;
@@ -714,8 +735,9 @@ const PDF_DATE = new Date().toLocaleDateString('fr-BE', { day: 'numeric', month:
 
 function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] }) {
   const pages = useMemo(() => {
-    // Garder uniquement les classes officielles (chiffre + lettre) — exclut 1e/2e et groupes de langues (A4-1, N4-2…)
-    const allGroups = [...allGroupes, ...manuscriptGroupes].filter(g => /^\d[A-Z]/i.test(g) && !/^[12]/i.test(g))
+    // Garder uniquement les classes officielles (chiffre + une lettre, rien d'autre) —
+    // exclut 1e/2e et tous les groupes de langues (A4-1, N4-2, 3J-A4, 6J-N4…)
+    const allGroups = [...allGroupes, ...manuscriptGroupes].filter(g => /^\d[A-Z]$/i.test(g) && !/^[12]/i.test(g))
     const sortedExams = [...exams].sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode))
 
     return allGroups.map(groupe => {
@@ -724,24 +746,36 @@ function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] })
       const studentExamSets = new Map()
       const tousExams = []
 
+      const addExam = (el, exEntry) => {
+        const key = studentKey(el.nom, el.prenom)
+        if (!studentMap.has(key)) {
+          studentMap.set(key, { nom: el.nom ?? '', prenom: el.prenom ?? '', exams: [] })
+          studentExamSets.set(key, new Set())
+        }
+        if (!studentExamSets.get(key).has(exEntry.id)) {
+          studentExamSets.get(key).add(exEntry.id)
+          studentMap.get(key).exams.push(exEntry)
+        }
+      }
+
       for (const ex of sortedExams) {
         const p = partData[ex.id]
         if (!keep(p)) continue
-        if (ex.groupe.toUpperCase() !== upper) continue
 
-        if (p.type === 'tous') {
-          tousExams.push(ex)
-        } else if (p.type === 'liste' && p.eleves?.length) {
+        if (ex.groupe.toUpperCase() === upper) {
+          if (p.type === 'tous') {
+            tousExams.push(ex)
+          } else if (p.type === 'liste' && p.eleves?.length) {
+            for (const el of p.eleves) addExam(el, ex)
+          }
+        } else if (!/^\d[A-Z]$/i.test(ex.groupe) && p.type === 'liste' && p.eleves?.length) {
+          // Groupe de langue (A4-1, 3J-A4…) : rattacher chaque élève à la page de sa
+          // classe manuscrite (el.classe), sinon au préfixe du groupe (3J-A4 → 3J)
+          const prefix = ex.groupe.match(/^(\d[A-Z])-/i)?.[1]?.toUpperCase() ?? null
           for (const el of p.eleves) {
-            const key = studentKey(el.nom, el.prenom)
-            if (!studentMap.has(key)) {
-              studentMap.set(key, { nom: el.nom ?? '', prenom: el.prenom ?? '', exams: [] })
-              studentExamSets.set(key, new Set())
-            }
-            if (!studentExamSets.get(key).has(ex.id)) {
-              studentExamSets.get(key).add(ex.id)
-              studentMap.get(key).exams.push(ex)
-            }
+            const cls = el.classe?.trim().toUpperCase().replace(/\s+/g, '') || prefix
+            if (cls !== upper) continue
+            addExam(el, { ...ex, fromGroupe: ex.groupe })
           }
         }
       }
@@ -795,7 +829,10 @@ function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] })
                     <div key={ex.id} className="pdf-exam-line">
                       <span className="pdf-exam-date">{fmtJourCourt(ex.jour)}</span>
                       <span className="pdf-exam-per">{ex.periode}</span>
-                      <span className="pdf-exam-mat">{ex.matiere}</span>
+                      <span className="pdf-exam-mat">
+                        {ex.matiere}
+                        {ex.fromGroupe && <span style={{ fontSize: 8.5, fontWeight: 400, color: 'var(--muted)' }}> ({ex.fromGroupe})</span>}
+                      </span>
                       <span className="pdf-exam-prof">{ex.profCode}</span>
                     </div>
                   ))}
@@ -947,6 +984,128 @@ function ViewPdfEleves({ exams, partData, allGroupes, manuscriptGroupes = [] }) 
   )
 }
 
+// ── View: PDF Surveillances ───────────────────────────────────────────────────
+
+function ViewPdfSurveillances({ exams, partData, jourFilter }) {
+  const pages = useMemo(() => {
+    return exams
+      .filter(ex => keep(partData[ex.id]))
+      .filter(ex => !jourFilter || ex.jour === jourFilter)
+      .sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode) || (a.local || '').localeCompare(b.local || ''))
+      .map(ex => {
+        const p = partData[ex.id]
+        const eleves = p.type === 'liste'
+          ? [...p.eleves].sort((a, b) => (a.nom || '').localeCompare(b.nom || '') || (a.prenom || '').localeCompare(b.prenom || ''))
+          : []
+        return { ex, p, eleves }
+      })
+  }, [exams, partData, jourFilter])
+
+  if (pages.length === 0) return (
+    <div className="empty">
+      <p>Aucun examen maintenu{jourFilter ? ` le ${fmtJour(jourFilter)}` : ''}.</p>
+      <small>Tous les examens sont annulés ou en attente de données.</small>
+    </div>
+  )
+
+  return (
+    <div className="pdf-wrap">
+      {pages.map(({ ex, p, eleves }) => (
+        <div key={ex.id} className="pdf-page">
+          <div className="pdf-school-hdr">
+            <div className="pdf-logo-box">
+              <img src="/Logo_couleur.png" alt="" style={{ height: 90, width: 'auto', display: 'block', clipPath: 'inset(0 0 38% 0)' }} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div className="pdf-school-name">Collège des Hayeffes</div>
+              <div className="pdf-school-sub">Session d'examens — Juin 2026</div>
+            </div>
+            <div className="pdf-school-date">{PDF_DATE}</div>
+          </div>
+
+          <div className="pdf-subject">
+            <div className="pdf-subject-label">Fiche de surveillance</div>
+            <div className="pdf-subject-value">{ex.matiere} — {ex.groupe}</div>
+            <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span className="pdf-count-badge">
+                {p.type === 'tous' ? 'Tous les élèves' : `${eleves.length} élève${eleves.length !== 1 ? 's' : ''}`}
+              </span>
+              {p.surveilleParTitulaire && (
+                <span style={{ fontSize: 11, fontWeight: 600, color: '#065f46' }}>Surveillé par le titulaire</span>
+              )}
+            </div>
+          </div>
+
+          <div className="pdf-surv-meta">
+            <div className="pdf-surv-meta-item">
+              <div className="lbl">Date</div>
+              <div className="val">{fmtJourCourt(ex.jour)}</div>
+            </div>
+            <div className="pdf-surv-meta-item">
+              <div className="lbl">Période</div>
+              <div className="val">{ex.periode}</div>
+            </div>
+            <div className="pdf-surv-meta-item">
+              <div className="lbl">Local</div>
+              <div className="val">{ex.local || '—'}</div>
+            </div>
+            <div className="pdf-surv-meta-item">
+              <div className="lbl">Professeur</div>
+              <div className="val">{ex.profCode}</div>
+            </div>
+          </div>
+
+          {p.type === 'tous' && (
+            <div className="pdf-notice">
+              Cet examen est maintenu pour <strong>tous les élèves</strong> du groupe {ex.groupe}.
+            </div>
+          )}
+
+          {eleves.length > 0 && (
+            <table className="pdf-table">
+              <thead>
+                <tr>
+                  <th style={{ width: 30 }}>#</th>
+                  <th>Nom</th>
+                  <th>Prénom</th>
+                  <th>Classe</th>
+                  <th style={{ width: 60, textAlign: 'center' }}>Présent</th>
+                </tr>
+              </thead>
+              <tbody>
+                {eleves.map((el, i) => (
+                  <tr key={i}>
+                    <td className="pdf-surv-num">{i + 1}</td>
+                    <td style={{ fontWeight: 700 }}>{el.nom}</td>
+                    <td>{el.prenom}</td>
+                    <td>{el.classe || ex.groupe}</td>
+                    <td style={{ textAlign: 'center' }}><span className="pdf-check" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          <div className="pdf-signature">
+            <div className="pdf-signature-block">
+              Remarques :
+              <div className="pdf-signature-line" style={{ width: 240 }}>&nbsp;</div>
+            </div>
+            <div className="pdf-signature-block">
+              Le surveillant
+              <div className="pdf-signature-line">signature</div>
+            </div>
+          </div>
+
+          <div className="pdf-footer">
+            Collège des Hayeffes — Session de juin 2026 — Fiche de surveillance ({fmtJourCourt(ex.jour)} · {ex.periode} · {ex.local || '—'})
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 const TABS = [
@@ -955,6 +1114,7 @@ const TABS = [
   { id: 'eleve',       label: 'Par élève'    },
   { id: 'pdf-classes', label: 'PDF — Classes' },
   { id: 'pdf-eleves',  label: 'PDF — Élèves'  },
+  { id: 'pdf-surv',    label: 'PDF — Surveillances' },
 ]
 
 const PrintIcon = () => (
@@ -1009,10 +1169,13 @@ function buildCsvRows(exams, partData, filterFn) {
 }
 
 export default function PrintViews({ exams, partData, allGroupes, allProfs, manuscriptGroupes = [] }) {
-  const [tab,    setTab]    = useState('classe')
-  const [groupe, setGroupe] = useState('')
-  const [prof,   setProf]   = useState('')
-  const [eleve,  setEleve]  = useState('')
+  const [tab,     setTab]     = useState('classe')
+  const [groupe,  setGroupe]  = useState('')
+  const [prof,    setProf]    = useState('')
+  const [eleve,   setEleve]   = useState('')
+  const [jourPdf, setJourPdf] = useState('')
+
+  const allJours = useMemo(() => [...new Set(exams.map(e => e.jour))].sort(), [exams])
 
   // Sorted student list for the élève tab (depends on groupe selection)
   const eleveList = useMemo(() => {
@@ -1053,7 +1216,7 @@ export default function PrintViews({ exams, partData, allGroupes, allProfs, manu
     }
   }
 
-  const isPdfTab = tab === 'pdf-classes' || tab === 'pdf-eleves'
+  const isPdfTab = tab === 'pdf-classes' || tab === 'pdf-eleves' || tab === 'pdf-surv'
 
   return (
     <>
@@ -1101,6 +1264,13 @@ export default function PrintViews({ exams, partData, allGroupes, allProfs, manu
           </select>
         )}
 
+        {tab === 'pdf-surv' && (
+          <select className="ctrl-select" value={jourPdf} onChange={e => setJourPdf(e.target.value)}>
+            <option value="">— Tous les jours —</option>
+            {allJours.map(j => <option key={j} value={j}>{fmtJour(j)}</option>)}
+          </select>
+        )}
+
         {!isPdfTab && currentKey && (
           <button className="print-btn" style={{ background: '#2d6a4f', marginLeft: 0 }} onClick={handleDownloadCSV}>
             <DownloadIcon /> CSV
@@ -1124,6 +1294,7 @@ export default function PrintViews({ exams, partData, allGroupes, allProfs, manu
       {/* PDF views — full width, one A4 page per item */}
       {tab === 'pdf-classes' && <ViewPdfClasses exams={exams} partData={partData} allGroupes={allGroupes} manuscriptGroupes={manuscriptGroupes} />}
       {tab === 'pdf-eleves'  && <ViewPdfEleves  exams={exams} partData={partData} allGroupes={allGroupes} manuscriptGroupes={manuscriptGroupes} />}
+      {tab === 'pdf-surv'    && <ViewPdfSurveillances exams={exams} partData={partData} jourFilter={jourPdf} />}
     </>
   )
 }
