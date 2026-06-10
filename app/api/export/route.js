@@ -470,7 +470,7 @@ export async function GET(request) {
       const cpBtn = conseilVal
         ? `<button class="cp-btn" data-v="${conseilVal}" onclick="cp(this)" title="${conseilVal}">← ${conseilVal}</button>`
         : ''
-      return `<td class="ts${survVal ? ' ts-ok' : ''}">${survVal}</td><td class="tfin-cell"><div class="tfin-wrap"><input class="fin-inp" type="text" list="profs-dl" data-conseil="${conseilVal}" placeholder="${conseilVal}" autocomplete="off" />${cpBtn}</div></td>`
+      return `<td class="ts${survVal ? ' ts-ok' : ''}">${survVal}</td><td class="tfin-cell"><div class="tfin-wrap"><input class="fin-inp" type="text" list="profs-dl" data-conseil="${conseilVal}" data-slot="${slot}" placeholder="${conseilVal}" autocomplete="off" />${cpBtn}</div></td>`
     }
 
     function partBadgeF(ex) {
@@ -657,13 +657,33 @@ export async function GET(request) {
         if (el) { el.textContent = msg; clearTimeout(el._t); el._t = setTimeout(() => el.textContent = '', 2000); }
       }
       const HEURES_PAR_PLAGE = 2;   // répartitions.xlsx compte en heures : 1 plage (P1/P2) = 2h
+      // Un même prof sur plusieurs examens de la même plage (jour|période) = 1 seule
+      // surveillance (fusion) : on compte les plages distinctes, pas les cellules.
       function getCounts() {
         const c = {};
+        const seen = new Set();
         document.querySelectorAll('.fin-inp').forEach(inp => {
           const v = inp.value.trim().toUpperCase();
-          if (v) c[v] = (c[v] || 0) + 1;
+          if (!v) return;
+          const key = v + '|' + (inp.dataset.slot || '');
+          if (seen.has(key)) return;
+          seen.add(key);
+          c[v] = (c[v] || 0) + 1;
         });
         return c;
+      }
+      // Total de plages à pourvoir : les cellules vides comptent 1 chacune, les
+      // cellules remplies fusionnent par (prof, plage) → le total diminue à chaque fusion.
+      function totalPlages() {
+        const seen = new Set();
+        let total = 0;
+        document.querySelectorAll('.fin-inp').forEach(inp => {
+          const v = inp.value.trim().toUpperCase();
+          if (!v) { total++; return; }
+          const key = v + '|' + (inp.dataset.slot || '');
+          if (!seen.has(key)) { seen.add(key); total++; }
+        });
+        return total;
       }
       // Cible de surveillance par prof après remaniement.
       // La charge globale (copies + heures de surv) est passée de (Cavant + Havant)
@@ -671,9 +691,9 @@ export async function GET(request) {
       // proportion, ses copies recalculées sont déduites, le solde = heures de surv
       // à lui attribuer. Les cibles somment exactement au nouveau total d'heures.
       let CIBLES = null;
-      function computeCibles() {
+      function computeCibles(totalPl) {
         const profs = Object.keys(REP_DATA);
-        const Hnouv = document.querySelectorAll('.fin-inp').length * HEURES_PAR_PLAGE;
+        const Hnouv = totalPl * HEURES_PAR_PLAGE;
         let Cavant = 0, Havant = 0, Capres = 0;
         profs.forEach(p => {
           Cavant += REP_DATA[p].c;
@@ -692,9 +712,9 @@ export async function GET(request) {
         return (Math.round(x * 10) / 10).toString().replace('.', ',');
       }
       function updateRecap() {
-        if (!CIBLES) computeCibles();
+        const totalSurv  = totalPlages();
+        computeCibles(totalSurv); // recalcul à chaque saisie : les fusions réduisent le total
         const survCounts = getCounts();
-        const totalSurv  = document.querySelectorAll('.fin-inp').length;
         const allProfs   = Object.keys(REP_DATA);
         const resteOf = p => (CIBLES[p] || 0) - (survCounts[p] || 0);
         // Tri par reste à attribuer décroissant : le prof le plus en retard en premier
@@ -720,7 +740,7 @@ export async function GET(request) {
         }).join('');
       }
       function getReste(prof, nouv) {
-        if (!CIBLES) computeCibles();
+        if (!CIBLES) computeCibles(totalPlages());
         if (!(prof in (CIBLES || {}))) return 0;
         return Math.max(0, CIBLES[prof] - nouv);
       }
@@ -908,7 +928,8 @@ ${datalistHtml}
       copies recalculées déduites.<br>
       <b>Reste</b> = cible − plages déjà attribuées (Fin.) ·
       <span style="color:#166534">✓</span>=atteint ·
-      <span style="color:#b45309">+x</span>=dépassé
+      <span style="color:#b45309">+x</span>=dépassé<br>
+      Un même prof sur plusieurs examens d'une même plage = 1 surveillance (fusion, le total diminue)
     </p>
     <table class="recap-table">
       <thead>
