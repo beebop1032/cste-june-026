@@ -566,11 +566,19 @@ export async function GET(request) {
       .recap-sub   { font-size:9px; color:#9ca3af; margin-bottom:6px }
       .recap-legend { font-size:8px; color:#6b7280; margin-bottom:8px; line-height:1.6 }
       .recap-table { width:100%; border-collapse:collapse; font-size:10px }
-      .recap-table thead th { background:#f0ede6; color:#1a3254; font-size:7.5px; font-weight:700; text-transform:uppercase; padding:3px 3px; border:1px solid #e2dfd8; text-align:center }
-      .recap-table tbody td { border:1px solid #e8e4db; padding:2px 3px; vertical-align:middle }
-      .rc-prof  { font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:600; color:#374151 }
-      .rc-n     { text-align:center; font-size:9px; font-weight:600; min-width:22px }
-      .rc-cible { text-align:center; font-size:9px; font-weight:700; min-width:28px; background:#f8f6f1 }
+      .recap-table thead th { background:#f0ede6; color:#1a3254; font-size:7.5px; font-weight:700; text-transform:uppercase; padding:3px 4px; border:1px solid #e2dfd8; text-align:left }
+      .recap-table tbody td { border:1px solid #e8e4db; padding:3px 4px; vertical-align:middle }
+      .rc-prof  { font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:600; color:#374151; white-space:nowrap }
+      .rc-bar-row { display:flex; align-items:center; gap:4px }
+      .rc-bar { flex:1; height:5px; background:#e2dfd8; border-radius:2px; min-width:30px; overflow:hidden }
+      .rc-bar-fill { height:100%; border-radius:2px; transition:width .25s }
+      .rc-bar-copy { background:#94a3b8 }
+      .rc-bar-ok   { background:#16a34a }
+      .rc-bar-warn { background:#d97706 }
+      .rc-bar-low  { background:#dc2626 }
+      .rc-val      { font-size:9px; font-weight:600; min-width:18px; text-align:right; white-space:nowrap }
+      .rc-denom    { font-size:8px; color:#9ca3af }
+      .rc-diff     { text-align:center; font-size:10px; font-weight:700; min-width:22px; white-space:nowrap }
       .autofill-btn { width:100%; margin:6px 0 8px; background:#1a3254; color:#fff; border:none; padding:6px 10px; font-family:inherit; font-size:10px; font-weight:700; cursor:pointer; border-radius:4px; text-align:center }
       .autofill-btn:hover { background:#1e4976 }
       .recap-absent { margin-top:14px; padding-top:10px; border-top:1px solid #e2dfd8 }
@@ -660,32 +668,34 @@ export async function GET(request) {
       function updateRecap() {
         const survCounts = getCounts();
         const allProfs = Object.keys(REP_DATA);
-        // Sort by ratio asc: lowest % of cible reached = most behind
+        // Sort by surv ratio asc: most behind on surveillance first
         allProfs.sort((a, b) => {
-          const ra = ratioOf(a, survCounts[a]||0);
-          const rb = ratioOf(b, survCounts[b]||0);
+          const da = REP_DATA[a], db = REP_DATA[b];
+          const ra = da.s > 0 ? (survCounts[a]||0) / da.s : 1;
+          const rb = db.s > 0 ? (survCounts[b]||0) / db.s : 1;
           return ra - rb;
         });
+        const maxCopies = Math.max(...allProfs.map(p => REP_DATA[p].c), 1);
         const tbody = document.getElementById('recap-tbody');
         if (!tbody) return;
         tbody.innerHTML = allProfs.map(prof => {
-          const d      = REP_DATA[prof];
-          const nouv   = survCounts[prof] || 0;
-          const score  = d.c + nouv * SURV_PTS;
-          const cible  = d.c + d.s * SURV_PTS;
-          const ratio  = cible > 0 ? score / cible : 1;
-          const pct    = Math.round(ratio * 100);
-          const rc     = ratio >= 1 ? '#166534' : ratio >= 0.75 ? '#b45309' : '#991b1b';
-          const nd = v => v > 0 ? v : \`<span style="color:#d1d5db">–</span>\`;
-          const ratioCell = ratio >= 1
-            ? \`<span style="color:#166534;font-weight:700">✓</span>\`
-            : \`<span style="color:\${rc};font-weight:700">\${pct}%</span>\`;
-          return \`<tr title="Copies (répart.): \${d.c} · Surv prévues: \${d.s}h · Cible: \${cible} · Sans surv: \${Math.round(d.c/cible*100)||0}%">
+          const d    = REP_DATA[prof];
+          const nouv = survCounts[prof] || 0;
+          const copyPct = Math.round(d.c / maxCopies * 100);
+          const survPct = d.s > 0 ? Math.min(100, Math.round(nouv / d.s * 100)) : (nouv > 0 ? 100 : 0);
+          const diff    = nouv - d.s;
+          const barCls  = diff >= 0 ? 'rc-bar-ok' : diff >= -2 ? 'rc-bar-warn' : 'rc-bar-low';
+          const diffCol = diff >= 0 ? '#166534' : diff >= -2 ? '#b45309' : '#991b1b';
+          const diffTxt = diff === 0
+            ? \`<span style="color:#166534">✓</span>\`
+            : diff > 0
+              ? \`<span style="color:#166534">+\${diff}</span>\`
+              : \`<span style="color:\${diffCol}">\${diff}</span>\`;
+          return \`<tr title="\${prof} · copies: \${d.c} · surv prévue: \${d.s}h · attribuée: \${nouv}h">
             <td class="rc-prof">\${prof}</td>
-            <td class="rc-n">\${score}</td>
-            <td class="rc-n">\${nd(d.s)}</td>
-            <td class="rc-n">\${nd(nouv)}</td>
-            <td class="rc-cible">\${ratioCell}</td>
+            <td><div class="rc-bar-row"><span class="rc-val">\${d.c||'–'}</span><div class="rc-bar"><div class="rc-bar-fill rc-bar-copy" style="width:\${copyPct}%"></div></div></div></td>
+            <td><div class="rc-bar-row"><span class="rc-val">\${nouv}<span class="rc-denom">/\${d.s}</span></span><div class="rc-bar"><div class="rc-bar-fill \${barCls}" style="width:\${survPct}%"></div></div></div></td>
+            <td class="rc-diff">\${diffTxt}</td>
           </tr>\`;
         }).join('');
       }
@@ -695,6 +705,11 @@ export async function GET(request) {
         const cible = d.c + d.s * SURV_PTS;
         if (cible === 0) return 1;
         return (d.c + nouv * SURV_PTS) / cible;
+      }
+      function getReste(prof, nouv) {
+        const d = REP_DATA[prof];
+        if (!d) return 0;
+        return Math.max(0, d.s - nouv);
       }
       function autoFill() {
         const inputs = [...document.querySelectorAll('.fin-inp')].filter(i => !i.value);
@@ -873,20 +888,23 @@ ${datalistHtml}
 <div class="recap-section no-print">
   <div class="recap-inner">
     <h2 class="recap-title">Récap charge de travail</h2>
-    <p class="recap-sub">Trié par score décroissant · mis à jour en temps réel</p>
-    <p class="recap-legend">Score = copies actuelles + nouv × 16<br>Cible = copies initiales + H.prév × 16<br>% = Score ÷ Cible &nbsp;<span style="color:#166534">✓</span>=atteint</p>
+    <p class="recap-sub">Trié par surv. la plus en retard · mis à jour en temps réel</p>
+    <p class="recap-legend">
+      <span style="display:inline-block;width:8px;height:4px;background:#94a3b8;border-radius:1px;vertical-align:middle;margin-right:3px"></span>Copies à corriger (répartitions initiales)<br>
+      <span style="display:inline-block;width:8px;height:4px;background:#16a34a;border-radius:1px;vertical-align:middle;margin-right:3px"></span>Surv. attrib. / prévue (Fin. / répartitions)<br>
+      Δ = attrib. − prévu &nbsp;<span style="color:#166534">✓</span>=atteint
+    </p>
     <table class="recap-table">
       <thead>
         <tr>
           <th>Prof</th>
-          <th title="Score actuel = copies + nouv surv × 16">Score</th>
-          <th title="Heures surv prévues (répartitions initiales)">H.Prév</th>
-          <th title="Nouvelles heures assignées (Fin.)">Nouv</th>
-          <th title="% de la cible atteint (Score ÷ Cible) — trié du plus loin au plus proche">%</th>
+          <th title="Copies à corriger (depuis répartitions.xlsx)">Copies</th>
+          <th title="Surv. attribuées (Fin.) / prévues (répartitions) — barre = attrib/prévu">Surv.</th>
+          <th title="Différence attribuée − prévue">Δ</th>
         </tr>
       </thead>
       <tbody id="recap-tbody">
-        <tr><td colspan="5" style="color:#9ca3af;text-align:center;padding:10px;font-style:italic">Chargement…</td></tr>
+        <tr><td colspan="4" style="color:#9ca3af;text-align:center;padding:10px;font-style:italic">Chargement…</td></tr>
       </tbody>
     </table>
     ${noRespHtml}
