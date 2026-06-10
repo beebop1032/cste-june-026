@@ -665,51 +665,64 @@ export async function GET(request) {
         });
         return c;
       }
-      // Score = copies + heures de surveillance
-      // Avant : répartitions initiales · Après : copies recalculées + plages Fin. ×2h
-      function scoreAvant(prof) {
-        const d = REP_DATA[prof];
-        return d.c + d.s;
+      // Cible de surveillance par prof après remaniement.
+      // La charge globale (copies + heures de surv) est passée de (Cavant + Havant)
+      // à (Capres + Hnouv) : la charge de chaque prof est réduite dans la même
+      // proportion, ses copies recalculées sont déduites, le solde = heures de surv
+      // à lui attribuer. Les cibles somment exactement au nouveau total d'heures.
+      let CIBLES = null;
+      function computeCibles() {
+        const profs = Object.keys(REP_DATA);
+        const Hnouv = document.querySelectorAll('.fin-inp').length * HEURES_PAR_PLAGE;
+        let Cavant = 0, Havant = 0, Capres = 0;
+        profs.forEach(p => {
+          Cavant += REP_DATA[p].c;
+          Havant += REP_DATA[p].s;
+          Capres += COPIES_PER_PROF[p] || 0;
+        });
+        const R = (Cavant + Havant) > 0 ? (Capres + Hnouv) / (Cavant + Havant) : 0;
+        CIBLES = {};
+        profs.forEach(p => {
+          const d = REP_DATA[p];
+          const cibleH = Math.max(0, R * (d.c + d.s) - (COPIES_PER_PROF[p] || 0));
+          CIBLES[p] = cibleH / HEURES_PAR_PLAGE; // en plages
+        });
       }
-      function scoreApres(prof, nouv) {
-        return (COPIES_PER_PROF[prof] || 0) + nouv * HEURES_PAR_PLAGE;
+      function fmt1(x) {
+        return (Math.round(x * 10) / 10).toString().replace('.', ',');
       }
       function updateRecap() {
+        if (!CIBLES) computeCibles();
         const survCounts = getCounts();
         const totalSurv  = document.querySelectorAll('.fin-inp').length;
         const allProfs   = Object.keys(REP_DATA);
-        const ratio = p => {
-          const av = scoreAvant(p);
-          return av > 0 ? scoreApres(p, survCounts[p] || 0) / av : (scoreApres(p, survCounts[p] || 0) > 0 ? 1 : 0);
-        };
-        // Tri par Score (équité après/avant) : les profs les moins chargés en premier
-        allProfs.sort((a, b) => ratio(a) - ratio(b));
-        const meanRatio = allProfs.length ? allProfs.reduce((s, p) => s + ratio(p), 0) / allProfs.length : 0;
+        const resteOf = p => (CIBLES[p] || 0) - (survCounts[p] || 0);
+        // Tri par reste à attribuer décroissant : le prof le plus en retard en premier
+        allProfs.sort((a, b) => resteOf(b) - resteOf(a));
         const tbody = document.getElementById('recap-tbody');
         if (!tbody) return;
         tbody.innerHTML = allProfs.map(prof => {
-          const d    = REP_DATA[prof];
-          const nouv = survCounts[prof] || 0;
-          const av   = Math.round(scoreAvant(prof));
-          const ap   = Math.round(scoreApres(prof, nouv));
-          const r    = ratio(prof);
-          const pct  = Math.round(r * 100);
-          const dev  = Math.abs(r - meanRatio);
-          const col  = dev <= 0.05 ? '#166534' : dev <= 0.15 ? '#b45309' : '#991b1b';
-          return \`<tr title="\${prof} · surv attribuées: \${nouv} plage\${nouv > 1 ? 's' : ''} (prévu: \${d.s}h = \${d.s / HEURES_PAR_PLAGE} plages) · copies: \${COPIES_PER_PROF[prof] || 0} (avant: \${d.c}) · Score après/avant: \${ap}/\${av}">
+          const d     = REP_DATA[prof];
+          const nouv  = survCounts[prof] || 0;
+          const cible = CIBLES[prof] || 0;
+          const reste = cible - nouv;
+          const resteTxt = reste > 0.05
+            ? \`<span style="color:#991b1b">\${fmt1(reste)}</span>\`
+            : reste < -0.55
+              ? \`<span style="color:#b45309">+\${fmt1(-reste)}</span>\`
+              : \`<span style="color:#166534">✓</span>\`;
+          return \`<tr title="\${prof} · avant: \${d.c} copies + \${d.s}h surv · après: \${COPIES_PER_PROF[prof] || 0} copies · cible: \${fmt1(cible * HEURES_PAR_PLAGE)}h = \${fmt1(cible)} plages · attribuées: \${nouv}">
             <td class="rc-prof">\${prof}</td>
             <td><span class="rc-val">\${nouv}<span class="rc-denom">/\${totalSurv}</span></span></td>
-            <td class="rc-val">\${av}</td>
-            <td class="rc-val">\${ap}</td>
-            <td style="font-weight:700;font-size:9px;color:\${col};white-space:nowrap">\${pct}%</td>
+            <td class="rc-val">\${fmt1(cible)}</td>
+            <td style="font-weight:700;font-size:9px;text-align:center;white-space:nowrap">\${resteTxt}</td>
           </tr>\`;
         }).join('');
       }
       function getReste(prof, nouv) {
-        const d = REP_DATA[prof];
-        if (!d) return 0;
-        // s est en heures, nouv en plages (1 plage = 2h)
-        return Math.max(0, d.s / HEURES_PAR_PLAGE - nouv);
+        if (!CIBLES) computeCibles();
+        if (!(prof in (CIBLES || {}))) return 0;
+        return Math.max(0, CIBLES[prof] - nouv);
       }
       function autoFill() {
         const inputs = [...document.querySelectorAll('.fin-inp')].filter(i => !i.value);
@@ -888,25 +901,26 @@ ${datalistHtml}
 <div class="recap-section no-print">
   <div class="recap-inner">
     <h2 class="recap-title">Récap charge de travail</h2>
-    <p class="recap-sub">Trié par Score (équité après/avant) · mis à jour en temps réel</p>
+    <p class="recap-sub">Trié par reste à attribuer · mis à jour en temps réel</p>
     <p class="recap-legend">
-      Score = copies + heures de surveillance (1 plage = 2h)<br>
-      Avant = répartitions initiales · Après = copies recalculées + surv. attribuées (Fin.)<br>
-      % = Après/Avant — équité : un % similaire pour tous
-      (<span style="color:#166534">■</span> proche de la moyenne, <span style="color:#b45309">■</span>/<span style="color:#991b1b">■</span> s'en écarte)
+      <b>À attrib.</b> = nouvelle cible de surveillance (en plages, 1 plage = 2h) après remaniement :
+      la charge du prof (copies + heures) est réduite dans la même proportion que la charge globale,
+      copies recalculées déduites.<br>
+      <b>Reste</b> = cible − plages déjà attribuées (Fin.) ·
+      <span style="color:#166534">✓</span>=atteint ·
+      <span style="color:#b45309">+x</span>=dépassé
     </p>
     <table class="recap-table">
       <thead>
         <tr>
           <th>Prof</th>
           <th title="Plages de surveillance attribuées (Fin.) / total des plages à surveiller">Surv.</th>
-          <th title="Score avant = copies initiales + heures surv prévues (répartitions.xlsx)">Avant</th>
-          <th title="Score après = copies recalculées + plages attribuées ×2h">Après</th>
-          <th title="Équité = Score après / Score avant">%</th>
+          <th title="Nombre de surveillances à attribuer (cible en plages après remaniement)">À attrib.</th>
+          <th title="Cible − plages déjà attribuées">Reste</th>
         </tr>
       </thead>
       <tbody id="recap-tbody">
-        <tr><td colspan="5" style="color:#9ca3af;text-align:center;padding:10px;font-style:italic">Chargement…</td></tr>
+        <tr><td colspan="4" style="color:#9ca3af;text-align:center;padding:10px;font-style:italic">Chargement…</td></tr>
       </tbody>
     </table>
     ${noRespHtml}
