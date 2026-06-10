@@ -402,6 +402,16 @@ export async function GET(request) {
       copiesPerProfF[ex.profCode] = (copiesPerProfF[ex.profCode] || 0) + n
     }
 
+    // Planned surveillances from "Surveillance exam juin2026.xlsx" (original timetable)
+    const excelSurvF = {
+      JAQ:11,PAY:10,DKS:10,DEST:10,SMO:10,PIEJ:9,ORF:8,PERS:8,FOF:8,PEC:8,
+      DEBS:8,VBG:8,LMC:8,BAL:8,DEMN:7,VERM:7,IVE:7,EVR:7,ROD:7,DRAY:7,
+      DELF:6,ENS:6,PHM:6,MEL:6,BLOA:6,DVT:6,DANB:6,GOD:6,CAR:6,DT:5,
+      DESI:5,LNB:5,KOT:5,VDS:5,HE:5,SAR:5,ANM:5,JY:5,JOR:5,CARO:5,
+      DOM:5,DMI:5,MYN:5,TAIL:4,BERS:4,GAU:4,HEK:4,BALJ:4,MRS:4,CP:3,
+      VERS:3,BAU:2,TAC:2,CLO:2,
+    }
+
     // Same surv logic as format=print
     const survFlagMapF = new Map()
     for (const f of currentFiles) {
@@ -541,7 +551,7 @@ export async function GET(request) {
       .rf-groupe { font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; color:#1a3254 }
       .rf-count { font-size:8px; color:#6b7280 }
       /* ── Récap sidebar ── */
-      .recap-section { position:fixed; top:56px; right:0; width:230px; height:calc(100vh - 56px); overflow-y:auto; background:#fff; border-left:1px solid #e2dfd8; box-shadow:-3px 0 12px rgba(0,0,0,.06); z-index:100; padding:14px 12px }
+      .recap-section { position:fixed; top:56px; right:0; width:260px; height:calc(100vh - 56px); overflow-y:auto; background:#fff; border-left:1px solid #e2dfd8; box-shadow:-3px 0 12px rgba(0,0,0,.06); z-index:100; padding:14px 12px }
       .recap-title { font-size:12px; font-weight:700; color:#1a3254; margin-bottom:2px }
       .recap-sub   { font-size:9px; color:#9ca3af; margin-bottom:6px }
       .recap-legend { font-size:8px; color:#6b7280; margin-bottom:8px; line-height:1.6 }
@@ -554,7 +564,7 @@ export async function GET(request) {
       .recap-absent { margin-top:14px; padding-top:10px; border-top:1px solid #e2dfd8 }
       .recap-absent-title { font-size:10px; font-weight:700; color:#7c3aed; margin-bottom:6px }
       .absent-badge { display:inline-block; background:#f5f3ff; color:#4c1d95; border:1px solid #ddd6fe; border-radius:3px; font-family:'JetBrains Mono',monospace; font-size:8.5px; font-weight:600; padding:1px 5px; margin:1px 2px }
-      .content { margin-right:240px }
+      .content { margin-right:270px }
       /* ── Print A3 ── */
       .print-hdr { display:none }
       @media print {
@@ -626,15 +636,14 @@ export async function GET(request) {
         const el = document.getElementById('save-status');
         if (el) { el.textContent = msg; clearTimeout(el._t); el._t = setTimeout(() => el.textContent = '', 2000); }
       }
-      const SURV_PTS = 16; // points per 1h supervision
+      const SURV_PTS = 16; // points per surveillance
       function updateRecap() {
         const survCounts = {};
         document.querySelectorAll('.fin-inp').forEach(inp => {
           const v = inp.value.trim().toUpperCase();
           if (v) survCounts[v] = (survCounts[v] || 0) + 1;
         });
-        // All profs with active exams (from server data)
-        const allProfs = new Set([...Object.keys(COPIES_PER_PROF), ...Object.keys(survCounts)]);
+        const allProfs = new Set([...Object.keys(COPIES_PER_PROF), ...Object.keys(EXCEL_SURV), ...Object.keys(survCounts)]);
         const sorted = [...allProfs].sort((a, b) => {
           const sA = (COPIES_PER_PROF[a] || 0) + (survCounts[a] || 0) * SURV_PTS;
           const sB = (COPIES_PER_PROF[b] || 0) + (survCounts[b] || 0) * SURV_PTS;
@@ -643,14 +652,26 @@ export async function GET(request) {
         const tbody = document.getElementById('recap-tbody');
         if (!tbody) return;
         tbody.innerHTML = sorted.map(prof => {
-          const copies = COPIES_PER_PROF[prof] || 0;
-          const surv   = survCounts[prof] || 0;
-          const score  = copies + surv * SURV_PTS;
-          const scoreColor = score >= 120 ? '#991b1b' : score >= 80 ? '#92400e' : '#166534';
-          return \`<tr>
+          const copies  = COPIES_PER_PROF[prof] || 0;
+          const surv    = survCounts[prof] || 0;
+          const prevu   = EXCEL_SURV[prof] || 0;
+          const score   = copies + surv * SURV_PTS;
+          const cible   = copies + prevu * SURV_PTS;
+          const ratio   = cible > 0 ? score / cible : 1;
+          const scoreColor = ratio >= 1 ? '#166534' : ratio >= 0.75 ? '#92400e' : '#991b1b';
+          const prevuCell = prevu > 0
+            ? \`\${prevu}\`
+            : \`<span style="color:#9ca3af">–</span>\`;
+          const survCell = surv > 0
+            ? \`\${surv}\`
+            : \`<span style="color:#9ca3af">–</span>\`;
+          const diff = surv - prevu;
+          const diffStr = diff === 0 ? '' : (diff > 0 ? \`<span style="color:#166534;font-size:8px"> +\${diff}</span>\` : \`<span style="color:#991b1b;font-size:8px"> \${diff}</span>\`);
+          return \`<tr title="Cible : \${cible}pts (copies + \${prevu} surv prévues × 16)">
             <td class="rc-prof">\${prof}</td>
             <td class="rc-n">\${copies}</td>
-            <td class="rc-n">\${surv > 0 ? surv * SURV_PTS : '<span style="color:#9ca3af">–</span>'}</td>
+            <td class="rc-n">\${prevuCell}</td>
+            <td class="rc-n">\${survCell}\${diffStr}</td>
             <td class="rc-score" style="color:\${scoreColor}">\${score}</td>
           </tr>\`;
         }).join('');
@@ -814,25 +835,26 @@ ${datalistHtml}
   <div class="recap-inner">
     <h2 class="recap-title">Récap charge de travail</h2>
     <p class="recap-sub">Trié par score décroissant · mis à jour en temps réel</p>
-    <p class="recap-legend">📝 Copies × 1pt &nbsp;·&nbsp; 👁 Surv × 16pts</p>
+    <p class="recap-legend">📝×1pt &nbsp;·&nbsp; 👁×16pts &nbsp;·&nbsp; Score = 📝 + 👁×16<br>Survol ligne = score cible (prévu initial)</p>
     <table class="recap-table">
       <thead>
         <tr>
           <th>Prof</th>
           <th title="Copies à corriger">📝</th>
-          <th title="Surveillances assignées (colonne Fin.)">👁</th>
-          <th title="Score total (copies + surv×8)">Score</th>
+          <th title="Surveillances prévues (planning initial)">Prév</th>
+          <th title="Surveillances assignées (colonne Fin.) · ±diff vs prévu">Ass</th>
+          <th title="Score actuel · vert ≥ cible · orange -25% · rouge -25%+">Score</th>
         </tr>
       </thead>
       <tbody id="recap-tbody">
-        <tr><td colspan="4" style="color:#9ca3af;text-align:center;padding:10px;font-style:italic">Chargement…</td></tr>
+        <tr><td colspan="5" style="color:#9ca3af;text-align:center;padding:10px;font-style:italic">Chargement…</td></tr>
       </tbody>
     </table>
     ${noRespHtml}
   </div>
 </div>
 
-<script>const COPIES_PER_PROF=${JSON.stringify(copiesPerProfF)};${jsF}</script></body></html>`
+<script>const COPIES_PER_PROF=${JSON.stringify(copiesPerProfF)};const EXCEL_SURV=${JSON.stringify(excelSurvF)};${jsF}</script></body></html>`
     return new Response(htmlF, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
   }
 
