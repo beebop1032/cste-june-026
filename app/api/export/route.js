@@ -870,7 +870,6 @@ ${datalistHtml}
     <h2 class="recap-title">Récap charge de travail</h2>
     <p class="recap-sub">Trié par score décroissant · mis à jour en temps réel</p>
     <p class="recap-legend">Score = copies actuelles + nouv × 16<br>Cible = copies initiales + H.prév × 16<br>Reste = Cible − Score &nbsp;<span style="color:#166534">✓</span>=atteint</p>
-    <button class="autofill-btn" onclick="autoFill()">⚖ Auto-répartir équitablement</button>
     <table class="recap-table">
       <thead>
         <tr>
