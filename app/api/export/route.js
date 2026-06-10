@@ -501,6 +501,12 @@ export async function GET(request) {
       .legend { display:flex; gap:12px; align-items:center; padding:7px 28px; background:#fff; border-bottom:1px solid var(--border); font-size:10px; color:var(--muted); flex-wrap:wrap }
       .leg { display:flex; align-items:center; gap:4px }
       .leg-dot { width:9px; height:9px; border-radius:2px; flex-shrink:0 }
+      .leg-sep { width:1px; height:14px; background:var(--border); margin:0 2px }
+      .leg-filter { cursor:pointer; font-weight:600; color:#374151; user-select:none }
+      .leg-filter input { accent-color:#1a3254; cursor:pointer }
+      /* Filtres : masquage des examens annulés / remplis (Prof + Local) */
+      body.hide-annule td[data-annule],
+      body.hide-filled td[data-filled] { visibility:hidden }
       .content { max-width:1700px; margin:0 auto; padding:14px 18px 32px }
       .day { background:var(--white); border:1px solid var(--border); border-radius:6px; overflow:hidden; margin-bottom:10px; box-shadow:0 1px 5px rgba(0,0,0,.05) }
       .day-hdr { background:var(--navy); color:#fff; padding:7px 13px; display:flex; align-items:center; justify-content:space-between }
@@ -663,6 +669,7 @@ export async function GET(request) {
         });
         localStorage.removeItem('tf-surv-2026');
         scheduleSync();
+        updateFilledMarks();
         showStatus('Réinitialisé');
       }
       function save() {
@@ -670,7 +677,21 @@ export async function GET(request) {
         localStorage.setItem('tf-surv-2026', JSON.stringify(vals));
         showStatus('Sauvegardé ✓');
         scheduleSync();
+        updateFilledMarks();
         updateRecap();
+      }
+      // Marque data-filled sur les cellules des examens dont Prof (Fin.) ET Local sont saisis
+      function updateFilledMarks() {
+        const locByEx = {};
+        document.querySelectorAll('.loc-inp[data-exid]').forEach(i => { locByEx[i.dataset.exid] = i.value.trim(); });
+        document.querySelectorAll('.fin-inp[data-exid]').forEach(inp => {
+          const id = inp.dataset.exid;
+          const filled = inp.value.trim() && locByEx[id];
+          document.querySelectorAll('td[data-exgrp="' + id + '"]').forEach(td => {
+            if (filled) td.setAttribute('data-filled', '1');
+            else td.removeAttribute('data-filled');
+          });
+        });
       }
       // Sync serveur (Blob) : surveillants + locaux par examen — utilisé par les vues imprimables
       let syncT = null;
@@ -831,6 +852,7 @@ export async function GET(request) {
             this.value = this.value.toUpperCase();
             this.classList.toggle('has-val', this.value.length > 0);
             scheduleSync();
+            updateFilledMarks();
             showStatus('Sauvegardé ✓');
           });
         });
@@ -855,8 +877,10 @@ export async function GET(request) {
             const v = (data.surveillants || {})[inp.dataset.exid];
             if (v && !inp.value) { inp.value = v; inp.classList.add('has-val'); }
           });
+          updateFilledMarks();
           updateRecap();
         }).catch(() => {});
+        updateFilledMarks();
         updateRecap();
       });
     `
@@ -895,6 +919,9 @@ ${datalistHtml}
   <span class="leg"><span class="leg-dot" style="background:#fde8e8;border:1px solid #fca5a5"></span>Annulé</span>
   <span class="leg"><span class="leg-dot" style="background:#d1fae5;border:1px solid #6ee7b7"></span>Tous les élèves</span>
   <span class="leg"><span class="leg-dot" style="background:#dbeafe;border:1px solid #93c5fd"></span>Liste nominative</span>
+  <span class="leg-sep"></span>
+  <label class="leg leg-filter"><input type="checkbox" checked onchange="document.body.classList.toggle('hide-annule', !this.checked)" /> Afficher les examens annulés</label>
+  <label class="leg leg-filter"><input type="checkbox" checked onchange="document.body.classList.toggle('hide-filled', !this.checked)" /> Afficher les examens remplis (Prof + Local)</label>
 </div>
 
 <div class="content">
@@ -938,7 +965,11 @@ ${datalistHtml}
                 htmlF += `<td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td>`
                 return
               }
-              htmlF += `<td class="tm">${ex.matiere}</td><td class="tg">${ex.groupe}</td><td class="tp">${ex.profCode}</td>${partBadgeF(ex)}${survFinalCells(ex)}`
+              // Tag chaque cellule de l'examen pour les filtres annulés/remplis (masquage client)
+              const isAnnule = partMap.get(ex.id)?.type === 'annule'
+              let cells = `<td class="tm">${ex.matiere}</td><td class="tg">${ex.groupe}</td><td class="tp">${ex.profCode}</td>${partBadgeF(ex)}${survFinalCells(ex)}`
+              cells = cells.replace(/<td /g, `<td data-exgrp="${ex.id}"${isAnnule ? ' data-annule="1"' : ''} `)
+              htmlF += cells
             })
             htmlF += `</tr>`
           }
