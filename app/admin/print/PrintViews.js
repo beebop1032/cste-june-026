@@ -291,10 +291,7 @@ body {
   border-bottom: 2.5px solid var(--navy); padding-bottom: 12px; margin-bottom: 20px;
 }
 .pdf-logo-box {
-  background: var(--navy); border-radius: 6px;
-  padding: 6px 10px; display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  flex-shrink: 0; overflow: hidden; display: flex; align-items: flex-start;
 }
 .pdf-school-name { font-size: 15px; font-weight: 700; color: var(--navy); letter-spacing: -.3px; }
 .pdf-school-sub  { font-size: 10px; color: var(--muted); margin-top: 2px; }
@@ -756,7 +753,7 @@ function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] })
         <div key={groupe} className="pdf-page">
           <div className="pdf-school-hdr">
             <div className="pdf-logo-box">
-              <img src="/logo.png" alt="" style={{ height: 56, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+              <img src="/Logo_couleur.png" alt="" style={{ height: 90, width: 'auto', display: 'block', clipPath: 'inset(0 0 38% 0)' }} />
             </div>
             <div style={{ flex: 1 }}>
               <div className="pdf-school-name">Collège des Hayeffes</div>
@@ -881,7 +878,7 @@ function ViewPdfEleves({ exams, partData, allGroupes, manuscriptGroupes = [] }) 
         <div key={i} className="pdf-page">
           <div className="pdf-school-hdr">
             <div className="pdf-logo-box">
-              <img src="/logo.png" alt="" style={{ height: 56, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+              <img src="/Logo_couleur.png" alt="" style={{ height: 90, width: 'auto', display: 'block', clipPath: 'inset(0 0 38% 0)' }} />
             </div>
             <div style={{ flex: 1 }}>
               <div className="pdf-school-name">Collège des Hayeffes</div>
