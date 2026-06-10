@@ -331,6 +331,29 @@ body {
   margin-top: 28px; font-size: 9px; color: var(--subtle); text-align: center; padding-top: 3px;
 }
 
+.pdf-student-list { display: flex; flex-direction: column; gap: 0; margin-top: 4px; }
+.pdf-student-block { margin-bottom: 8px; }
+.pdf-student-name {
+  font-weight: 700; font-size: 11.5px; color: var(--navy);
+  padding: 4px 0 3px; border-bottom: 1.5px solid var(--navy-light); margin-bottom: 1px;
+  letter-spacing: -.1px;
+}
+.pdf-exam-line {
+  display: grid; grid-template-columns: 120px 55px 1fr 44px;
+  gap: 4px; padding: 2.5px 4px; font-size: 10.5px;
+  border-bottom: 1px solid var(--border-light);
+}
+.pdf-exam-line:last-child { border-bottom: none; }
+.pdf-exam-date { color: var(--muted); white-space: nowrap; }
+.pdf-exam-per  { font-weight: 700; color: var(--navy-light); }
+.pdf-exam-mat  { font-weight: 600; }
+.pdf-exam-prof { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--muted); text-align: right; }
+
+@media print {
+  .pdf-student-block { break-inside: avoid; }
+  .pdf-exam-line { padding: 2px 2px; font-size: 9.5px; }
+}
+
 .pdf-footer {
   margin-top: auto; padding-top: 14px;
   border-top: 1px solid var(--border); font-size: 9.5px; color: var(--subtle); line-height: 1.5;
@@ -668,19 +691,47 @@ const PDF_DATE = new Date().toLocaleDateString('fr-BE', { day: 'numeric', month:
 
 function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] }) {
   const pages = useMemo(() => {
-    const allGroups = [...allGroupes, ...manuscriptGroupes]
+    const allGroups = [...allGroupes, ...manuscriptGroupes].filter(g => !/^[12]/i.test(g))
+    const sortedExams = [...exams].sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode))
+
     return allGroups.map(groupe => {
       const upper = groupe.toUpperCase()
-      const gExams = []
-      for (const ex of exams) {
+      const studentMap = new Map()
+      const studentExamSets = new Map()
+      const tousExams = []
+
+      for (const ex of sortedExams) {
         const p = partData[ex.id]
         if (!keep(p)) continue
         if (ex.groupe.toUpperCase() !== upper) continue
-        gExams.push({ ex, p })
+
+        if (p.type === 'tous') {
+          tousExams.push(ex)
+        } else if (p.type === 'liste' && p.eleves?.length) {
+          for (const el of p.eleves) {
+            const key = `${(el.nom || '').toUpperCase()}||${(el.prenom || '').toLowerCase()}`
+            if (!studentMap.has(key)) {
+              studentMap.set(key, { nom: el.nom ?? '', prenom: el.prenom ?? '', exams: [] })
+              studentExamSets.set(key, new Set())
+            }
+            if (!studentExamSets.get(key).has(ex.id)) {
+              studentExamSets.get(key).add(ex.id)
+              studentMap.get(key).exams.push(ex)
+            }
+          }
+        }
       }
-      gExams.sort((a, b) => a.ex.jour.localeCompare(b.ex.jour) || a.ex.periode.localeCompare(b.ex.periode))
-      return { groupe, exams: gExams }
-    }).filter(g => g.exams.length > 0 && !/^[12]/i.test(g.groupe))
+
+      // Add tous exams to each named student
+      const students = [...studentMap.values()].map(st => {
+        const key = `${st.nom.toUpperCase()}||${st.prenom.toLowerCase()}`
+        const set = studentExamSets.get(key)
+        const extra = tousExams.filter(ex => !set?.has(ex.id))
+        return { ...st, exams: [...st.exams, ...extra].sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode)) }
+      }).sort((a, b) => a.nom.localeCompare(b.nom) || a.prenom.localeCompare(b.prenom))
+
+      return { groupe, students, tousOnly: students.length === 0 ? tousExams : [] }
+    }).filter(g => g.students.length > 0 || g.tousOnly.length > 0)
   }, [exams, partData, allGroupes, manuscriptGroupes])
 
   if (pages.length === 0) return (
@@ -689,7 +740,7 @@ function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] })
 
   return (
     <div className="pdf-wrap">
-      {pages.map(({ groupe, exams: gExams }) => (
+      {pages.map(({ groupe, students, tousOnly }) => (
         <div key={groupe} className="pdf-page">
           <div className="pdf-school-hdr">
             <img src="/logo.png" alt="" style={{ height: 44, width: 'auto', objectFit: 'contain', flexShrink: 0 }} />
@@ -704,53 +755,45 @@ function ViewPdfClasses({ exams, partData, allGroupes, manuscriptGroupes = [] })
             <div className="pdf-subject-label">Examens maintenus — Session de juin 2026</div>
             <div className="pdf-subject-value">Classe {groupe}</div>
             <div style={{ marginTop: 8 }}>
-              <span className="pdf-count-badge">{gExams.length} examen{gExams.length !== 1 ? 's' : ''}</span>
+              <span className="pdf-count-badge">{students.length > 0 ? `${students.length} élève${students.length !== 1 ? 's' : ''}` : `${tousOnly.length} examen${tousOnly.length !== 1 ? 's' : ''}`}</span>
             </div>
           </div>
 
-          <div className="pdf-notice">
-            Vous trouverez ci-dessous la liste des examens maintenus pour votre classe lors de la session de juin 2026.
-            Prière de vous présenter à l'heure indiquée. Toute absence doit être signalée préalablement.
-            <br /><em>[Texte à compléter — instructions spécifiques, remarques générales, etc.]</em>
-          </div>
-
-          <table className="pdf-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Pér.</th>
-                <th>Matière</th>
-                <th>Prof</th>
-                <th>Élèves concernés</th>
-              </tr>
-            </thead>
-            <tbody>
-              {gExams.map(({ ex, p }) => (
-                <tr key={ex.id}>
-                  <td style={{ whiteSpace: 'nowrap' }}>{fmtJour(ex.jour)}</td>
-                  <td style={{ fontWeight: 700 }}>{ex.periode}</td>
-                  <td style={{ fontWeight: 600 }}>{ex.matiere}</td>
-                  <td><span className="mono">{ex.profCode}</span></td>
-                  <td>
-                    {p.type === 'tous' ? (
-                      <span style={{ color: '#065f46', fontWeight: 600 }}>Toute la classe</span>
-                    ) : (
-                      <>
-                        <span style={{ color: '#1e40af', fontWeight: 600 }}>{p.nEleves} élève{p.nEleves !== 1 ? 's' : ''}</span>
-                        {p.eleves?.length > 0 && (
-                          <div className="pdf-students">
-                            {p.eleves.map((el, i) => (
-                              <span key={i} className="pdf-student-chip">{el.prenom} {el.nom}</span>
-                            ))}
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </td>
-                </tr>
+          {/* Named students with their exam list */}
+          {students.length > 0 && (
+            <div className="pdf-student-list">
+              {students.map((st, i) => (
+                <div key={i} className="pdf-student-block">
+                  <div className="pdf-student-name">{st.nom} {st.prenom}</div>
+                  {st.exams.map(ex => (
+                    <div key={ex.id} className="pdf-exam-line">
+                      <span className="pdf-exam-date">{fmtJourCourt(ex.jour)}</span>
+                      <span className="pdf-exam-per">{ex.periode}</span>
+                      <span className="pdf-exam-mat">{ex.matiere}</span>
+                      <span className="pdf-exam-prof">{ex.profCode}</span>
+                    </div>
+                  ))}
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          )}
+
+          {/* Fallback: only tous-type exams, no named students */}
+          {tousOnly.length > 0 && (
+            <table className="pdf-table" style={{ marginTop: 12 }}>
+              <thead><tr><th>Date</th><th>Pér.</th><th>Matière</th><th>Prof</th></tr></thead>
+              <tbody>
+                {tousOnly.map(ex => (
+                  <tr key={ex.id}>
+                    <td style={{ whiteSpace: 'nowrap' }}>{fmtJour(ex.jour)}</td>
+                    <td style={{ fontWeight: 700 }}>{ex.periode}</td>
+                    <td style={{ fontWeight: 600 }}>{ex.matiere}</td>
+                    <td><span className="mono">{ex.profCode}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
 
           <div className="pdf-footer">
             Collège des Hayeffes — Session de juin 2026 — Document réservé à usage interne
