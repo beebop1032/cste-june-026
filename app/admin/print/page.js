@@ -12,8 +12,9 @@ export default async function PrintPage() {
     getLocksData(),
     read('final-locaux.json'),
   ])
-  // Locaux saisis dans le Tableau Final — priorité sur le local d'origine de l'horaire
-  const locauxFinal = finalData?.locaux ?? {}
+  // Locaux et surveillants saisis dans le Tableau Final
+  const locauxFinal       = finalData?.locaux ?? {}
+  const surveillantsFinal = finalData?.surveillants ?? {}
   const groupeStatuts = locksData.groupeStatuts ?? {}
   const examStatuts   = locksData.examStatuts   ?? {}
 
@@ -88,7 +89,7 @@ export default async function PrintPage() {
           </nav>
         </div>
       </div>
-      <PrintViews exams={exams} partData={partData} allGroupes={allGroupes} allProfs={allProfs} manuscriptGroupes={manuscriptGroupes} locaux={locauxFinal} />
+      <PrintViews exams={exams} partData={partData} allGroupes={allGroupes} allProfs={allProfs} manuscriptGroupes={manuscriptGroupes} locaux={locauxFinal} surveillants={surveillantsFinal} />
     </>
   )
 }

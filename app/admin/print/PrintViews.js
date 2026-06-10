@@ -1002,8 +1002,9 @@ function ViewPdfEleves({ exams, partData, allGroupes, manuscriptGroupes = [], lo
 
 // ── View: PDF Surveillances ───────────────────────────────────────────────────
 
-function ViewPdfSurveillances({ exams, partData, jourFilter, locaux }) {
+function ViewPdfSurveillances({ exams, partData, jourFilter, locaux, surveillants }) {
   const localOf = makeLocalOf(locaux)
+  const survOf = ex => (surveillants && surveillants[ex.id]) || ''
   const pages = useMemo(() => {
     return exams
       .filter(ex => keep(partData[ex.id]))
@@ -1053,7 +1054,7 @@ function ViewPdfSurveillances({ exams, partData, jourFilter, locaux }) {
             </div>
           </div>
 
-          <div className="pdf-surv-meta">
+          <div className="pdf-surv-meta" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
             <div className="pdf-surv-meta-item">
               <div className="lbl">Date</div>
               <div className="val">{fmtJourCourt(ex.jour)}</div>
@@ -1069,6 +1070,10 @@ function ViewPdfSurveillances({ exams, partData, jourFilter, locaux }) {
             <div className="pdf-surv-meta-item">
               <div className="lbl">Professeur</div>
               <div className="val">{ex.profCode}</div>
+            </div>
+            <div className="pdf-surv-meta-item" style={{ borderColor: 'var(--gold)', background: 'var(--gold-bg)' }}>
+              <div className="lbl">Surveillant</div>
+              <div className="val">{survOf(ex) || '—'}</div>
             </div>
           </div>
 
@@ -1109,7 +1114,7 @@ function ViewPdfSurveillances({ exams, partData, jourFilter, locaux }) {
               <div className="pdf-signature-line" style={{ width: 240 }}>&nbsp;</div>
             </div>
             <div className="pdf-signature-block">
-              Le surveillant
+              Le surveillant{survOf(ex) ? ` — ${survOf(ex)}` : ''}
               <div className="pdf-signature-line">signature</div>
             </div>
           </div>
@@ -1185,7 +1190,7 @@ function buildCsvRows(exams, partData, filterFn) {
   return rows
 }
 
-export default function PrintViews({ exams, partData, allGroupes, allProfs, manuscriptGroupes = [], locaux = {} }) {
+export default function PrintViews({ exams, partData, allGroupes, allProfs, manuscriptGroupes = [], locaux = {}, surveillants = {} }) {
   const [tab,     setTab]     = useState('classe')
   const [groupe,  setGroupe]  = useState('')
   const [prof,    setProf]    = useState('')
@@ -1311,7 +1316,7 @@ export default function PrintViews({ exams, partData, allGroupes, allProfs, manu
       {/* PDF views — full width, one A4 page per item */}
       {tab === 'pdf-classes' && <ViewPdfClasses exams={exams} partData={partData} allGroupes={allGroupes} manuscriptGroupes={manuscriptGroupes} locaux={locaux} />}
       {tab === 'pdf-eleves'  && <ViewPdfEleves  exams={exams} partData={partData} allGroupes={allGroupes} manuscriptGroupes={manuscriptGroupes} locaux={locaux} />}
-      {tab === 'pdf-surv'    && <ViewPdfSurveillances exams={exams} partData={partData} jourFilter={jourPdf} locaux={locaux} />}
+      {tab === 'pdf-surv'    && <ViewPdfSurveillances exams={exams} partData={partData} jourFilter={jourPdf} locaux={locaux} surveillants={surveillants} />}
     </>
   )
 }
