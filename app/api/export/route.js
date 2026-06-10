@@ -559,8 +559,8 @@ export async function GET(request) {
       .recap-table thead th { background:#f0ede6; color:#1a3254; font-size:7.5px; font-weight:700; text-transform:uppercase; padding:3px 3px; border:1px solid #e2dfd8; text-align:center }
       .recap-table tbody td { border:1px solid #e8e4db; padding:2px 3px; vertical-align:middle }
       .rc-prof  { font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:600; color:#374151 }
-      .rc-n     { text-align:center; font-size:9.5px; font-weight:600 }
-      .rc-score { text-align:center; font-size:10px; font-weight:700; min-width:30px }
+      .rc-n     { text-align:center; font-size:9px; font-weight:600; min-width:22px }
+      .rc-cible { text-align:center; font-size:9px; font-weight:700; min-width:28px; background:#f8f6f1 }
       .recap-absent { margin-top:14px; padding-top:10px; border-top:1px solid #e2dfd8 }
       .recap-absent-title { font-size:10px; font-weight:700; color:#7c3aed; margin-bottom:6px }
       .absent-badge { display:inline-block; background:#f5f3ff; color:#4c1d95; border:1px solid #ddd6fe; border-radius:3px; font-family:'JetBrains Mono',monospace; font-size:8.5px; font-weight:600; padding:1px 5px; margin:1px 2px }
@@ -636,7 +636,7 @@ export async function GET(request) {
         const el = document.getElementById('save-status');
         if (el) { el.textContent = msg; clearTimeout(el._t); el._t = setTimeout(() => el.textContent = '', 2000); }
       }
-      const SURV_PTS = 16; // points per surveillance
+      const SURV_PTS = 16;
       function updateRecap() {
         const survCounts = {};
         document.querySelectorAll('.fin-inp').forEach(inp => {
@@ -644,35 +644,30 @@ export async function GET(request) {
           if (v) survCounts[v] = (survCounts[v] || 0) + 1;
         });
         const allProfs = new Set([...Object.keys(COPIES_PER_PROF), ...Object.keys(EXCEL_SURV), ...Object.keys(survCounts)]);
+        // Sort by cible desc (reference level), then score desc
         const sorted = [...allProfs].sort((a, b) => {
-          const sA = (COPIES_PER_PROF[a] || 0) + (survCounts[a] || 0) * SURV_PTS;
-          const sB = (COPIES_PER_PROF[b] || 0) + (survCounts[b] || 0) * SURV_PTS;
-          return sB - sA;
+          const cA = (COPIES_PER_PROF[a] || 0) + (EXCEL_SURV[a] || 0) * SURV_PTS;
+          const cB = (COPIES_PER_PROF[b] || 0) + (EXCEL_SURV[b] || 0) * SURV_PTS;
+          return cB - cA;
         });
         const tbody = document.getElementById('recap-tbody');
         if (!tbody) return;
         tbody.innerHTML = sorted.map(prof => {
-          const copies  = COPIES_PER_PROF[prof] || 0;
-          const surv    = survCounts[prof] || 0;
-          const prevu   = EXCEL_SURV[prof] || 0;
-          const score   = copies + surv * SURV_PTS;
-          const cible   = copies + prevu * SURV_PTS;
-          const ratio   = cible > 0 ? score / cible : 1;
-          const scoreColor = ratio >= 1 ? '#166534' : ratio >= 0.75 ? '#92400e' : '#991b1b';
-          const prevuCell = prevu > 0
-            ? \`\${prevu}\`
-            : \`<span style="color:#9ca3af">–</span>\`;
-          const survCell = surv > 0
-            ? \`\${surv}\`
-            : \`<span style="color:#9ca3af">–</span>\`;
-          const diff = surv - prevu;
-          const diffStr = diff === 0 ? '' : (diff > 0 ? \`<span style="color:#166534;font-size:8px"> +\${diff}</span>\` : \`<span style="color:#991b1b;font-size:8px"> \${diff}</span>\`);
-          return \`<tr title="Cible : \${cible}pts (copies + \${prevu} surv prévues × 16)">
+          const copies = COPIES_PER_PROF[prof] || 0;
+          const prevu  = EXCEL_SURV[prof] || 0;
+          const nouv   = survCounts[prof] || 0;
+          const score  = copies + nouv * SURV_PTS;
+          const cible  = copies + prevu * SURV_PTS;
+          const ratio  = cible > 0 ? score / cible : 1;
+          const scoreColor = ratio >= 1 ? '#166534' : ratio >= 0.75 ? '#b45309' : '#991b1b';
+          const cibleColor = ratio >= 1 ? '#166534' : ratio >= 0.75 ? '#b45309' : '#991b1b';
+          const nd = v => v > 0 ? v : \`<span style="color:#9ca3af">–</span>\`;
+          return \`<tr title="\${copies} copies × 1pt + \${prevu} surv prévues × 16 = cible \${cible}">
             <td class="rc-prof">\${prof}</td>
-            <td class="rc-n">\${copies}</td>
-            <td class="rc-n">\${prevuCell}</td>
-            <td class="rc-n">\${survCell}\${diffStr}</td>
-            <td class="rc-score" style="color:\${scoreColor}">\${score}</td>
+            <td class="rc-n" style="color:\${scoreColor}">\${score}</td>
+            <td class="rc-n">\${nd(prevu)}</td>
+            <td class="rc-n">\${nd(nouv)}</td>
+            <td class="rc-cible" style="color:\${cibleColor}">\${cible}</td>
           </tr>\`;
         }).join('');
       }
@@ -835,15 +830,15 @@ ${datalistHtml}
   <div class="recap-inner">
     <h2 class="recap-title">Récap charge de travail</h2>
     <p class="recap-sub">Trié par score décroissant · mis à jour en temps réel</p>
-    <p class="recap-legend">📝×1pt &nbsp;·&nbsp; 👁×16pts &nbsp;·&nbsp; Score = 📝 + 👁×16<br>Survol ligne = score cible (prévu initial)</p>
+    <p class="recap-legend">Score = copies + nouvelles surv × 16<br>Cible = copies + surv prévues (avant) × 16<br><span style="color:#166534">■</span> ≥ cible &nbsp;<span style="color:#b45309">■</span> -25% &nbsp;<span style="color:#991b1b">■</span> en dessous</p>
     <table class="recap-table">
       <thead>
         <tr>
           <th>Prof</th>
-          <th title="Copies à corriger">📝</th>
-          <th title="Surveillances prévues (planning initial)">Prév</th>
-          <th title="Surveillances assignées (colonne Fin.) · ±diff vs prévu">Ass</th>
-          <th title="Score actuel · vert ≥ cible · orange -25% · rouge -25%+">Score</th>
+          <th title="Score actuel : copies + nouvelles surv × 16">Score</th>
+          <th title="Heures de surv prévues dans l'ancien planning">Prév</th>
+          <th title="Nouvelles heures assignées (colonne Fin.)">Nouv</th>
+          <th title="Score cible : copies + surv prévues × 16">Cible</th>
         </tr>
       </thead>
       <tbody id="recap-tbody">
