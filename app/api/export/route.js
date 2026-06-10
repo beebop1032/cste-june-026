@@ -680,13 +680,16 @@ export async function GET(request) {
         updateFilledMarks();
         updateRecap();
       }
-      // Marque data-filled sur les cellules des examens dont Prof (Fin.) ET Local sont saisis
+      // Marque data-filled sur les cellules des examens dont Prof (Fin.) ET Local sont saisis.
+      // L'examen dont un input a le focus n'est jamais marqué : pas de masquage sous le curseur.
       function updateFilledMarks() {
+        const act = document.activeElement;
+        const activeExid = act && act.dataset ? act.dataset.exid : null;
         const locByEx = {};
         document.querySelectorAll('.loc-inp[data-exid]').forEach(i => { locByEx[i.dataset.exid] = i.value.trim(); });
         document.querySelectorAll('.fin-inp[data-exid]').forEach(inp => {
           const id = inp.dataset.exid;
-          const filled = inp.value.trim() && locByEx[id];
+          const filled = inp.value.trim() && locByEx[id] && id !== activeExid;
           document.querySelectorAll('td[data-exgrp="' + id + '"]').forEach(td => {
             if (filled) td.setAttribute('data-filled', '1');
             else td.removeAttribute('data-filled');
@@ -846,6 +849,11 @@ export async function GET(request) {
               if (next) next.focus();
             }
           });
+          // Au départ du focus, l'examen complété peut être masqué par le filtre
+          inp.addEventListener('blur', () => setTimeout(updateFilledMarks, 120));
+        });
+        document.querySelectorAll('.loc-inp').forEach(inp => {
+          inp.addEventListener('blur', () => setTimeout(updateFilledMarks, 120));
         });
         document.querySelectorAll('.loc-inp').forEach(inp => {
           inp.addEventListener('input', function() {
