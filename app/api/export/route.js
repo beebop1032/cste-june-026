@@ -657,17 +657,15 @@ export async function GET(request) {
         });
         return c;
       }
-      function getReste(prof, nouv) {
-        const d = REP_DATA[prof];
-        if (!d) return 0;
-        const cible = d.c + d.s * SURV_PTS;
-        const score = (COPIES_PER_PROF[prof] || 0) + nouv * SURV_PTS;
-        return cible - score;
-      }
       function updateRecap() {
         const survCounts = getCounts();
         const allProfs = Object.keys(REP_DATA);
-        allProfs.sort((a, b) => getReste(b, survCounts[b]||0) - getReste(a, survCounts[a]||0));
+        // Sort by ratio asc: lowest % of cible reached = most behind
+        allProfs.sort((a, b) => {
+          const ra = ratioOf(a, survCounts[a]||0);
+          const rb = ratioOf(b, survCounts[b]||0);
+          return ra - rb;
+        });
         const tbody = document.getElementById('recap-tbody');
         if (!tbody) return;
         tbody.innerHTML = allProfs.map(prof => {
@@ -676,20 +674,28 @@ export async function GET(request) {
           const nouv   = survCounts[prof] || 0;
           const score  = copies + nouv * SURV_PTS;
           const cible  = d.c + d.s * SURV_PTS;
-          const reste  = cible - score;
-          const rc = reste <= 0 ? '#166534' : reste <= 48 ? '#b45309' : '#991b1b';
+          const ratio  = cible > 0 ? score / cible : 1;
+          const pct    = Math.round(ratio * 100);
+          const rc     = ratio >= 1 ? '#166534' : ratio >= 0.75 ? '#b45309' : '#991b1b';
           const nd = v => v > 0 ? v : \`<span style="color:#d1d5db">–</span>\`;
-          const resteCell = reste <= 0
+          const ratioCell = ratio >= 1
             ? \`<span style="color:#166534;font-weight:700">✓</span>\`
-            : \`<span style="color:\${rc};font-weight:700">\${reste}</span>\`;
-          return \`<tr title="Copies initial: \${d.c} · Surv prévues: \${d.s}h · Cible: \${cible}">
+            : \`<span style="color:\${rc};font-weight:700">\${pct}%</span>\`;
+          return \`<tr title="Score: \${score} · Cible: \${cible} · Copies init: \${d.c} · Surv prév: \${d.s}h">
             <td class="rc-prof">\${prof}</td>
             <td class="rc-n">\${score}</td>
             <td class="rc-n">\${nd(d.s)}</td>
             <td class="rc-n">\${nd(nouv)}</td>
-            <td class="rc-cible">\${resteCell}</td>
+            <td class="rc-cible">\${ratioCell}</td>
           </tr>\`;
         }).join('');
+      }
+      function ratioOf(prof, nouv) {
+        const d = REP_DATA[prof];
+        if (!d) return 1;
+        const cible = d.c + d.s * SURV_PTS;
+        if (cible === 0) return 1;
+        return ((COPIES_PER_PROF[prof] || 0) + nouv * SURV_PTS) / cible;
       }
       function autoFill() {
         const inputs = [...document.querySelectorAll('.fin-inp')].filter(i => !i.value);
@@ -869,7 +875,7 @@ ${datalistHtml}
   <div class="recap-inner">
     <h2 class="recap-title">Récap charge de travail</h2>
     <p class="recap-sub">Trié par score décroissant · mis à jour en temps réel</p>
-    <p class="recap-legend">Score = copies actuelles + nouv × 16<br>Cible = copies initiales + H.prév × 16<br>Reste = Cible − Score &nbsp;<span style="color:#166534">✓</span>=atteint</p>
+    <p class="recap-legend">Score = copies actuelles + nouv × 16<br>Cible = copies initiales + H.prév × 16<br>% = Score ÷ Cible &nbsp;<span style="color:#166534">✓</span>=atteint</p>
     <table class="recap-table">
       <thead>
         <tr>
@@ -877,7 +883,7 @@ ${datalistHtml}
           <th title="Score actuel = copies + nouv surv × 16">Score</th>
           <th title="Heures surv prévues (répartitions initiales)">H.Prév</th>
           <th title="Nouvelles heures assignées (Fin.)">Nouv</th>
-          <th title="Reste à atteindre pour égaler la cible (Cible − Score)">Reste</th>
+          <th title="% de la cible atteint (Score ÷ Cible) — trié du plus loin au plus proche">%</th>
         </tr>
       </thead>
       <tbody id="recap-tbody">
