@@ -1339,6 +1339,16 @@ ${datalistHtml}
     const PER_LABEL = { P1: 'P1', P2: 'P2' }
     const PER_TIME  = { P1: '8h30 → 10h10', P2: '10h25 → 12h05' }
 
+    // partMap + elevesMap (pour afficher les élèves dans les cellules réserviste)
+    const partMap  = await buildPartMap()
+    const elevesMap = new Map()   // examId → [{nom, prenom}]
+    for (const prof of profDatas) {
+      for (const ex of prof.examens ?? []) {
+        if (!elevesMap.has(ex.id))
+          elevesMap.set(ex.id, (ex.eleves ?? []).filter(e => e.nom || e.prenom))
+      }
+    }
+
     // Index: "prof|jour|per" → [{mat, grp, local}]
     const survBySlot = {}
     for (const [uid, survProf] of Object.entries(survMap)) {
@@ -1472,7 +1482,11 @@ ${datalistHtml}
         text-transform:uppercase;
       }
       .res-exams{margin-top:2px;font-weight:400;text-transform:none;letter-spacing:0}
-      .re-item{font-size:8px;color:#333;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .re-item{font-size:8px;color:#333;line-height:1.4;margin-bottom:2px}
+      .re-mat{font-weight:700}
+      .re-loc{font-weight:700}
+      .re-elv-all{font-style:italic;color:#555;font-size:7.5px}
+      .re-elv{color:#555;font-size:7.5px}
       .cell-dash{color:#ccc;text-align:center;padding-top:6px;font-size:16px;line-height:1}
 
       /* Réserviste summary en bas de page */
@@ -1559,8 +1573,20 @@ ${datalistHtml}
             if (slotExams.length) {
               html += `<div class="res-exams">`
               slotExams.forEach(e => {
-                const loc = locMap[e.id + '@' + per] ?? locMap[e.id] ?? e.local ?? ''
-                html += `<div class="re-item">${e.matiere} · ${e.groupe}${loc ? ' · ' + loc : ''}</div>`
+                const loc  = locMap[e.id + '@' + per] ?? locMap[e.id] ?? e.local ?? ''
+                const part = partMap.get(e.id)
+                if (part?.type === 'annule') return
+                html += `<div class="re-item"><span class="re-mat">${e.matiere}</span> · ${e.groupe}${loc ? ' · <span class="re-loc">' + loc + '</span>' : ''}`
+                if (part?.type === 'tous') {
+                  html += `<br><span class="re-elv-all">Tous les élèves participent</span>`
+                } else {
+                  const eleves = elevesMap.get(e.id) ?? []
+                  if (eleves.length) {
+                    const noms = eleves.map(el => [el.nom, el.prenom].filter(Boolean).join(' ')).join(', ')
+                    html += `<br><span class="re-elv">${eleves.length} élève${eleves.length > 1 ? 's' : ''} : ${noms}</span>`
+                  }
+                }
+                html += `</div>`
               })
               html += `</div>`
             }
