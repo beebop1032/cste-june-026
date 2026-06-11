@@ -1264,18 +1264,20 @@ ${datalistHtml}
         fusionCandidates.push({ profCode: prof.profCode, jour: meta.jour, periode: meta.periode, matiere: meta.matiere, groupe: meta.groupe, local: meta.local, copies: n })
       }
     }
+    // Une fusion exige la même plage : même prof, même jour ET même période (P1/P2)
     const fusionGroupMap = {}
     for (const c of fusionCandidates) {
-      const key = `${c.profCode}|${c.jour}`
-      if (!fusionGroupMap[key]) fusionGroupMap[key] = { profCode: c.profCode, jour: c.jour, items: [] }
+      const key = `${c.profCode}|${c.jour}|${c.periode}`
+      if (!fusionGroupMap[key]) fusionGroupMap[key] = { profCode: c.profCode, jour: c.jour, periode: c.periode, items: [] }
       fusionGroupMap[key].items.push(c)
     }
-    // fusionsByJour[jour] = array of valid fusion groups (≥2 exams)
-    const fusionsByJour = {}
+    // fusionsByJourPer[`jour|periode`] = array of valid fusion groups (≥2 exams)
+    const fusionsByJourPer = {}
     for (const g of Object.values(fusionGroupMap)) {
       if (g.items.length < 2) continue
-      if (!fusionsByJour[g.jour]) fusionsByJour[g.jour] = []
-      fusionsByJour[g.jour].push(g)
+      const k = `${g.jour}|${g.periode}`
+      if (!fusionsByJourPer[k]) fusionsByJourPer[k] = []
+      fusionsByJourPer[k].push(g)
     }
 
     function partBadge(ex) {
@@ -1395,13 +1397,12 @@ ${datalistHtml}
 `
 
     for (const jour of JOURS) {
-      const dayFusions  = fusionsByJour[jour] ?? []
-      let fusionPrinted = false
+      const nbFusionsJour = (fusionsByJourPer[`${jour}|P1`]?.length ?? 0) + (fusionsByJourPer[`${jour}|P2`]?.length ?? 0)
 
       htmlP += `<div class="day">
   <div class="day-hdr">
     <span class="day-name">${labelJour(jour)}</span>
-    <span style="font-size:10px;color:rgba(255,255,255,.55)">${dayFusions.length > 0 ? `${dayFusions.length} proposition${dayFusions.length > 1 ? 's' : ''} de fusion` : 'Aucune fusion proposée'}</span>
+    <span style="font-size:10px;color:rgba(255,255,255,.55)">${nbFusionsJour > 0 ? `${nbFusionsJour} proposition${nbFusionsJour > 1 ? 's' : ''} de fusion` : 'Aucune fusion proposée'}</span>
   </div>`
 
       for (const periode of ['P1', 'P2']) {
@@ -1409,15 +1410,14 @@ ${datalistHtml}
         if (!bloc.length) continue
         const { byNiveau, maxRows } = buildBlocRows(bloc)
 
-        const showFusionContent = !fusionPrinted
-        if (showFusionContent) fusionPrinted = true
+        const perFusions = fusionsByJourPer[`${jour}|${periode}`] ?? []
 
         // Build fusion cell HTML
         let fusionCellHtml = ''
-        if (dayFusions.length === 0) {
+        if (perFusions.length === 0) {
           fusionCellHtml = `<span class="fi-none">–</span>`
         } else {
-          fusionCellHtml = dayFusions.map(g => {
+          fusionCellHtml = perFusions.map(g => {
             const parts = g.items.map(it => `${it.matiere}&nbsp;${it.groupe}&nbsp;(${it.periode},&nbsp;${it.copies}&nbsp;él.)`)
             const total = g.items.reduce((s, it) => s + it.copies, 0)
             return `<span class="fi"><span class="fi-prof">${g.profCode}</span><span class="fi-arrow">↔</span>${parts.join('<span class="fi-arrow"> + </span>')}<span class="fi-arrow"> →</span> <span class="fi-tot">${total}&nbsp;él.</span></span>`
@@ -1447,11 +1447,7 @@ ${datalistHtml}
             htmlP += `<td class="tm">${ex.matiere}</td><td class="tg">${ex.groupe}</td><td class="tp">${ex.profCode}</td>${partBadge(ex)}`
           })
           if (i === 0) {
-            if (showFusionContent) {
-              htmlP += `<td rowspan="${maxRows}" class="tf-cell">${fusionCellHtml}</td>`
-            } else {
-              htmlP += `<td rowspan="${maxRows}" class="tf-empty"></td>`
-            }
+            htmlP += `<td rowspan="${maxRows}" class="tf-cell">${fusionCellHtml}</td>`
           }
           htmlP += `</tr>`
         }
