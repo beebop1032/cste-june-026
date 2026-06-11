@@ -1,0 +1,270 @@
+{
+  "ANM": {
+    "nom": "Anciaux",
+    "prenom": "Marc"
+  },
+  "BALJ": {
+    "nom": "Balbin",
+    "prenom": "Jimmy"
+  },
+  "BAL": {
+    "nom": "Barbier",
+    "prenom": "Ludivine"
+  },
+  "BAU": {
+    "nom": "Bauwin",
+    "prenom": "Christelle"
+  },
+  "BERS": {
+    "nom": "Bernard",
+    "prenom": "Sylvain"
+  },
+  "BIE": {
+    "nom": "Biernaux",
+    "prenom": "Romain"
+  },
+  "BLOA": {
+    "nom": "Blothiaux",
+    "prenom": "Aline"
+  },
+  "BHA": {
+    "nom": "Bouchat",
+    "prenom": "Félicie"
+  },
+  "BUC": {
+    "nom": "Buchet",
+    "prenom": "Laurie"
+  },
+  "CAR": {
+    "nom": "Carion",
+    "prenom": "Laetitia"
+  },
+  "CARO": {
+    "nom": "Caro",
+    "prenom": "Marie"
+  },
+  "CP": {
+    "nom": "Choppin",
+    "prenom": "Nathalie"
+  },
+  "CLO": {
+    "nom": "Cloots",
+    "prenom": "Cécile"
+  },
+  "COL": {
+    "nom": "Collet",
+    "prenom": "Valérie"
+  },
+  "CORE": {
+    "nom": "Cornez",
+    "prenom": "Elisabeth"
+  },
+  "DANB": {
+    "nom": "Dang",
+    "prenom": "Bao"
+  },
+  "SMO": {
+    "nom": "de Saint Moulin",
+    "prenom": "Olivier"
+  },
+  "DVT": {
+    "nom": "De Vriendt",
+    "prenom": "Marie-Odile"
+  },
+  "DEBS": {
+    "nom": "Debeck",
+    "prenom": "Sophie"
+  },
+  "DEG": {
+    "nom": "Deghirra",
+    "prenom": "Lorena"
+  },
+  "DKS": {
+    "nom": "Dekeuster",
+    "prenom": "Gaël"
+  },
+  "DELF": {
+    "nom": "Delloye",
+    "prenom": "Félix"
+  },
+  "DMI": {
+    "nom": "Deminne",
+    "prenom": "Christelle"
+  },
+  "DEMN": {
+    "nom": "Demotte",
+    "prenom": "Nathalie"
+  },
+  "DESI": {
+    "nom": "Desirant",
+    "prenom": "Laurence"
+  },
+  "DEST": {
+    "nom": "Destree",
+    "prenom": "Guillaume"
+  },
+  "DOM": {
+    "nom": "Doms",
+    "prenom": "Ophélie"
+  },
+  "DRAY": {
+    "nom": "Draye",
+    "prenom": "Maïté"
+  },
+  "DT": {
+    "nom": "Duthoit",
+    "prenom": "Sébastien"
+  },
+  "ENS": {
+    "nom": "Ensch",
+    "prenom": "Laurence"
+  },
+  "EVR": {
+    "nom": "Evrard",
+    "prenom": "Pierre"
+  },
+  "FR": {
+    "nom": "Ferrier",
+    "prenom": "Isabelle"
+  },
+  "FOF": {
+    "nom": "Fouss",
+    "prenom": "Frédéric"
+  },
+  "GAU": {
+    "nom": "Gaudy",
+    "prenom": "Nathalie"
+  },
+  "GOD": {
+    "nom": "Godart",
+    "prenom": "Anne"
+  },
+  "HEK": {
+    "nom": "Hemeryck",
+    "prenom": "Olivier"
+  },
+  "HE": {
+    "nom": "Hermant",
+    "prenom": "Anne"
+  },
+  "IVE": {
+    "nom": "Ivens",
+    "prenom": "Virginie"
+  },
+  "JY": {
+    "nom": "Jacoby",
+    "prenom": "Michèle"
+  },
+  "JAQ": {
+    "nom": "Jacquemin",
+    "prenom": "Brigitte"
+  },
+  "JOR": {
+    "nom": "Jordan",
+    "prenom": "Aline"
+  },
+  "KOT": {
+    "nom": "Kotnik",
+    "prenom": "Charlotte"
+  },
+  "LAY": {
+    "nom": "Lahaye",
+    "prenom": "Vincent"
+  },
+  "LMC": {
+    "nom": "Le Mayeur de Merpe",
+    "prenom": "Céline"
+  },
+  "LNB": {
+    "nom": "Lenoble",
+    "prenom": "Alix"
+  },
+  "MEL": {
+    "nom": "Melery",
+    "prenom": "Anne"
+  },
+  "MRS": {
+    "nom": "Mertens De Wilmars",
+    "prenom": "Caroline"
+  },
+  "MYN": {
+    "nom": "Misselyn",
+    "prenom": "Aline"
+  },
+  "PHM": {
+    "nom": "Moulaert",
+    "prenom": "Pierre-Hugues"
+  },
+  "ORF": {
+    "nom": "Orfei",
+    "prenom": "Olivier"
+  },
+  "PAY": {
+    "nom": "Paye",
+    "prenom": "Amandine"
+  },
+  "PEC": {
+    "nom": "Pecorella",
+    "prenom": "Fabrice"
+  },
+  "PERS": {
+    "nom": "Persoons",
+    "prenom": "Ludovic"
+  },
+  "PIEJ": {
+    "nom": "Pierard",
+    "prenom": "Julien"
+  },
+  "ROD": {
+    "nom": "Rödel",
+    "prenom": "Erik"
+  },
+  "RSV": {
+    "nom": "Rousseau",
+    "prenom": "Vincent"
+  },
+  "SAR": {
+    "nom": "Sarkozi",
+    "prenom": "Jennifer"
+  },
+  "SHE": {
+    "nom": "scheers",
+    "prenom": "Ludivine"
+  },
+  "TAB": {
+    "nom": "Tabury",
+    "prenom": "Alan"
+  },
+  "TAC": {
+    "nom": "Tacq",
+    "prenom": "Christelle"
+  },
+  "TAIL": {
+    "nom": "Taillier",
+    "prenom": "Ysaline"
+  },
+  "VDS": {
+    "nom": "Van Den Abeele",
+    "prenom": "Steven"
+  },
+  "VHM": {
+    "nom": "Van Humbeeck",
+    "prenom": "Michaël"
+  },
+  "VBG": {
+    "nom": "Verbrugghe",
+    "prenom": "Valérie"
+  },
+  "VERM": {
+    "nom": "Vermeiren",
+    "prenom": "Aude"
+  },
+  "VEC": {
+    "nom": "Versichel",
+    "prenom": "Christian"
+  },
+  "VERS": {
+    "nom": "Verstichel",
+    "prenom": "Johana"
+  }
+}

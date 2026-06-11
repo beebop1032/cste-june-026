@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { requireAdmin } from '@/lib/auth'
 import { listFiles, read, writeFileSafe, deleteFile } from '@/lib/storage'
 import exams from '@/lib/exams.json'
+import profsData from '@/lib/profs.json'
 
 export async function GET(request) {
   await requireAdmin()
@@ -1413,6 +1414,7 @@ ${datalistHtml}
         flex-shrink:0;
       }
       .prof-tri{font-size:32px;font-weight:900;letter-spacing:2px;text-transform:uppercase;line-height:1}
+      .prof-fullname{font-size:15px;font-weight:600;margin-top:3px;letter-spacing:.3px}
       .prof-meta{font-size:9px;color:#555;margin-top:2px}
 
       /* Grille */
@@ -1574,9 +1576,15 @@ ${datalistHtml}
       }).join('')
 
 
+      const profInfo = profsData[prof] ?? {}
+      const profFullName = profInfo.prenom && profInfo.nom
+        ? `${profInfo.prenom} ${profInfo.nom.toUpperCase()}`
+        : ''
+
       htmlRP += `<div class="ppage" data-prof="${prof}" data-s="${ns + nr}">
   <div class="prof-hdr">
     <div class="prof-tri">${prof}</div>
+    ${profFullName ? `<div class="prof-fullname">${profFullName}</div>` : ''}
     <div class="prof-meta">${ns} surveillance${ns !== 1 ? 's' : ''}${nr ? ' · ' + nr + ' réserviste' + (nr > 1 ? 's' : '') : ''} · Juin 2026 · Collège des Hayeffes</div>
   </div>
   <div class="grid-wrap">
