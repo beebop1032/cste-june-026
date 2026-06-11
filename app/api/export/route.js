@@ -1462,10 +1462,9 @@ ${datalistHtml}
       table.rp tbody tr{height:50%}
       table.rp tbody td{
         border:1px solid #888;
-        padding:0;
+        padding:4px 5px;
         vertical-align:top;
         font-size:11px;
-        position:relative;
       }
       table.rp tbody td.per-td{
         border:1px solid #000;
@@ -1477,7 +1476,8 @@ ${datalistHtml}
         width:18mm;
         line-height:1.2;
       }
-      .cell-inner{position:absolute;inset:0;display:flex;flex-direction:column;gap:2px;padding:4px 5px;overflow:hidden}
+      .cell-inner{display:flex;flex-direction:column;gap:2px}
+      .elv-list{max-height:55mm;overflow:hidden}
       .s-mat{font-weight:700;font-size:12px;line-height:1.2}
       .s-niv{font-weight:400;font-size:10px;color:#555}
       .s-tit{font-weight:400;font-size:10px;color:#888}
@@ -1630,9 +1630,11 @@ ${datalistHtml}
             if (part?.type === 'tous') {
               html += `<div class="re-elv-all">Tous les élèves</div>`
             } else if (eleves.length) {
+              html += `<div class="elv-list">`
               eleves.forEach(el => {
                 html += `<div class="re-elv-name">${[el.nom, el.prenom].filter(Boolean).join(' ')}</div>`
               })
+              html += `</div>`
             }
           })
           if (isRes) {
