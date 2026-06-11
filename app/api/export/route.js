@@ -527,8 +527,13 @@ export async function GET(request) {
       body.hide-filled td[data-filled] { visibility:hidden }
       .content { max-width:1700px; margin:0 auto; padding:14px 18px 32px }
       .day { background:var(--white); border:1px solid var(--border); border-radius:6px; overflow:hidden; margin-bottom:10px; box-shadow:0 1px 5px rgba(0,0,0,.05) }
-      .day-hdr { background:var(--navy); color:#fff; padding:7px 13px; display:flex; align-items:center; justify-content:space-between }
-      .day-name { font-weight:700; font-size:11.5px; letter-spacing:.5px; text-transform:uppercase }
+      .day-hdr { background:var(--navy); color:#fff; padding:5px 13px 6px; display:flex; align-items:center; gap:14px; flex-wrap:wrap }
+      .day-name { font-weight:700; font-size:11.5px; letter-spacing:.5px; text-transform:uppercase; margin-right:4px }
+      .res-row { display:flex; align-items:center; gap:6px; flex:1; flex-wrap:wrap }
+      .res-lbl { font-size:9px; font-weight:700; color:rgba(255,255,255,.6); text-transform:uppercase; letter-spacing:.5px; white-space:nowrap }
+      .res-inp { width:160px; border:1px solid rgba(255,255,255,.3); border-radius:3px; padding:2px 6px; font-family:'JetBrains Mono',monospace; font-size:9px; color:#fff; background:rgba(255,255,255,.1); text-transform:uppercase }
+      .res-inp:focus { outline:none; border-color:rgba(255,255,255,.7); background:rgba(255,255,255,.18) }
+      .res-inp.has-val { background:rgba(255,255,255,.2); border-color:rgba(255,255,255,.6) }
       .per { padding:7px 13px 9px; border-top:1px solid var(--border) }
       .per:first-of-type { border-top:none }
       .per-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:var(--navy); margin-bottom:5px; display:flex; align-items:center; gap:6px }
@@ -660,6 +665,12 @@ export async function GET(request) {
         .ts { font-size:6.5px; min-width:16px }
         .tfin-cell { min-width:52px }
         .cp-btn, .lnk-btn { display:none }
+        .res-inp {
+          border:none !important; background:transparent !important;
+          width:auto !important; font-size:7px; padding:0 !important;
+          color:#fff; font-weight:700; text-transform:uppercase;
+        }
+        .res-inp::placeholder { display:none; color:transparent }
         .fin-inp, .loc-inp {
           border:none !important; background:transparent !important;
           width:auto !important; font-size:7px; padding:0 !important;
@@ -779,18 +790,21 @@ export async function GET(request) {
         syncT = setTimeout(syncServer, 800);
       }
       async function syncServer() {
-        const surveillants = {}, locaux = {};
+        const surveillants = {}, locaux = {}, reservistes = {};
         document.querySelectorAll('.fin-inp').forEach(i => {
           if (i.value.trim() && i.dataset.exid) surveillants[i.dataset.exid] = i.value.trim().toUpperCase();
         });
         document.querySelectorAll('.loc-inp').forEach(i => {
           if (i.value.trim() && i.dataset.exid) locaux[i.dataset.exid] = i.value.trim().toUpperCase();
         });
+        document.querySelectorAll('.res-inp').forEach(i => {
+          if (i.value.trim() && i.dataset.slot) reservistes[i.dataset.slot] = i.value.trim().toUpperCase();
+        });
         try {
           const r = await fetch('/api/final', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ surveillants, locaux, liaisons: LIAISONS }),
+            body: JSON.stringify({ surveillants, locaux, liaisons: LIAISONS, reservistes }),
           });
           showStatus(r.ok ? 'Synchronisé ☁' : 'Erreur de sync serveur');
         } catch (e) {
@@ -1062,6 +1076,14 @@ export async function GET(request) {
           // Au départ du focus, l'examen complété peut être masqué par le filtre
           inp.addEventListener('blur', () => setTimeout(updateFilledMarks, 120));
         });
+        document.querySelectorAll('.res-inp').forEach(inp => {
+          inp.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+            this.classList.toggle('has-val', this.value.length > 0);
+            scheduleSync();
+            showStatus('Sauvegardé ✓');
+          });
+        });
         document.querySelectorAll('.loc-inp').forEach(inp => {
           inp.addEventListener('blur', () => setTimeout(updateFilledMarks, 120));
         });
@@ -1112,6 +1134,12 @@ export async function GET(request) {
           document.querySelectorAll('.fin-inp').forEach(inp => {
             const v = legacyOf(data.surveillants, inp.dataset.exid);
             if (v && !inp.value) { inp.value = v; inp.classList.add('has-val'); }
+          });
+          // Réservistes
+          const res = data.reservistes || {};
+          document.querySelectorAll('.res-inp').forEach(inp => {
+            const v = res[inp.dataset.slot];
+            if (v) { inp.value = v; inp.classList.add('has-val'); }
           });
           updateFilledMarks();
           updateRecap();
@@ -1170,7 +1198,15 @@ ${datalistHtml}
 
     for (const jour of JOURS) {
       htmlF += `<div class="day">
-  <div class="day-hdr"><span class="day-name">${labelJour(jour)}</span></div>`
+  <div class="day-hdr">
+    <span class="day-name">${labelJour(jour)}</span>
+    <div class="res-row">
+      <span class="res-lbl">Rés. P1 :</span>
+      <input class="res-inp" type="text" data-slot="${jour}@P1" list="profs-dl" placeholder="ABC, DEF…" autocomplete="off" />
+      <span class="res-lbl">P2 :</span>
+      <input class="res-inp" type="text" data-slot="${jour}@P2" list="profs-dl" placeholder="ABC…" autocomplete="off" />
+    </div>
+  </div>`
 
       for (const periode of ['P1', 'P2']) {
         const bloc = examsForBloc(jour, periode)
@@ -1294,187 +1330,175 @@ ${datalistHtml}
   // ── Récap prof : corrections + surveillances ──────────────────────────────
 
   if (format === 'print-recap-prof') {
-    const partMap  = await buildPartMap()
-    const finalRaw = await read('final-locaux.json') ?? {}
-    const survMap  = finalRaw.surveillants ?? {}
-    const locMap   = finalRaw.locaux       ?? {}
+    const finalRaw   = await read('final-locaux.json') ?? {}
+    const survMap    = finalRaw.surveillants ?? {}
+    const locMap     = finalRaw.locaux       ?? {}
+    const resMap     = finalRaw.reservistes  ?? {}   // "jour@per" → "ABC, DEF"
 
-    const CLASS_SIZES_R = {
-      '1H':19,'1I':20,'1J':21,'1K':21,'1L':21,'1M':21,'1N':21,
-      '2H':20,'2I':23,'2J':21,'2K':21,'2L':21,'2M':20,'2N':19,
-      '6H':25,'6I':24,'6J':24,'6K':24,
-    }
-    const szR = g => CLASS_SIZES_R[g] ?? 25
-
-    // Corrections (examens à corriger, non annulés) par prof
-    const corrections = {}   // profCode → [{jour,per,mat,grp,n,type}]
-    const totalCopies = {}   // profCode → int
-    for (const ex of exams) {
-      const p = partMap.get(ex.id)
-      if (!p || p.type === 'annule') continue
-      const n = p.type === 'liste' ? (p.n || 0) : szR(ex.groupe)
-      for (const per of periodesOf(ex)) {
-        if (!corrections[ex.profCode]) { corrections[ex.profCode] = []; totalCopies[ex.profCode] = 0 }
-        corrections[ex.profCode].push({ jour: ex.jour, per, mat: ex.matiere, grp: ex.groupe, n, type: p.type })
-        totalCopies[ex.profCode] = (totalCopies[ex.profCode] || 0) + n
-      }
-    }
-
-    // Surveillances attribuées (tableau final) par prof surveillant
-    const surveillances = {}  // profCode → [{jour,per,mat,grp,local}]
+    // Index: (prof, jour, per) → [{mat, grp, local}]
+    const survBySlot = {}
     for (const [uid, survProf] of Object.entries(survMap)) {
       if (!survProf) continue
       const [baseId, per2] = uid.includes('@') ? uid.split('@') : [uid, null]
       const meta = exams.find(e => e.id === baseId)
       if (!meta) continue
-      const per   = per2 ?? (meta.periode === 'P1+P2' ? 'P1+P2' : meta.periode)
-      const local = locMap[uid] ?? locMap[baseId] ?? meta.local ?? ''
-      if (!surveillances[survProf]) surveillances[survProf] = []
-      // déduplique si même uid déjà présent
-      if (!surveillances[survProf].find(s => s.uid === uid))
-        surveillances[survProf].push({ uid, jour: meta.jour, per, mat: meta.matiere, grp: meta.groupe, local })
+      for (const per of (per2 ? [per2] : periodesOf(meta))) {
+        const local = locMap[uid] ?? locMap[baseId] ?? meta.local ?? ''
+        const key = survProf + '|' + meta.jour + '|' + per
+        if (!survBySlot[key]) survBySlot[key] = []
+        if (!survBySlot[key].find(s => s.mat === meta.matiere && s.grp === meta.groupe))
+          survBySlot[key].push({ mat: meta.matiere, grp: meta.groupe, local })
+      }
+    }
+
+    // Index: (prof, jour, per) → true if réserviste
+    const resByProf = {}   // prof → Set of "jour|per"
+    for (const [slot, val] of Object.entries(resMap)) {
+      if (!val) continue
+      const [jour, per] = slot.split('@')
+      val.split(',').map(s => s.trim().toUpperCase()).filter(Boolean).forEach(prof => {
+        if (!resByProf[prof]) resByProf[prof] = new Set()
+        resByProf[prof].add(jour + '|' + per)
+      })
     }
 
     const allProfsR = [...new Set(exams.map(e => e.profCode))].sort()
-    // Tri par copies desc puis alpha
-    const sorted = [...allProfsR].sort((a,b) => (totalCopies[b]||0) - (totalCopies[a]||0) || a.localeCompare(b))
+    // Nombre de surveillances par prof
+    const nSurvOf = p => Object.keys(survBySlot).filter(k => k.startsWith(p + '|')).length
+    const nResOf  = p => (resByProf[p] ? resByProf[p].size : 0)
+    const sorted  = [...allProfsR].sort((a,b) => (nSurvOf(b)+nResOf(b)) - (nSurvOf(a)+nResOf(a)) || a.localeCompare(b))
 
-    function fmtJ(iso) {
-      const d = new Date(iso + 'T12:00:00Z')
+    function fmtJR(iso) {
+      const d   = new Date(iso + 'T12:00:00Z')
       const day = d.toLocaleDateString('fr-FR', { weekday: 'short', timeZone: 'Europe/Brussels' })
       const [,m,j] = iso.split('-')
-      return day.charAt(0).toUpperCase() + day.slice(1,3) + ' ' + j + '/' + m
+      return `<span class="dw">${day.charAt(0).toUpperCase() + day.slice(1,3)}</span><span class="dd"> ${j}/${m}</span>`
     }
-    function sortSlots(arr) {
-      return [...arr].sort((a,b) => a.jour.localeCompare(b.jour) || a.per.localeCompare(b.per) || (a.mat||'').localeCompare(b.mat||''))
-    }
+
+    const PERS = ['P1', 'P2']
 
     const cssR = `
       @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap');
       *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
       :root{--navy:#1a3254;--gold:#b8893a;--bg:#f4f3ef;--border:#d6d2c8;--muted:#6b7280}
       body{font-family:'Source Sans 3',sans-serif;font-size:10px;background:var(--bg);color:#1c1c1c;line-height:1.3}
-      .topbar{background:var(--navy);color:#fff;padding:11px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:10}
-      .topbar h1{font-size:15px;font-weight:700}
-      .topbar p{font-size:9.5px;color:rgba(255,255,255,.55);margin-top:1px}
-      .topbar-right{display:flex;align-items:center;gap:7px;flex-shrink:0}
-      .btn-gold{background:var(--gold);color:#fff;border:none;padding:6px 14px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;border-radius:4px}
-      .btn-dark{background:#374151;color:#fff;border:none;padding:6px 13px;font-family:inherit;font-size:10.5px;font-weight:600;cursor:pointer;border-radius:4px}
-      .content{max-width:1300px;margin:0 auto;padding:14px 18px 40px}
-      .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(580px,1fr));gap:10px}
-      .card{background:#fff;border:1px solid var(--border);border-radius:5px;overflow:hidden;page-break-inside:avoid;break-inside:avoid}
-      .card-hdr{background:var(--navy);color:#fff;padding:5px 10px;display:flex;align-items:center;gap:8px}
-      .card-prof{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;letter-spacing:.5px;min-width:52px}
-      .card-stats{font-size:9px;color:rgba(255,255,255,.65);display:flex;gap:10px;flex-wrap:wrap}
-      .stat-pill{background:rgba(255,255,255,.12);border-radius:20px;padding:1px 7px;white-space:nowrap}
-      .stat-pill.zero{opacity:.45}
-      .card-body{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border)}
-      .col{padding:0}
-      .col+.col{border-left:1px solid var(--border)}
-      .col-hdr{font-size:7.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;padding:3px 8px;background:#f0ede6;color:var(--navy);border-bottom:1px solid var(--border)}
-      table{width:100%;border-collapse:collapse}
-      td{padding:2px 6px;border-bottom:1px solid #f0ede6;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
-      tr:last-child td{border-bottom:none}
-      .tj{font-size:8.5px;color:var(--muted)}
-      .tp{font-size:8px;color:var(--muted)}
-      .tm{font-size:9px;font-weight:600;color:#1c1c1c;max-width:90px}
-      .tg{font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:700;color:var(--navy)}
-      .tn{font-size:9px;font-weight:700;text-align:right}
-      .tn.all{color:#065f46}.tn.list{color:#1e40af}.tn.zero{color:var(--muted)}
-      .tl{font-family:'JetBrains Mono',monospace;font-size:8.5px;color:#5b21b6;font-weight:700}
-      .empty{padding:5px 8px;font-size:8.5px;color:var(--muted);font-style:italic}
+      .topbar{background:var(--navy);color:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:0;z-index:10}
+      .topbar h1{font-size:14px;font-weight:700}
+      .topbar p{font-size:9px;color:rgba(255,255,255,.5);margin-top:1px}
+      .topbar-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+      .btn-gold{background:var(--gold);color:#fff;border:none;padding:5px 13px;font-family:inherit;font-size:10.5px;font-weight:700;cursor:pointer;border-radius:4px}
+      .btn-dark{background:#374151;color:#fff;border:none;padding:5px 12px;font-family:inherit;font-size:10px;font-weight:600;cursor:pointer;border-radius:4px}
+      .content{max-width:1400px;margin:0 auto;padding:12px 14px 36px}
+      .pcard{background:#fff;border:1px solid var(--border);border-radius:5px;overflow:hidden;margin-bottom:8px;page-break-inside:avoid;break-inside:avoid}
+      .pcard-hdr{background:var(--navy);color:#fff;padding:4px 10px;display:flex;align-items:center;gap:10px}
+      .pname{font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:600;letter-spacing:.5px;min-width:50px}
+      .pstats{font-size:8.5px;color:rgba(255,255,255,.6);display:flex;gap:8px}
+      .ps{background:rgba(255,255,255,.12);border-radius:20px;padding:1px 7px;white-space:nowrap}
+      .ps.z{opacity:.4}
+      table.gt{width:100%;border-collapse:collapse;table-layout:fixed}
+      table.gt th{background:#f0ede6;color:var(--navy);font-size:8px;font-weight:700;padding:3px 4px;border:1px solid var(--border);text-align:center;vertical-align:bottom}
+      table.gt th.per-th{background:#e8e4db;width:32px;font-size:8px;font-weight:700;color:var(--navy)}
+      table.gt th .dw{display:block;font-weight:700}
+      table.gt th .dd{display:block;font-size:7.5px;color:var(--muted)}
+      table.gt td{border:1px solid #e8e4db;padding:3px 5px;vertical-align:top;min-height:28px;font-size:8.5px}
+      table.gt td.per-td{background:#f8f6f1;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;color:var(--navy);text-align:center;vertical-align:middle;width:32px}
+      .cell-surv{display:flex;flex-direction:column;gap:1px}
+      .s-item{background:#eff6ff;border:1px solid #bfdbfe;border-radius:3px;padding:1px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .s-mat{font-weight:600;color:#1e40af;font-size:8px}
+      .s-grp{font-family:'JetBrains Mono',monospace;font-size:7.5px;color:#1e40af}
+      .s-loc{font-family:'JetBrains Mono',monospace;font-size:7px;color:#5b21b6;font-weight:700}
+      .cell-res{background:#fef9c3;border:1px solid #fde047;border-radius:3px;padding:2px 5px;font-size:8px;font-weight:700;color:#713f12;white-space:nowrap}
+      .cell-empty{color:#d1d5db;font-size:9px;text-align:center;padding-top:4px}
       .print-hdr{display:none}
       @media print{
-        @page{size:A4 portrait;margin:8mm 10mm}
-        body{font-size:9px;background:#fff}
+        @page{size:A4 landscape;margin:7mm 9mm}
+        body{font-size:8.5px;background:#fff}
         .topbar,.btn-gold,.btn-dark{display:none}
-        .print-hdr{display:block;text-align:center;padding-bottom:5px;border-bottom:2px solid var(--navy);margin-bottom:8px}
-        .print-hdr h1{font-size:13px;font-weight:700;color:var(--navy)}
-        .print-hdr p{font-size:8px;color:var(--muted);margin-top:2px}
+        .print-hdr{display:block;text-align:center;padding-bottom:4px;border-bottom:2px solid var(--navy);margin-bottom:7px}
+        .print-hdr h1{font-size:12px;font-weight:700;color:var(--navy)}
+        .print-hdr p{font-size:7.5px;color:var(--muted);margin-top:2px}
         .content{padding:0;max-width:none}
-        .grid{grid-template-columns:repeat(2,1fr);gap:6px}
-        .card{border-radius:0;border:1px solid #bbb}
-        .card-hdr{padding:3px 7px}
-        .card-prof{font-size:10.5px}
-        td{padding:1px 5px}
+        .pcard{border-radius:0;border:1px solid #bbb;margin-bottom:4px}
+        .pcard-hdr{padding:2px 7px}
+        .pname{font-size:10px}
+        table.gt th{font-size:7px;padding:2px 3px}
+        table.gt td{padding:2px 3px;font-size:7.5px}
+        .s-item{padding:0 3px}
+        .s-mat{font-size:7px}
+        .s-grp,.s-loc{font-size:6.5px}
+        .cell-res{font-size:7px;padding:1px 3px}
       }
     `
 
     const jsR = `
-      let sortMode = 'copies';
+      let sortMode = 'surv';
       function toggleSort() {
-        sortMode = sortMode === 'copies' ? 'alpha' : 'copies';
+        sortMode = sortMode === 'surv' ? 'alpha' : 'surv';
         const btn = document.getElementById('sort-btn');
-        if (btn) btn.textContent = sortMode === 'copies' ? 'Tri : copies ↓' : 'Tri : alpha ↑';
-        const grid = document.getElementById('prof-grid');
-        if (!grid) return;
-        const cards = [...grid.children];
-        cards.sort((a, b) => {
-          if (sortMode === 'alpha') return a.dataset.prof.localeCompare(b.dataset.prof);
-          return parseInt(b.dataset.copies || 0) - parseInt(a.dataset.copies || 0) || a.dataset.prof.localeCompare(b.dataset.prof);
-        });
-        cards.forEach(c => grid.appendChild(c));
+        if(btn) btn.textContent = sortMode === 'surv' ? 'Tri : surveillances ↓' : 'Tri : alpha ↑';
+        const wrap = document.getElementById('prof-list');
+        if(!wrap) return;
+        const cards = [...wrap.children];
+        cards.sort((a,b) => sortMode === 'alpha'
+          ? a.dataset.prof.localeCompare(b.dataset.prof)
+          : parseInt(b.dataset.surv||0) - parseInt(a.dataset.surv||0) || a.dataset.prof.localeCompare(b.dataset.prof));
+        cards.forEach(c => wrap.appendChild(c));
       }
     `
 
     let htmlR = `<!DOCTYPE html>
 <html lang="fr"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Récap profs — Surveillance juin 2026</title>
+<title>Récap surveillance — Juin 2026</title>
 <style>${cssR}</style>
 </head><body>
 <div class="topbar">
   <div>
-    <h1>Récap profs — Corrections &amp; Surveillances</h1>
-    <p>Collège des Hayeffes · Juin 2026 · ${allProfsR.length} profs · trié par copies décroissantes</p>
+    <h1>Récap surveillance — Profs</h1>
+    <p>Collège des Hayeffes · Juin 2026 · ${allProfsR.length} profs</p>
   </div>
   <div class="topbar-right">
-    <button class="btn-dark" id="sort-btn" onclick="toggleSort()">Tri : copies ↓</button>
-    <button class="btn-gold" onclick="window.print()">Imprimer A4 / PDF</button>
+    <button class="btn-dark" id="sort-btn" onclick="toggleSort()">Tri : surveillances ↓</button>
+    <button class="btn-gold" onclick="window.print()">Imprimer A4 paysage / PDF</button>
   </div>
 </div>
 <div class="print-hdr">
-  <h1>Récap profs — Corrections &amp; Surveillances — Juin 2026</h1>
-  <p>Collège des Hayeffes · Imprimé le ${new Date().toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+  <h1>Récap surveillance — Juin 2026 — Collège des Hayeffes</h1>
+  <p>Imprimé le ${new Date().toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
 </div>
-<div class="content"><div class="grid" id="prof-grid">
+<div class="content"><div id="prof-list">
 `
 
     for (const prof of sorted) {
-      const corr  = sortSlots(corrections[prof]   || [])
-      const surv  = sortSlots(surveillances[prof]  || [])
-      const copies = totalCopies[prof] || 0
-      const nSurv  = surv.length
+      const ns = nSurvOf(prof), nr = nResOf(prof)
 
-      const corrRows = corr.length
-        ? corr.map(r => {
-            const cls = r.type === 'tous' ? 'all' : r.type === 'liste' ? 'list' : 'zero'
-            return `<tr><td class="tj">${fmtJ(r.jour)}</td><td class="tp">${r.per}</td><td class="tm">${r.mat}</td><td class="tg">${r.grp}</td><td class="tn ${cls}">${r.n > 0 ? r.n : '—'}</td></tr>`
-          }).join('')
-        : `<tr><td colspan="5" class="empty">Aucun examen</td></tr>`
+      // Construire le tableau grille
+      let thead = `<tr><th class="per-th"></th>${JOURS.map(j => `<th>${fmtJR(j)}</th>`).join('')}</tr>`
+      let tbody = PERS.map(per => {
+        const cells = JOURS.map(jour => {
+          const survs = survBySlot[prof + '|' + jour + '|' + per] || []
+          const isRes = resByProf[prof]?.has(jour + '|' + per)
+          if (!survs.length && !isRes) return `<td><span class="cell-empty">—</span></td>`
+          let html = `<td><div class="cell-surv">`
+          survs.forEach(s => {
+            html += `<div class="s-item"><span class="s-mat">${s.mat}</span> <span class="s-grp">${s.grp}</span>${s.local ? ` <span class="s-loc">${s.local}</span>` : ''}</div>`
+          })
+          if (isRes) html += `<div class="cell-res">Réserviste</div>`
+          html += `</div></td>`
+          return html
+        }).join('')
+        return `<tr><td class="per-td">${per}</td>${cells}</tr>`
+      }).join('')
 
-      const survRows = surv.length
-        ? surv.map(r => `<tr><td class="tj">${fmtJ(r.jour)}</td><td class="tp">${r.per}</td><td class="tm">${r.mat}</td><td class="tg">${r.grp}</td><td class="tl">${r.local || '—'}</td></tr>`).join('')
-        : `<tr><td colspan="5" class="empty">Aucune surveillance saisie</td></tr>`
-
-      htmlR += `<div class="card" data-prof="${prof}" data-copies="${copies}">
-  <div class="card-hdr">
-    <span class="card-prof">${prof}</span>
-    <span class="card-stats">
-      <span class="stat-pill${copies === 0 ? ' zero' : ''}">${copies} copie${copies > 1 ? 's' : ''}</span>
-      <span class="stat-pill${nSurv === 0 ? ' zero' : ''}">${nSurv} surveillance${nSurv > 1 ? 's' : ''}</span>
+      htmlR += `<div class="pcard" data-prof="${prof}" data-surv="${ns + nr}">
+  <div class="pcard-hdr">
+    <span class="pname">${prof}</span>
+    <span class="pstats">
+      <span class="ps${ns === 0 ? ' z' : ''}">${ns} surveillance${ns > 1 ? 's' : ''}</span>
+      <span class="ps${nr === 0 ? ' z' : ''}">${nr} réserviste${nr > 1 ? 's' : ''}</span>
     </span>
   </div>
-  <div class="card-body">
-    <div class="col">
-      <div class="col-hdr">À corriger — ${corr.length} examen${corr.length > 1 ? 's' : ''}</div>
-      <table><tbody>${corrRows}</tbody></table>
-    </div>
-    <div class="col">
-      <div class="col-hdr">À surveiller — ${nSurv} plage${nSurv > 1 ? 's' : ''}</div>
-      <table><tbody>${survRows}</tbody></table>
-    </div>
-  </div>
+  <table class="gt"><thead>${thead}</thead><tbody>${tbody}</tbody></table>
 </div>`
     }
 

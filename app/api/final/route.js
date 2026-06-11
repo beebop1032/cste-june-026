@@ -7,7 +7,7 @@ const FILE = 'final-locaux.json'
 export async function GET() {
   if (!(await verifySession('admin'))) return new Response('Unauthorized', { status: 401 })
   const data = await read(FILE)
-  return Response.json(data ?? { locaux: {}, surveillants: {}, liaisons: {} })
+  return Response.json(data ?? { locaux: {}, surveillants: {}, liaisons: {}, reservistes: {} })
 }
 
 export async function POST(request) {
@@ -26,8 +26,8 @@ export async function POST(request) {
   await write(FILE, {
     locaux: clean(body.locaux),
     surveillants: clean(body.surveillants),
-    // Liaisons manuelles : examId → id de groupe (fusion prévue, même plage)
     liaisons: clean(body.liaisons),
+    reservistes: clean(body.reservistes),
     updatedAt: new Date().toISOString(),
   })
   return Response.json({ ok: true })
