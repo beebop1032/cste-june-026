@@ -76,10 +76,11 @@ function computeGroupingHints(groupeStatuts, examStatuts, responses) {
     examData.push({ profCode: ex.profCode, jour: ex.jour, periode: ex.periode, matiere: ex.matiere, groupe: ex.groupe, local: ex.local, copies: n })
   }
 
+  // Une fusion exige la même plage : même prof, même jour ET même période (P1/P2)
   const map = {}
   for (const ed of examData) {
-    const key = `${ed.profCode}|${ed.jour}`
-    if (!map[key]) map[key] = { profCode: ed.profCode, jour: ed.jour, items: [] }
+    const key = `${ed.profCode}|${ed.jour}|${ed.periode}`
+    if (!map[key]) map[key] = { profCode: ed.profCode, jour: ed.jour, periode: ed.periode, items: [] }
     map[key].items.push(ed)
   }
 

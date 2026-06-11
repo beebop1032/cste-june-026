@@ -66,12 +66,12 @@ export default function TempsProfTable({ rows: initialRows, hints = [], examDeta
   const totalExams  = profRows.reduce((s, r) => s + r.examens, 0)
 
   // ── Vue globale: fusion lookup ─────────────────────────────────────────────
-  // Key: profCode|jour|matiere|groupe → { others, total }
+  // Key: profCode|jour|periode|matiere|groupe → { others, total }
   const fusionByKey = useMemo(() => {
     const map = new Map()
     for (const h of hints) {
       for (const item of h.items) {
-        const k = `${item.profCode}|${item.jour}|${item.matiere}|${item.groupe}`
+        const k = `${item.profCode}|${item.jour}|${item.periode}|${item.matiere}|${item.groupe}`
         const others = h.items.filter(o => !(o.matiere === item.matiere && o.groupe === item.groupe))
         map.set(k, { others, total: h.total })
       }
@@ -84,7 +84,7 @@ export default function TempsProfTable({ rows: initialRows, hints = [], examDeta
       a.jour.localeCompare(b.jour) || a.profCode.localeCompare(b.profCode) || a.periode.localeCompare(b.periode)
     )
     if (fusionOnly) {
-      rows = rows.filter(r => fusionByKey.has(`${r.profCode}|${r.jour}|${r.matiere}|${r.groupe}`))
+      rows = rows.filter(r => fusionByKey.has(`${r.profCode}|${r.jour}|${r.periode}|${r.matiere}|${r.groupe}`))
     }
     return rows
   }, [examDetails, fusionByKey, fusionOnly])
@@ -325,7 +325,7 @@ export default function TempsProfTable({ rows: initialRows, hints = [], examDeta
               </thead>
               <tbody>
                 {globalRows.map((row, i) => {
-                  const fk      = `${row.profCode}|${row.jour}|${row.matiere}|${row.groupe}`
+                  const fk      = `${row.profCode}|${row.jour}|${row.periode}|${row.matiere}|${row.groupe}`
                   const fusion  = fusionByKey.get(fk)
                   const isAnnu  = row.type === 'annule'
                   const rowBg   = fusion
