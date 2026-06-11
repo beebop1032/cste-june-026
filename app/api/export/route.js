@@ -1408,14 +1408,14 @@ ${datalistHtml}
       /* En-tête prof */
       .prof-hdr{
         text-align:center;
-        padding-bottom:5mm;
+        padding-bottom:3mm;
         border-bottom:1.5px solid #000;
-        margin-bottom:4mm;
+        margin-bottom:3mm;
         flex-shrink:0;
       }
-      .prof-tri{font-size:32px;font-weight:900;letter-spacing:2px;text-transform:uppercase;line-height:1}
-      .prof-fullname{font-size:15px;font-weight:600;margin-top:3px;letter-spacing:.3px}
-      .prof-meta{font-size:9px;color:#555;margin-top:2px}
+      .prof-tri{font-size:26px;font-weight:900;letter-spacing:2px;text-transform:uppercase;line-height:1}
+      .prof-fullname{font-size:13px;font-weight:600;margin-top:2px;letter-spacing:.3px}
+      .prof-meta{font-size:8px;color:#555;margin-top:2px}
 
       /* Grille */
       .grid-wrap{flex:1;display:flex;flex-direction:column;min-height:0}
@@ -1443,24 +1443,24 @@ ${datalistHtml}
       table.rp tbody tr{height:50%}
       table.rp tbody td{
         border:1px solid #888;
-        padding:3px 4px;
+        padding:2px 3px;
         vertical-align:top;
-        font-size:9.5px;
+        font-size:9px;
       }
       table.rp tbody td.per-td{
         border:1px solid #000;
         background:#f0f0f0;
         font-weight:900;
-        font-size:13px;
+        font-size:11px;
         text-align:center;
         vertical-align:middle;
-        width:20mm;
+        width:18mm;
         line-height:1.2;
       }
-      .per-time{display:block;font-weight:400;font-size:8px;color:#555;margin-top:2px}
-      .cell-inner{height:100%;display:flex;flex-direction:column;gap:2px;padding:2px 0}
-      .s-mat{font-weight:700;font-size:10px}
-      .s-detail{font-size:8.5px;color:#333}
+      .per-time{display:block;font-weight:400;font-size:7.5px;color:#555;margin-top:1px}
+      .cell-inner{height:100%;display:flex;flex-direction:column;gap:1px;padding:1px 0}
+      .s-mat{font-weight:700;font-size:9px}
+      .s-detail{font-size:8px;color:#333}
       .s-loc{font-weight:700}
       .cell-res{
         font-weight:900;
