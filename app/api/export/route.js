@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { requireAdmin } from '@/lib/auth'
 import { listFiles, read, writeFileSafe, deleteFile } from '@/lib/storage'
 import exams from '@/lib/exams.json'
