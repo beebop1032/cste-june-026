@@ -399,7 +399,7 @@ body {
 @media print {
   @page { size: A4 portrait; margin: 12mm 15mm; }
 
-  .no-print, .topbar, .controls { display: none !important; }
+  .no-print, .topbar, .controls, footer { display: none !important; }
   .content { padding: 0; max-width: none; }
 
   body { font-size: 11px; background: #fff; }

@@ -975,6 +975,17 @@ export async function GET(request) {
       function fmt1(x) {
         return (Math.round(x * 10) / 10).toString().replace('.', ',');
       }
+      function updateCounter() {
+        const filled = Object.values(getCounts()).reduce((a, b) => a + b, 0);
+        const total  = totalPlages();
+        const el = document.getElementById('fill-counter');
+        if (!el) return;
+        const done = filled >= total;
+        el.innerHTML =
+          '<strong style="font-size:12px;color:' + (done ? '#166534' : '#1a3254') + '">' + filled + '</strong>'
+          + ' <span style="color:#9ca3af">/ ' + total + '</span>'
+          + ' <span style="color:#6b7280">plages renseignées</span>';
+      }
       function updateRecap() {
         const totalSurv  = totalPlages();
         computeCibles(totalSurv); // recalcul à chaque saisie : les fusions réduisent le total
@@ -1002,6 +1013,7 @@ export async function GET(request) {
             <td style="font-weight:700;font-size:9px;text-align:center;white-space:nowrap">\${resteTxt}</td>
           </tr>\`;
         }).join('');
+        updateCounter();
       }
       function getReste(prof, nouv) {
         if (!CIBLES) computeCibles(totalPlages());
@@ -1147,6 +1159,8 @@ ${datalistHtml}
   <span class="leg-sep"></span>
   <label class="leg leg-filter"><input type="checkbox" checked onchange="document.body.classList.toggle('hide-annule', !this.checked)" /> Afficher les examens annulés</label>
   <label class="leg leg-filter"><input type="checkbox" checked onchange="document.body.classList.toggle('hide-filled', !this.checked)" /> Afficher les examens remplis (Prof + Local)</label>
+  <span class="leg-sep"></span>
+  <span id="fill-counter" style="font-size:10.5px"></span>
 </div>
 
 <div class="content">
