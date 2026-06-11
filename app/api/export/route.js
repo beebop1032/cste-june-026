@@ -1336,7 +1336,7 @@ ${datalistHtml}
     const resMap     = finalRaw.reservistes  ?? {}
 
     const PER_LABEL = { P1: 'P1', P2: 'P2' }
-    const PER_TIME  = { P1: '8h30 – 12h30', P2: '13h15 – 17h00' }
+    const PER_TIME  = { P1: '8h30 → 10h10', P2: '10h25 → 12h05' }
 
     // Index: "prof|jour|per" → [{mat, grp, local}]
     const survBySlot = {}
@@ -1462,14 +1462,15 @@ ${datalistHtml}
       .s-loc{font-weight:700}
       .cell-res{
         font-weight:900;
-        font-size:10px;
-        text-align:center;
-        padding:4px 0;
-        letter-spacing:.5px;
+        font-size:9px;
+        padding:3px 0 2px;
+        letter-spacing:.4px;
         border-top:1px dashed #888;
         margin-top:2px;
         text-transform:uppercase;
       }
+      .res-exams{margin-top:2px;font-weight:400;text-transform:none;letter-spacing:0}
+      .re-item{font-size:8px;color:#333;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .cell-dash{color:#ccc;text-align:center;padding-top:6px;font-size:16px;line-height:1}
 
       /* Réserviste summary en bas de page */
@@ -1550,7 +1551,19 @@ ${datalistHtml}
             html += `<div><span class="s-mat">${s.mat}</span></div>`
             html += `<div class="s-detail">${s.grp}${s.local ? ' · <span class="s-loc">' + s.local + '</span>' : ''}</div>`
           })
-          if (isRes) html += `<div class="cell-res">★ Réserviste</div>`
+          if (isRes) {
+            const slotExams = exams.filter(e => e.jour === jour && periodesOf(e).includes(per))
+            html += `<div class="cell-res">★ Réserviste`
+            if (slotExams.length) {
+              html += `<div class="res-exams">`
+              slotExams.forEach(e => {
+                const loc = locMap[e.id + '@' + per] ?? locMap[e.id] ?? e.local ?? ''
+                html += `<div class="re-item">${e.matiere} · ${e.groupe}${loc ? ' · ' + loc : ''}</div>`
+              })
+              html += `</div>`
+            }
+            html += `</div>`
+          }
           html += `</div></td>`
           return html
         }).join('')
