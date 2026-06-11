@@ -436,9 +436,19 @@ body {
 
 function keep(p) { return p && p.type !== 'annule' }
 
-// Local effectif : celui saisi dans le Tableau Final prime sur celui de l'horaire d'origine
+// Local effectif : celui saisi dans le Tableau Final prime sur celui de l'horaire d'origine.
+// Un examen P1+P2 a un local par période (id@P1 / id@P2) : on affiche les deux s'ils diffèrent.
 function makeLocalOf(locaux) {
-  return ex => (locaux && locaux[ex.id]) || ex.local || ''
+  return ex => {
+    if (locaux) {
+      if (locaux[ex.id]) return locaux[ex.id]
+      if (ex.periode === 'P1+P2') {
+        const perLocaux = [...new Set([locaux[`${ex.id}@P1`], locaux[`${ex.id}@P2`]].filter(Boolean))]
+        if (perLocaux.length) return perLocaux.join(' / ')
+      }
+    }
+    return ex.local || ''
+  }
 }
 
 // Normalise un nom pour servir de clé de déduplication (accents, tirets, casse)
@@ -1003,35 +1013,43 @@ function ViewPdfEleves({ exams, partData, allGroupes, manuscriptGroupes = [], lo
 // ── View: PDF Surveillances ───────────────────────────────────────────────────
 
 function ViewPdfSurveillances({ exams, partData, jourFilter, locaux, surveillants, liaisons }) {
-  const localOf = makeLocalOf(locaux)
-  const survOf = ex => (surveillants && surveillants[ex.id]) || ''
+  // Les examens P1+P2 sont gérés par période dans le Tableau Final (clé id@P1 / id@P2) :
+  // une fiche par plage. Les saisies héritées sous l'id brut servent de repli.
+  const survOf = e => (surveillants && (surveillants[e.uid] || surveillants[e.ex.id])) || ''
+  const locOf  = e => (locaux && (locaux[e.uid] || locaux[e.ex.id])) || e.ex.local || ''
 
   const pages = useMemo(() => {
-    const kept = exams
-      .filter(ex => keep(partData[ex.id]))
-      .filter(ex => !jourFilter || ex.jour === jourFilter)
+    const kept = []
+    for (const ex of exams) {
+      if (!keep(partData[ex.id])) continue
+      if (jourFilter && ex.jour !== jourFilter) continue
+      for (const per of ex.periode === 'P1+P2' ? ['P1', 'P2'] : [ex.periode]) {
+        kept.push({ ex, periode: per, uid: ex.periode === 'P1+P2' ? `${ex.id}@${per}` : ex.id })
+      }
+    }
 
     // Une fiche par examen, sauf examens liés dans le Tableau Final : une fiche par groupe
     const groups = new Map()
-    for (const ex of kept) {
-      const gid = (liaisons && liaisons[ex.id]) || `solo-${ex.id}`
+    for (const e of kept) {
+      const legacyGid = liaisons && liaisons[e.ex.id] && e.uid !== e.ex.id ? `${liaisons[e.ex.id]}@${e.periode}` : null
+      const gid = (liaisons && liaisons[e.uid]) || legacyGid || `solo-${e.uid}`
       if (!groups.has(gid)) groups.set(gid, [])
-      groups.get(gid).push(ex)
+      groups.get(gid).push(e)
     }
 
-    return [...groups.values()].map(gExams => {
-      const entries = gExams.map(ex => {
-        const p = partData[ex.id]
+    return [...groups.values()].map(gEntries => {
+      const entries = gEntries.map(e => {
+        const p = partData[e.ex.id]
         const eleves = p.type === 'liste'
           ? [...p.eleves].sort((a, b) => (a.nom || '').localeCompare(b.nom || '') || (a.prenom || '').localeCompare(b.prenom || ''))
           : []
-        return { ex, p, eleves }
+        return { ...e, p, eleves }
       })
-      const first   = entries[0].ex
-      const local   = entries.map(e => localOf(e.ex)).find(Boolean) || ''
-      const surv    = entries.map(e => survOf(e.ex)).find(Boolean) || ''
+      const first   = entries[0]
+      const local   = entries.map(locOf).find(Boolean) || ''
+      const surv    = entries.map(survOf).find(Boolean) || ''
       const nEleves = entries.reduce((s, e) => s + e.eleves.length, 0)
-      return { key: first.id, jour: first.jour, periode: first.periode, local, surv, entries, nEleves }
+      return { key: first.uid, jour: first.ex.jour, periode: first.periode, local, surv, entries, nEleves }
     }).sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode) || a.local.localeCompare(b.local))
   }, [exams, partData, jourFilter, locaux, surveillants, liaisons])
 

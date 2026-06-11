@@ -69,6 +69,11 @@ export async function GET(request) {
     return exams.filter(e => e.jour === jour && (e.periode === periode || e.periode === 'P1+P2'))
   }
 
+  // Un examen P1+P2 occupe deux plages distinctes : il est traité par période
+  // (surveillant, local, liaison et décompte séparés en P1 et en P2)
+  const periodesOf = ex => ex.periode === 'P1+P2' ? ['P1', 'P2'] : [ex.periode]
+  const uidOf = (ex, periode) => ex.periode === 'P1+P2' ? `${ex.id}@${periode}` : ex.id
+
   function buildBlocRows(blocExams) {
     const byNiveau = {}
     for (const n of NIVEAUX) {
@@ -165,12 +170,14 @@ export async function GET(request) {
     const freeAtSlot   = new Map() // slot → Array<profCode> sorted
 
     for (const ex of exams) {
-      const slot = `${ex.jour}|${ex.periode}`
-      if (!activeAtSlot.has(slot)) activeAtSlot.set(slot, new Set())
-      if (!freeAtSlot.has(slot))   freeAtSlot.set(slot, [])
       const p = partMap.get(ex.id)
-      if (!p || p.type === 'annule') freeAtSlot.get(slot).push(ex.profCode)
-      else activeAtSlot.get(slot).add(ex.profCode)
+      for (const per of periodesOf(ex)) {
+        const slot = `${ex.jour}|${per}`
+        if (!activeAtSlot.has(slot)) activeAtSlot.set(slot, new Set())
+        if (!freeAtSlot.has(slot))   freeAtSlot.set(slot, [])
+        if (!p || p.type === 'annule') freeAtSlot.get(slot).push(ex.profCode)
+        else activeAtSlot.get(slot).add(ex.profCode)
+      }
     }
 
     // Conflict detection: prof has 2+ active exams at same slot → can't supervise all
@@ -178,18 +185,20 @@ export async function GET(request) {
     for (const ex of exams) {
       const p = partMap.get(ex.id)
       if (!p || p.type === 'annule') continue
-      const key = `${ex.profCode}|${ex.jour}|${ex.periode}`
-      profActiveCount.set(key, (profActiveCount.get(key) || 0) + 1)
+      for (const per of periodesOf(ex)) {
+        const key = `${ex.profCode}|${ex.jour}|${per}`
+        profActiveCount.set(key, (profActiveCount.get(key) || 0) + 1)
+      }
     }
 
-    function survCells(ex) {
+    function survCells(ex, periode) {
       const p = partMap.get(ex.id)
       if (!p || p.type === 'annule') {
         return `<td class="ts-an"></td><td class="ts-an"></td><td class="ts-fin"></td>`
       }
-      const slot        = `${ex.jour}|${ex.periode}`
+      const slot        = `${ex.jour}|${periode}`
       const wantsSurv   = survFlagMap.get(ex.id) ?? false
-      const hasConflict = (profActiveCount.get(`${ex.profCode}|${ex.jour}|${ex.periode}`) || 0) > 1
+      const hasConflict = (profActiveCount.get(`${ex.profCode}|${ex.jour}|${periode}`) || 0) > 1
       const survVal     = (wantsSurv && !hasConflict) ? ex.profCode : ''
       let conseilVal = ''
       if (!wantsSurv || hasConflict) {
@@ -366,7 +375,7 @@ export async function GET(request) {
                 html += `<td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td>`
                 return
               }
-              html += `<td class="tm">${ex.matiere}</td><td class="tg">${ex.groupe}</td><td class="tp">${ex.profCode}</td>${partBadge(ex)}${survCells(ex)}`
+              html += `<td class="tm">${ex.matiere}</td><td class="tg">${ex.groupe}</td><td class="tp">${ex.profCode}</td>${partBadge(ex)}${survCells(ex, periode)}`
             })
             html += `</tr>`
           }
@@ -434,8 +443,10 @@ export async function GET(request) {
     for (const ex of exams) {
       const p = partMap.get(ex.id)
       if (!p || p.type === 'annule') continue
-      const key = `${ex.profCode}|${ex.jour}|${ex.periode}`
-      profActiveCountF.set(key, (profActiveCountF.get(key) || 0) + 1)
+      for (const per of periodesOf(ex)) {
+        const key = `${ex.profCode}|${ex.jour}|${per}`
+        profActiveCountF.set(key, (profActiveCountF.get(key) || 0) + 1)
+      }
     }
 
     // Profs who are actively supervising their OWN exam at each slot
@@ -445,24 +456,28 @@ export async function GET(request) {
       const p = partMap.get(ex.id)
       if (!p || p.type === 'annule') continue
       if (!survFlagMapF.has(ex.id)) continue
-      if ((profActiveCountF.get(`${ex.profCode}|${ex.jour}|${ex.periode}`) || 0) > 1) continue
-      const slot = `${ex.jour}|${ex.periode}`
-      if (!survWillingAtSlot.has(slot)) survWillingAtSlot.set(slot, [])
-      survWillingAtSlot.get(slot).push(ex.profCode)
+      if (periodesOf(ex).some(per => (profActiveCountF.get(`${ex.profCode}|${ex.jour}|${per}`) || 0) > 1)) continue
+      for (const per of periodesOf(ex)) {
+        const slot = `${ex.jour}|${per}`
+        if (!survWillingAtSlot.has(slot)) survWillingAtSlot.set(slot, [])
+        survWillingAtSlot.get(slot).push(ex.profCode)
+      }
     }
 
     // Profs with no file at all (never connected)
     const profsWithFile = new Set(currentFiles.map(f => f.replace(/^prof-/, '').replace(/\.json$/, '')))
     const profsNoResponse = [...new Set(exams.map(e => e.profCode))].filter(p => !profsWithFile.has(p)).sort()
 
-    function survFinalCells(ex) {
+    function survFinalCells(ex, periode) {
       const p = partMap.get(ex.id)
       if (!p || p.type === 'annule') {
         return `<td class="ts-an"></td><td class="tfin-cell ts-an"></td><td class="tloc-cell ts-an"></td>`
       }
-      const slot        = `${ex.jour}|${ex.periode}`
+      // Plage et identité par période : un examen P1+P2 a des saisies séparées en P1 et P2
+      const slot        = `${ex.jour}|${periode}`
+      const uid         = uidOf(ex, periode)
       const wantsSurv   = survFlagMapF.get(ex.id) ?? false
-      const hasConflict = (profActiveCountF.get(`${ex.profCode}|${ex.jour}|${ex.periode}`) || 0) > 1
+      const hasConflict = (profActiveCountF.get(`${ex.profCode}|${ex.jour}|${periode}`) || 0) > 1
       const survVal     = (wantsSurv && !hasConflict) ? ex.profCode : ''
       // Arrow shows the prof's own code whenever they asked to supervise (conflict or not)
       const conseilVal = wantsSurv ? ex.profCode : ''
@@ -471,9 +486,9 @@ export async function GET(request) {
         : ''
       // 1re/2e : examens inchangés → local pré-encodé avec l'ancien local
       const preLocal = (ex.niveau === '1re' || ex.niveau === '2e') ? (ex.local ?? '') : ''
-      const locInput = `<input class="loc-inp${preLocal ? ' has-val' : ''}" type="text" data-exid="${ex.id}" data-default="${preLocal}" value="${preLocal}" placeholder="${ex.local ?? ''}" autocomplete="off" />`
-      const lnkBtn = `<button class="lnk-btn" data-exid="${ex.id}" data-slot="${slot}" onclick="lnk(this)" title="Lier à un autre examen de la même plage (fusion prévue)">🔗</button>`
-      return `<td class="ts${survVal ? ' ts-ok' : ''}">${survVal}</td><td class="tfin-cell"><div class="tfin-wrap"><input class="fin-inp" type="text" list="profs-dl" data-conseil="${conseilVal}" data-slot="${slot}" data-exid="${ex.id}" placeholder="${conseilVal}" autocomplete="off" />${cpBtn}</div></td><td class="tloc-cell"><div class="tloc-wrap">${locInput}${lnkBtn}</div></td>`
+      const locInput = `<input class="loc-inp${preLocal ? ' has-val' : ''}" type="text" data-exid="${uid}" data-default="${preLocal}" value="${preLocal}" placeholder="${ex.local ?? ''}" autocomplete="off" />`
+      const lnkBtn = `<button class="lnk-btn" data-exid="${uid}" data-slot="${slot}" onclick="lnk(this)" title="Lier à un autre examen de la même plage (fusion prévue)">🔗</button>`
+      return `<td class="ts${survVal ? ' ts-ok' : ''}">${survVal}</td><td class="tfin-cell"><div class="tfin-wrap"><input class="fin-inp" type="text" list="profs-dl" data-conseil="${conseilVal}" data-slot="${slot}" data-exid="${uid}" placeholder="${conseilVal}" autocomplete="off" />${cpBtn}</div></td><td class="tloc-cell"><div class="tloc-wrap">${locInput}${lnkBtn}</div></td>`
     }
 
     function partBadgeF(ex) {
@@ -1056,17 +1071,32 @@ export async function GET(request) {
             showStatus('Chargé ✓');
           }
         } catch(e) {}
-        // Données serveur (clé = id d'examen) : locaux prioritaires, surveillants en complément
+        // Données serveur (clé = id d'examen) : locaux prioritaires, surveillants en complément.
+        // Les examens P1+P2 ont un id par période (id@P1 / id@P2) : les saisies héritées
+        // sauvées sous l'id brut sont reprises sur les deux périodes.
+        const legacyOf = (map, exid) => {
+          const m = map || {};
+          return m[exid] ?? (exid.includes('@') ? m[exid.split('@')[0]] : undefined);
+        };
         fetch('/api/final').then(r => r.ok ? r.json() : null).then(data => {
           if (!data) return;
           LIAISONS = data.liaisons || {};
+          // Migration : liaison héritée sur un examen P1+P2 → une liaison par période
+          Object.keys(LIAISONS).forEach(id => {
+            if (document.querySelector('.lnk-btn[data-exid="' + id + '"]')) return;
+            const gid = LIAISONS[id];
+            ['P1', 'P2'].forEach(p => {
+              if (document.querySelector('.lnk-btn[data-exid="' + id + '@' + p + '"]')) LIAISONS[id + '@' + p] = gid + '@' + p;
+            });
+            delete LIAISONS[id];
+          });
           renderLiaisons();
           document.querySelectorAll('.loc-inp').forEach(inp => {
-            const v = (data.locaux || {})[inp.dataset.exid];
+            const v = legacyOf(data.locaux, inp.dataset.exid);
             if (v) { inp.value = v; inp.classList.add('has-val'); }
           });
           document.querySelectorAll('.fin-inp').forEach(inp => {
-            const v = (data.surveillants || {})[inp.dataset.exid];
+            const v = legacyOf(data.surveillants, inp.dataset.exid);
             if (v && !inp.value) { inp.value = v; inp.classList.add('has-val'); }
           });
           updateFilledMarks();
@@ -1162,8 +1192,8 @@ ${datalistHtml}
               }
               // Tag chaque cellule de l'examen pour les filtres annulés/remplis (masquage client)
               const isAnnule = partMap.get(ex.id)?.type === 'annule'
-              let cells = `<td class="tm">${ex.matiere}</td><td class="tg">${ex.groupe}</td><td class="tp">${ex.profCode}</td>${partBadgeF(ex)}${survFinalCells(ex)}`
-              cells = cells.replace(/<td /g, `<td data-exgrp="${ex.id}"${isAnnule ? ' data-annule="1"' : ''} `)
+              let cells = `<td class="tm">${ex.matiere}</td><td class="tg">${ex.groupe}</td><td class="tp">${ex.profCode}</td>${partBadgeF(ex)}${survFinalCells(ex, periode)}`
+              cells = cells.replace(/<td /g, `<td data-exgrp="${uidOf(ex, periode)}"${isAnnule ? ' data-annule="1"' : ''} `)
               htmlF += cells
             })
             htmlF += `</tr>`
@@ -1175,14 +1205,15 @@ ${datalistHtml}
       htmlF += `</div>`
     }
 
-    // Count active exam periods per groupe/niveau
+    // Count active exam periods per groupe/niveau (un examen P1+P2 = 2 plages)
     const activeByGroupe = {}
     let totalActiveF = 0
     for (const ex of exams) {
       const p = partMap.get(ex.id)
       if (!p || p.type === 'annule') continue
-      totalActiveF++
-      activeByGroupe[ex.groupe] = (activeByGroupe[ex.groupe] || 0) + 1
+      const nPer = periodesOf(ex).length
+      totalActiveF += nPer
+      activeByGroupe[ex.groupe] = (activeByGroupe[ex.groupe] || 0) + nPer
     }
 
     const recapFinalHtml = `<div class="recap-final">
@@ -1261,7 +1292,10 @@ ${datalistHtml}
         if (!statut || statut === 'aucun' || statut === 'maintenu' || statut === 'tous') continue
         const n = (ex.eleves ?? []).filter(e => e.nom || e.prenom).length
         if (n < 1 || n > FEW_TH) continue
-        fusionCandidates.push({ profCode: prof.profCode, jour: meta.jour, periode: meta.periode, matiere: meta.matiere, groupe: meta.groupe, local: meta.local, copies: n })
+        // Un examen P1+P2 est candidat dans chacune de ses deux plages
+        for (const per of periodesOf(meta)) {
+          fusionCandidates.push({ profCode: prof.profCode, jour: meta.jour, periode: per, matiere: meta.matiere, groupe: meta.groupe, local: meta.local, copies: n })
+        }
       }
     }
     // Une fusion exige la même plage : même prof, même jour ET même période (P1/P2)
