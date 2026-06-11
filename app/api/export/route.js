@@ -1436,58 +1436,57 @@ ${datalistHtml}
       .btn-1prof:hover{background:#f0f0f0}
       @media print{.no-print{display:none!important}}
 
-      /* Grille */
-      .grid-wrap{flex:1;display:flex;flex-direction:column;min-height:0}
+      /* Grille — remplit toute la hauteur disponible sans déborder */
+      .grid-wrap{flex:1;min-height:0;overflow:hidden;display:block}
       table.rp{
-        width:100%;
+        width:100%;height:100%;
         border-collapse:collapse;
         table-layout:fixed;
-        flex:1;
-        height:100%;
       }
       table.rp thead th{
         border:1px solid #000;
-        padding:3px 2px;
-        font-size:8.5px;
+        padding:4px 3px;
+        font-size:10px;
         font-weight:700;
         text-align:center;
         background:#f0f0f0;
         line-height:1.3;
+        white-space:nowrap;
       }
       table.rp thead th.per-hdr{
         background:#e0e0e0;
         width:18mm;
-        font-size:9px;
+        font-size:10px;
       }
-      table.rp tbody tr{height:50%;max-height:50%}
+      table.rp tbody{display:table-row-group;height:calc(100% - 32px)}
+      table.rp tbody tr{height:50%}
       table.rp tbody td{
         border:1px solid #888;
-        padding:3px 4px;
+        padding:4px 5px;
         vertical-align:top;
-        font-size:10px;
+        font-size:11px;
         overflow:hidden;
-        max-height:0;
       }
       table.rp tbody td.per-td{
         border:1px solid #000;
         background:#f0f0f0;
         font-weight:900;
-        font-size:13px;
+        font-size:14px;
         text-align:center;
         vertical-align:middle;
         width:18mm;
         line-height:1.2;
       }
       .cell-inner{height:100%;display:flex;flex-direction:column;gap:2px;padding:2px 0;overflow:hidden}
-      .s-mat{font-weight:700;font-size:11px;line-height:1.2}
-      .s-niv{font-weight:400;font-size:9px;color:#555}
-      .s-tit{font-weight:400;font-size:9px;color:#888}
-      .s-detail{font-size:9.5px;color:#333}
+      .s-mat{font-weight:700;font-size:12px;line-height:1.2}
+      .s-niv{font-weight:400;font-size:10px;color:#555}
+      .s-tit{font-weight:400;font-size:10px;color:#888}
+      .s-detail{font-size:11px;color:#333}
       .s-loc{font-weight:700}
-      .cell-res{font-weight:900;font-size:11px;padding:3px 0;letter-spacing:.4px;text-transform:uppercase}
-      .re-elv-all{font-style:italic;color:#555;font-size:9px}
-      .re-elv-name{color:#333;font-size:9px;line-height:1.4}
-      .cell-dash{color:#ccc;text-align:center;padding-top:8px;font-size:18px;line-height:1}
+      .cell-res{font-weight:900;font-size:12px;padding:4px 0;letter-spacing:.4px;text-transform:uppercase}
+      .re-elv-all{font-style:italic;color:#555;font-size:10px}
+      .re-elv-name{color:#333;font-size:10px;line-height:1.5}
+      .cell-dash{color:#ccc;text-align:center;padding-top:10px;font-size:20px;line-height:1}
 
       /* Réserviste summary en bas de page */
       .res-summary{
