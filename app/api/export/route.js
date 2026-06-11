@@ -1337,7 +1337,6 @@ ${datalistHtml}
     const resMap     = finalRaw.reservistes  ?? {}
 
     const PER_LABEL = { P1: 'P1', P2: 'P2' }
-    const PER_TIME  = { P1: '8h30 → 10h10', P2: '10h25 → 12h05' }
 
     // partMap + elevesMap (pour afficher les élèves dans les cellules réserviste)
     const partMap  = await buildPartMap()
@@ -1351,8 +1350,9 @@ ${datalistHtml}
 
     // Index: "prof|jour|per" → [{mat, grp, local}]
     const survBySlot = {}
-    for (const [uid, survProf] of Object.entries(survMap)) {
-      if (!survProf) continue
+    for (const [uid, survProfRaw] of Object.entries(survMap)) {
+      if (!survProfRaw) continue
+      const survProf = profsData[survProfRaw]?.displayCode ?? survProfRaw
       const [baseId, per2] = uid.includes('@') ? uid.split('@') : [uid, null]
       const meta = exams.find(e => e.id === baseId)
       if (!meta) continue
@@ -1361,7 +1361,7 @@ ${datalistHtml}
         const key   = survProf + '|' + meta.jour + '|' + per
         if (!survBySlot[key]) survBySlot[key] = []
         if (!survBySlot[key].find(s => s.id === meta.id))
-          survBySlot[key].push({ id: meta.id, mat: meta.matiere, grp: meta.groupe, local })
+          survBySlot[key].push({ id: meta.id, mat: meta.matiere, grp: meta.groupe, niv: meta.niveau, local })
       }
     }
 
@@ -1375,6 +1375,9 @@ ${datalistHtml}
         resByProf[prof].add(jour + '|' + per)
       })
     }
+
+    // Alias : afficher le code d'affichage si défini (ex: BALJ → PC)
+    const displayCode = code => profsData[code]?.displayCode ?? code
 
     const allProfsR = [...new Set([
       ...exams.map(e => e.profCode),
@@ -1402,17 +1405,19 @@ ${datalistHtml}
       .btn{border:none;padding:5px 12px;font-size:10px;font-weight:700;cursor:pointer;border-radius:3px}
       .btn-p{background:#b8893a;color:#fff}
       .btn-s{background:#374151;color:#fff}
+      .btn-z{background:#166534;color:#fff}
 
-      /* Chaque prof = 1 feuille A4 */
+      /* Chaque prof = 1 feuille A4 paysage */
       .ppage{
         background:#fff;
-        width:210mm;
-        height:297mm;
+        width:297mm;
+        height:210mm;
         margin:16px auto;
-        padding:8mm 8mm 6mm;
+        padding:6mm 8mm 5mm;
         display:flex;
         flex-direction:column;
         box-shadow:0 2px 16px rgba(0,0,0,.25);
+        overflow:hidden;
       }
 
       /* En-tête prof */
@@ -1426,6 +1431,9 @@ ${datalistHtml}
       .prof-tri{font-size:26px;font-weight:900;letter-spacing:2px;text-transform:uppercase;line-height:1}
       .prof-fullname{font-size:13px;font-weight:600;margin-top:2px;letter-spacing:.3px}
       .prof-meta{font-size:8px;color:#555;margin-top:2px}
+      .btn-1prof{margin-top:4px;background:none;border:1px solid #999;border-radius:3px;padding:2px 8px;font-size:8px;cursor:pointer;color:#555}
+      .btn-1prof:hover{background:#f0f0f0}
+      @media print{.no-print{display:none!important}}
 
       /* Grille */
       .grid-wrap{flex:1;display:flex;flex-direction:column;min-height:0}
@@ -1470,6 +1478,7 @@ ${datalistHtml}
       .per-time{display:block;font-weight:400;font-size:7.5px;color:#555;margin-top:1px}
       .cell-inner{height:100%;display:flex;flex-direction:column;gap:1px;padding:1px 0}
       .s-mat{font-weight:700;font-size:9px}
+      .s-niv{font-weight:400;font-size:8px;color:#555}
       .s-detail{font-size:8px;color:#333}
       .s-loc{font-weight:700}
       .cell-res{
@@ -1500,14 +1509,14 @@ ${datalistHtml}
       }
       .res-summary strong{font-weight:700;font-size:8.5px;color:#000}
 
-      @page{size:210mm 297mm portrait;margin:0}
+      @page{size:A4 landscape;margin:0}
       @media print{
         body{background:#fff}
         .topbar,.btn,.btn-p,.btn-s{display:none!important}
         #pw{display:block}
         .ppage{
-          width:210mm;height:297mm;
-          margin:0;padding:8mm 8mm 6mm;
+          width:297mm;height:210mm;
+          margin:0;padding:6mm 8mm 5mm;
           box-shadow:none;
           page-break-after:always;
           break-after:page;
@@ -1531,6 +1540,31 @@ ${datalistHtml}
           :parseInt(b.dataset.s||0)-parseInt(a.dataset.s||0)||a.dataset.prof.localeCompare(b.dataset.prof));
         cs.forEach(c=>w.appendChild(c));
       }
+
+      async function downloadZip() {
+        const btn = document.getElementById('zip-btn');
+        btn.disabled = true; btn.textContent = 'Génération…';
+        const css = document.querySelector('style').textContent;
+        const cards = [...document.querySelectorAll('#pw .ppage')];
+        const zip = new JSZip();
+        cards.forEach(card => {
+          const prof = card.dataset.prof;
+          // Clone sans le bouton individuel
+          const clone = card.cloneNode(true);
+          clone.querySelectorAll('.no-print').forEach(el => el.remove());
+          const html = '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">'
+            + '<title>' + prof + ' — Récap surveillance</title>'
+            + '<style>' + css + '</style></head>'
+            + '<body style="background:#fff;margin:0">' + clone.outerHTML + '</body></html>';
+          zip.file(prof + '.html', html);
+        });
+        const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'recap-surveillance-juin2026.zip';
+        a.click();
+        btn.disabled = false; btn.textContent = '⬇ ZIP tous les profs';
+      }
     `
 
     let htmlRP = `<!DOCTYPE html>
@@ -1538,12 +1572,14 @@ ${datalistHtml}
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Récap surveillance — Juin 2026</title>
 <style>${cssRP}</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head><body>
 <div class="topbar">
   <h1>Récap surveillance — 1 page / prof — ${sorted.length} profs</h1>
   <div class="topbar-right">
     <button class="btn btn-s" id="sb" onclick="toggleSort()">Tri : présences ↓</button>
-    <button class="btn btn-p" onclick="window.print()">Imprimer A4 portrait</button>
+    <button class="btn btn-z" id="zip-btn" onclick="downloadZip()">⬇ ZIP tous les profs</button>
+    <button class="btn btn-p" onclick="window.print()">Imprimer tout A4 paysage</button>
   </div>
 </div>
 <div id="pw">
@@ -1568,7 +1604,8 @@ ${datalistHtml}
           survs.forEach(s => {
             const part   = partMap.get(s.id)
             const eleves = elevesMap.get(s.id) ?? []
-            html += `<div><span class="s-mat">${s.mat}</span></div>`
+            const nivLabel = s.niv ? NIVEAU_LABELS[NIVEAUX.indexOf(s.niv)] ?? s.niv : ''
+            html += `<div><span class="s-mat">${s.mat}</span>${nivLabel ? ` <span class="s-niv">${nivLabel}</span>` : ''}</div>`
             html += `<div class="s-detail">${s.grp}${s.local ? ' · <span class="s-loc">' + s.local + '</span>' : ''}</div>`
             if (part?.type === 'tous') {
               html += `<div class="re-elv-all">Tous les élèves participent</div>`
@@ -1597,22 +1634,24 @@ ${datalistHtml}
           return html
         }).join('')
         return `<tr>
-          <td class="per-td">${PER_LABEL[per]}<span class="per-time">${PER_TIME[per]}</span></td>
+          <td class="per-td">${PER_LABEL[per]}</td>
           ${cells}
         </tr>`
       }).join('')
 
 
-      const profInfo = profsData[prof] ?? {}
+      const profInfo    = profsData[prof] ?? {}
+      const dispCode    = displayCode(prof)
       const profFullName = profInfo.prenom && profInfo.nom
-        ? `${profInfo.prenom} ${profInfo.nom.toUpperCase()}`
+        ? `${profInfo.prenom} ${profInfo.nom.toUpperCase()}${profInfo.remplacant ? ' (remplaçant·e)' : ''}`
         : ''
 
-      htmlRP += `<div class="ppage" data-prof="${prof}" data-s="${ns + nr}">
+      htmlRP += `<div class="ppage" data-prof="${dispCode}" data-s="${ns + nr}">
   <div class="prof-hdr">
-    <div class="prof-tri">${prof}</div>
+    <div class="prof-tri">${dispCode}</div>
     ${profFullName ? `<div class="prof-fullname">${profFullName}</div>` : ''}
     <div class="prof-meta">${ns} surveillance${ns !== 1 ? 's' : ''}${nr ? ' · ' + nr + ' réserviste' + (nr > 1 ? 's' : '') : ''} · Juin 2026 · Collège des Hayeffes</div>
+    <button class="btn-1prof no-print" onclick="printOne(this.closest('.ppage'))">⬇ PDF ${dispCode}</button>
   </div>
   <div class="grid-wrap">
     <table class="rp"><thead>${thead}</thead><tbody>${tbody}</tbody></table>

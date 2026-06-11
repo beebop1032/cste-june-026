@@ -4,8 +4,15 @@
     "prenom": "Marc"
   },
   "BALJ": {
-    "nom": "Balbin",
-    "prenom": "Jimmy"
+    "nom": "Pecasse",
+    "prenom": "Nathalie",
+    "displayCode": "PC",
+    "remplacant": true
+  },
+  "PC": {
+    "nom": "Pecasse",
+    "prenom": "Nathalie",
+    "remplacant": true
   },
   "BAL": {
     "nom": "Barbier",
