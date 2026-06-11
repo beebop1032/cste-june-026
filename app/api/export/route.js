@@ -1573,17 +1573,6 @@ ${datalistHtml}
         </tr>`
       }).join('')
 
-      // Résumé réserviste en bas de page
-      const resSlots = [...(resByProf[prof] ?? [])].sort().map(slot => {
-        const [jour, per] = slot.split('|')
-        const d   = new Date(jour + 'T12:00:00Z')
-        const day = d.toLocaleDateString('fr-FR', { weekday: 'short', timeZone: 'Europe/Brussels' })
-        const [,m,j2] = jour.split('-')
-        return `${day} ${j2}/${m} ${per}`
-      })
-      const resSummaryHtml = resSlots.length
-        ? `<div class="res-summary"><strong>★ Réserviste :</strong> ${resSlots.join(' — ')}</div>`
-        : ''
 
       htmlRP += `<div class="ppage" data-prof="${prof}" data-s="${ns + nr}">
   <div class="prof-hdr">
@@ -1593,7 +1582,6 @@ ${datalistHtml}
   <div class="grid-wrap">
     <table class="rp"><thead>${thead}</thead><tbody>${tbody}</tbody></table>
   </div>
-  ${resSummaryHtml}
 </div>`
     }
 
