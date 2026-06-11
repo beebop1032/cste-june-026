@@ -1362,8 +1362,11 @@ ${datalistHtml}
       })
     }
 
-    const allProfsR = [...new Set(exams.map(e => e.profCode))].sort()
-    // Nombre de surveillances par prof
+    // Union des profs avec examens + profs réservistes (peuvent ne pas avoir d'examens)
+    const allProfsR = [...new Set([
+      ...exams.map(e => e.profCode),
+      ...Object.keys(resByProf),
+    ])].sort()
     const nSurvOf = p => Object.keys(survBySlot).filter(k => k.startsWith(p + '|')).length
     const nResOf  = p => (resByProf[p] ? resByProf[p].size : 0)
     const sorted  = [...allProfsR].sort((a,b) => (nSurvOf(b)+nResOf(b)) - (nSurvOf(a)+nResOf(a)) || a.localeCompare(b))
