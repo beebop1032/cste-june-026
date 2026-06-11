@@ -1360,8 +1360,8 @@ ${datalistHtml}
         const local = locMap[uid] ?? locMap[baseId] ?? meta.local ?? ''
         const key   = survProf + '|' + meta.jour + '|' + per
         if (!survBySlot[key]) survBySlot[key] = []
-        if (!survBySlot[key].find(s => s.mat === meta.matiere && s.grp === meta.groupe))
-          survBySlot[key].push({ mat: meta.matiere, grp: meta.groupe, local })
+        if (!survBySlot[key].find(s => s.id === meta.id))
+          survBySlot[key].push({ id: meta.id, mat: meta.matiere, grp: meta.groupe, local })
       }
     }
 
@@ -1566,8 +1566,16 @@ ${datalistHtml}
           }
           let html = `<td><div class="cell-inner">`
           survs.forEach(s => {
+            const part   = partMap.get(s.id)
+            const eleves = elevesMap.get(s.id) ?? []
             html += `<div><span class="s-mat">${s.mat}</span></div>`
             html += `<div class="s-detail">${s.grp}${s.local ? ' · <span class="s-loc">' + s.local + '</span>' : ''}</div>`
+            if (part?.type === 'tous') {
+              html += `<div class="re-elv-all">Tous les élèves participent</div>`
+            } else if (eleves.length) {
+              const noms = eleves.map(el => [el.nom, el.prenom].filter(Boolean).join(' ')).join(', ')
+              html += `<div class="re-elv">${eleves.length} élève${eleves.length > 1 ? 's' : ''} : ${noms}</div>`
+            }
           })
           if (isRes) {
             const slotExams = exams.filter(e => e.jour === jour && periodesOf(e).includes(per))
