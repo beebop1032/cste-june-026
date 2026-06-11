@@ -1289,6 +1289,197 @@ ${datalistHtml}
     return new Response(htmlF, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
   }
 
+  // ── Récap prof : corrections + surveillances ──────────────────────────────
+
+  if (format === 'print-recap-prof') {
+    const partMap  = await buildPartMap()
+    const finalRaw = await read('final-locaux.json') ?? {}
+    const survMap  = finalRaw.surveillants ?? {}
+    const locMap   = finalRaw.locaux       ?? {}
+
+    const CLASS_SIZES_R = {
+      '1H':19,'1I':20,'1J':21,'1K':21,'1L':21,'1M':21,'1N':21,
+      '2H':20,'2I':23,'2J':21,'2K':21,'2L':21,'2M':20,'2N':19,
+      '6H':25,'6I':24,'6J':24,'6K':24,
+    }
+    const szR = g => CLASS_SIZES_R[g] ?? 25
+
+    // Corrections (examens à corriger, non annulés) par prof
+    const corrections = {}   // profCode → [{jour,per,mat,grp,n,type}]
+    const totalCopies = {}   // profCode → int
+    for (const ex of exams) {
+      const p = partMap.get(ex.id)
+      if (!p || p.type === 'annule') continue
+      const n = p.type === 'liste' ? (p.n || 0) : szR(ex.groupe)
+      for (const per of periodesOf(ex)) {
+        if (!corrections[ex.profCode]) { corrections[ex.profCode] = []; totalCopies[ex.profCode] = 0 }
+        corrections[ex.profCode].push({ jour: ex.jour, per, mat: ex.matiere, grp: ex.groupe, n, type: p.type })
+        totalCopies[ex.profCode] = (totalCopies[ex.profCode] || 0) + n
+      }
+    }
+
+    // Surveillances attribuées (tableau final) par prof surveillant
+    const surveillances = {}  // profCode → [{jour,per,mat,grp,local}]
+    for (const [uid, survProf] of Object.entries(survMap)) {
+      if (!survProf) continue
+      const [baseId, per2] = uid.includes('@') ? uid.split('@') : [uid, null]
+      const meta = exams.find(e => e.id === baseId)
+      if (!meta) continue
+      const per   = per2 ?? (meta.periode === 'P1+P2' ? 'P1+P2' : meta.periode)
+      const local = locMap[uid] ?? locMap[baseId] ?? meta.local ?? ''
+      if (!surveillances[survProf]) surveillances[survProf] = []
+      // déduplique si même uid déjà présent
+      if (!surveillances[survProf].find(s => s.uid === uid))
+        surveillances[survProf].push({ uid, jour: meta.jour, per, mat: meta.matiere, grp: meta.groupe, local })
+    }
+
+    const allProfsR = [...new Set(exams.map(e => e.profCode))].sort()
+    // Tri par copies desc puis alpha
+    const sorted = [...allProfsR].sort((a,b) => (totalCopies[b]||0) - (totalCopies[a]||0) || a.localeCompare(b))
+
+    function fmtJ(iso) {
+      const d = new Date(iso + 'T12:00:00Z')
+      const day = d.toLocaleDateString('fr-FR', { weekday: 'short', timeZone: 'Europe/Brussels' })
+      const [,m,j] = iso.split('-')
+      return day.charAt(0).toUpperCase() + day.slice(1,3) + ' ' + j + '/' + m
+    }
+    function sortSlots(arr) {
+      return [...arr].sort((a,b) => a.jour.localeCompare(b.jour) || a.per.localeCompare(b.per) || (a.mat||'').localeCompare(b.mat||''))
+    }
+
+    const cssR = `
+      @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap');
+      *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+      :root{--navy:#1a3254;--gold:#b8893a;--bg:#f4f3ef;--border:#d6d2c8;--muted:#6b7280}
+      body{font-family:'Source Sans 3',sans-serif;font-size:10px;background:var(--bg);color:#1c1c1c;line-height:1.3}
+      .topbar{background:var(--navy);color:#fff;padding:11px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:10}
+      .topbar h1{font-size:15px;font-weight:700}
+      .topbar p{font-size:9.5px;color:rgba(255,255,255,.55);margin-top:1px}
+      .topbar-right{display:flex;align-items:center;gap:7px;flex-shrink:0}
+      .btn-gold{background:var(--gold);color:#fff;border:none;padding:6px 14px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;border-radius:4px}
+      .btn-dark{background:#374151;color:#fff;border:none;padding:6px 13px;font-family:inherit;font-size:10.5px;font-weight:600;cursor:pointer;border-radius:4px}
+      .content{max-width:1300px;margin:0 auto;padding:14px 18px 40px}
+      .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(580px,1fr));gap:10px}
+      .card{background:#fff;border:1px solid var(--border);border-radius:5px;overflow:hidden;page-break-inside:avoid;break-inside:avoid}
+      .card-hdr{background:var(--navy);color:#fff;padding:5px 10px;display:flex;align-items:center;gap:8px}
+      .card-prof{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;letter-spacing:.5px;min-width:52px}
+      .card-stats{font-size:9px;color:rgba(255,255,255,.65);display:flex;gap:10px;flex-wrap:wrap}
+      .stat-pill{background:rgba(255,255,255,.12);border-radius:20px;padding:1px 7px;white-space:nowrap}
+      .stat-pill.zero{opacity:.45}
+      .card-body{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border)}
+      .col{padding:0}
+      .col+.col{border-left:1px solid var(--border)}
+      .col-hdr{font-size:7.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;padding:3px 8px;background:#f0ede6;color:var(--navy);border-bottom:1px solid var(--border)}
+      table{width:100%;border-collapse:collapse}
+      td{padding:2px 6px;border-bottom:1px solid #f0ede6;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+      tr:last-child td{border-bottom:none}
+      .tj{font-size:8.5px;color:var(--muted)}
+      .tp{font-size:8px;color:var(--muted)}
+      .tm{font-size:9px;font-weight:600;color:#1c1c1c;max-width:90px}
+      .tg{font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:700;color:var(--navy)}
+      .tn{font-size:9px;font-weight:700;text-align:right}
+      .tn.all{color:#065f46}.tn.list{color:#1e40af}.tn.zero{color:var(--muted)}
+      .tl{font-family:'JetBrains Mono',monospace;font-size:8.5px;color:#5b21b6;font-weight:700}
+      .empty{padding:5px 8px;font-size:8.5px;color:var(--muted);font-style:italic}
+      .print-hdr{display:none}
+      @media print{
+        @page{size:A4 portrait;margin:8mm 10mm}
+        body{font-size:9px;background:#fff}
+        .topbar,.btn-gold,.btn-dark{display:none}
+        .print-hdr{display:block;text-align:center;padding-bottom:5px;border-bottom:2px solid var(--navy);margin-bottom:8px}
+        .print-hdr h1{font-size:13px;font-weight:700;color:var(--navy)}
+        .print-hdr p{font-size:8px;color:var(--muted);margin-top:2px}
+        .content{padding:0;max-width:none}
+        .grid{grid-template-columns:repeat(2,1fr);gap:6px}
+        .card{border-radius:0;border:1px solid #bbb}
+        .card-hdr{padding:3px 7px}
+        .card-prof{font-size:10.5px}
+        td{padding:1px 5px}
+      }
+    `
+
+    const jsR = `
+      let sortMode = 'copies';
+      function toggleSort() {
+        sortMode = sortMode === 'copies' ? 'alpha' : 'copies';
+        const btn = document.getElementById('sort-btn');
+        if (btn) btn.textContent = sortMode === 'copies' ? 'Tri : copies ↓' : 'Tri : alpha ↑';
+        const grid = document.getElementById('prof-grid');
+        if (!grid) return;
+        const cards = [...grid.children];
+        cards.sort((a, b) => {
+          if (sortMode === 'alpha') return a.dataset.prof.localeCompare(b.dataset.prof);
+          return parseInt(b.dataset.copies || 0) - parseInt(a.dataset.copies || 0) || a.dataset.prof.localeCompare(b.dataset.prof);
+        });
+        cards.forEach(c => grid.appendChild(c));
+      }
+    `
+
+    let htmlR = `<!DOCTYPE html>
+<html lang="fr"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Récap profs — Surveillance juin 2026</title>
+<style>${cssR}</style>
+</head><body>
+<div class="topbar">
+  <div>
+    <h1>Récap profs — Corrections &amp; Surveillances</h1>
+    <p>Collège des Hayeffes · Juin 2026 · ${allProfsR.length} profs · trié par copies décroissantes</p>
+  </div>
+  <div class="topbar-right">
+    <button class="btn-dark" id="sort-btn" onclick="toggleSort()">Tri : copies ↓</button>
+    <button class="btn-gold" onclick="window.print()">Imprimer A4 / PDF</button>
+  </div>
+</div>
+<div class="print-hdr">
+  <h1>Récap profs — Corrections &amp; Surveillances — Juin 2026</h1>
+  <p>Collège des Hayeffes · Imprimé le ${new Date().toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+</div>
+<div class="content"><div class="grid" id="prof-grid">
+`
+
+    for (const prof of sorted) {
+      const corr  = sortSlots(corrections[prof]   || [])
+      const surv  = sortSlots(surveillances[prof]  || [])
+      const copies = totalCopies[prof] || 0
+      const nSurv  = surv.length
+
+      const corrRows = corr.length
+        ? corr.map(r => {
+            const cls = r.type === 'tous' ? 'all' : r.type === 'liste' ? 'list' : 'zero'
+            return `<tr><td class="tj">${fmtJ(r.jour)}</td><td class="tp">${r.per}</td><td class="tm">${r.mat}</td><td class="tg">${r.grp}</td><td class="tn ${cls}">${r.n > 0 ? r.n : '—'}</td></tr>`
+          }).join('')
+        : `<tr><td colspan="5" class="empty">Aucun examen</td></tr>`
+
+      const survRows = surv.length
+        ? surv.map(r => `<tr><td class="tj">${fmtJ(r.jour)}</td><td class="tp">${r.per}</td><td class="tm">${r.mat}</td><td class="tg">${r.grp}</td><td class="tl">${r.local || '—'}</td></tr>`).join('')
+        : `<tr><td colspan="5" class="empty">Aucune surveillance saisie</td></tr>`
+
+      htmlR += `<div class="card" data-prof="${prof}" data-copies="${copies}">
+  <div class="card-hdr">
+    <span class="card-prof">${prof}</span>
+    <span class="card-stats">
+      <span class="stat-pill${copies === 0 ? ' zero' : ''}">${copies} copie${copies > 1 ? 's' : ''}</span>
+      <span class="stat-pill${nSurv === 0 ? ' zero' : ''}">${nSurv} surveillance${nSurv > 1 ? 's' : ''}</span>
+    </span>
+  </div>
+  <div class="card-body">
+    <div class="col">
+      <div class="col-hdr">À corriger — ${corr.length} examen${corr.length > 1 ? 's' : ''}</div>
+      <table><tbody>${corrRows}</tbody></table>
+    </div>
+    <div class="col">
+      <div class="col-hdr">À surveiller — ${nSurv} plage${nSurv > 1 ? 's' : ''}</div>
+      <table><tbody>${survRows}</tbody></table>
+    </div>
+  </div>
+</div>`
+    }
+
+    htmlR += `</div></div><script>${jsR}</script></body></html>`
+    return new Response(htmlR, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+  }
+
   // ── Vue imprimable — propositions de fusion ────────────────────────────────
 
   if (format === 'print-propositions') {

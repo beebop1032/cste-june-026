@@ -244,6 +244,7 @@ export default async function AdminPage({ searchParams }) {
           { href: '/api/export?format=print',              label: 'Vue globale' },
           { href: '/api/export?format=print-propositions', label: 'Vue globale proposition' },
           { href: '/api/export?format=print-final',        label: 'Tableau final' },
+          { href: '/api/export?format=print-recap-prof',     label: 'Récap profs' },
           { href: '/admin/print',                          label: 'Par classe / prof / élève' },
         ].map(({ href, label }) => (
           <a key={href} href={href} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-xs">
