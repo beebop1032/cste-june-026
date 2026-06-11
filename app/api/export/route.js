@@ -820,12 +820,14 @@ export async function GET(request) {
             showStatus('Liaison annulée');
           }
         } else if (pendingLink && pendingLink.slot === slot) {
-          // Deuxième clic même plage : lier (rejoint un groupe existant le cas échéant)
+          // Clic même plage : lier (rejoint un groupe existant le cas échéant).
+          // Le groupe reste sélectionné → on peut enchaîner les clics pour l agrandir.
           const gid = LIAISONS[id] || LIAISONS[pendingLink.id] || ('L' + Date.now());
           LIAISONS[id] = gid;
           LIAISONS[pendingLink.id] = gid;
-          pendingLink = null;
-          afterLiaisonChange('Examens liés 🔗 — clique 🔗 sur le groupe puis sur un autre examen pour agrandir', gid);
+          pendingLink = { id, slot };
+          const n = Object.keys(LIAISONS).filter(k => LIAISONS[k] === gid).length;
+          afterLiaisonChange('Groupe de ' + n + ' examens 🔗 — clique 🔗 sur un autre examen pour agrandir, re-clique pour délier', gid);
         } else if (pendingLink) {
           pendingLink = { id, slot };
           renderLiaisons();
@@ -1088,7 +1090,7 @@ ${datalistHtml}
 <div class="topbar">
   <div class="topbar-left">
     <h1>Tableau final — Surveillance</h1>
-    <p>Collège des Hayeffes &nbsp;·&nbsp; Juin 2026 &nbsp;·&nbsp; Les saisies sont sauvegardées automatiquement</p>
+    <p>Collège des Hayeffes &nbsp;·&nbsp; Juin 2026 &nbsp;·&nbsp; Les saisies sont sauvegardées automatiquement &nbsp;·&nbsp; v3</p>
   </div>
   <div class="topbar-right">
     <span class="save-status" id="save-status"></span>
