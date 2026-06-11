@@ -1587,15 +1587,6 @@ ${datalistHtml}
                 const part = partMap.get(e.id)
                 if (part?.type === 'annule') return
                 html += `<div class="re-item"><span class="re-mat">${e.matiere}</span> · ${e.groupe}${loc ? ' · <span class="re-loc">' + loc + '</span>' : ''}`
-                if (part?.type === 'tous') {
-                  html += `<br><span class="re-elv-all">Tous les élèves participent</span>`
-                } else {
-                  const eleves = elevesMap.get(e.id) ?? []
-                  if (eleves.length) {
-                    const noms = eleves.map(el => [el.nom, el.prenom].filter(Boolean).join(' ')).join(', ')
-                    html += `<br><span class="re-elv">${eleves.length} élève${eleves.length > 1 ? 's' : ''} : ${noms}</span>`
-                  }
-                }
                 html += `</div>`
               })
               html += `</div>`
