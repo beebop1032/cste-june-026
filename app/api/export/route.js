@@ -1348,7 +1348,10 @@ ${datalistHtml}
       }
     }
 
-    // Index: "prof|jour|per" → [{mat, grp, local}]
+    // Alias : afficher le code d'affichage si défini (ex: BALJ → PC)
+    const displayCode = code => profsData[code]?.displayCode ?? code
+
+    // Index: "prof|jour|per" → [{mat, grp, local, titulaire}]
     const survBySlot = {}
     for (const [uid, survProfRaw] of Object.entries(survMap)) {
       if (!survProfRaw) continue
@@ -1361,7 +1364,7 @@ ${datalistHtml}
         const key   = survProf + '|' + meta.jour + '|' + per
         if (!survBySlot[key]) survBySlot[key] = []
         if (!survBySlot[key].find(s => s.id === meta.id))
-          survBySlot[key].push({ id: meta.id, mat: meta.matiere, grp: meta.groupe, niv: meta.niveau, local })
+          survBySlot[key].push({ id: meta.id, mat: meta.matiere, grp: meta.groupe, niv: meta.niveau, local, titulaire: displayCode(meta.profCode) })
       }
     }
 
@@ -1375,9 +1378,6 @@ ${datalistHtml}
         resByProf[prof].add(jour + '|' + per)
       })
     }
-
-    // Alias : afficher le code d'affichage si défini (ex: BALJ → PC)
-    const displayCode = code => profsData[code]?.displayCode ?? code
 
     const allProfsR = [...new Set([
       ...exams.map(e => e.profCode),
@@ -1456,48 +1456,38 @@ ${datalistHtml}
       }
       table.rp thead th.per-hdr{
         background:#e0e0e0;
-        width:20mm;
-        font-size:8px;
+        width:18mm;
+        font-size:9px;
       }
-      table.rp tbody tr{height:50%}
+      table.rp tbody tr{height:50%;max-height:50%}
       table.rp tbody td{
         border:1px solid #888;
-        padding:2px 3px;
+        padding:3px 4px;
         vertical-align:top;
-        font-size:9px;
+        font-size:10px;
+        overflow:hidden;
+        max-height:0;
       }
       table.rp tbody td.per-td{
         border:1px solid #000;
         background:#f0f0f0;
         font-weight:900;
-        font-size:11px;
+        font-size:13px;
         text-align:center;
         vertical-align:middle;
         width:18mm;
         line-height:1.2;
       }
-      .per-time{display:block;font-weight:400;font-size:7.5px;color:#555;margin-top:1px}
-      .cell-inner{height:100%;display:flex;flex-direction:column;gap:1px;padding:1px 0}
-      .s-mat{font-weight:700;font-size:9px}
-      .s-niv{font-weight:400;font-size:8px;color:#555}
-      .s-detail{font-size:8px;color:#333}
+      .cell-inner{height:100%;display:flex;flex-direction:column;gap:2px;padding:2px 0;overflow:hidden}
+      .s-mat{font-weight:700;font-size:11px;line-height:1.2}
+      .s-niv{font-weight:400;font-size:9px;color:#555}
+      .s-tit{font-weight:400;font-size:9px;color:#888}
+      .s-detail{font-size:9.5px;color:#333}
       .s-loc{font-weight:700}
-      .cell-res{
-        font-weight:900;
-        font-size:9px;
-        padding:3px 0 2px;
-        letter-spacing:.4px;
-        border-top:1px dashed #888;
-        margin-top:2px;
-        text-transform:uppercase;
-      }
-      .res-exams{margin-top:2px;font-weight:400;text-transform:none;letter-spacing:0}
-      .re-item{font-size:8px;color:#333;line-height:1.4;margin-bottom:2px}
-      .re-mat{font-weight:700}
-      .re-loc{font-weight:700}
-      .re-elv-all{font-style:italic;color:#555;font-size:7.5px}
-      .re-elv{color:#555;font-size:7.5px}
-      .cell-dash{color:#ccc;text-align:center;padding-top:6px;font-size:16px;line-height:1}
+      .cell-res{font-weight:900;font-size:11px;padding:3px 0;letter-spacing:.4px;text-transform:uppercase}
+      .re-elv-all{font-style:italic;color:#555;font-size:9px}
+      .re-elv-name{color:#333;font-size:9px;line-height:1.4}
+      .cell-dash{color:#ccc;text-align:center;padding-top:8px;font-size:18px;line-height:1}
 
       /* Réserviste summary en bas de page */
       .res-summary{
@@ -1544,27 +1534,49 @@ ${datalistHtml}
 
       async function downloadZip() {
         const btn = document.getElementById('zip-btn');
-        btn.disabled = true; btn.textContent = 'Génération…';
-        const css = document.querySelector('style').textContent;
+        const prog = document.getElementById('zip-prog');
+        btn.disabled = true;
         const cards = [...document.querySelectorAll('#pw .ppage')];
         const zip = new JSZip();
-        cards.forEach(card => {
+
+        const offscreen = document.createElement('div');
+        offscreen.style.cssText = 'position:absolute;left:-9999px;top:0;width:297mm';
+        document.body.appendChild(offscreen);
+
+        for (let i = 0; i < cards.length; i++) {
+          const card = cards[i];
           const prof = card.dataset.prof;
-          // Clone sans le bouton individuel
+          btn.textContent = prof + '… (' + (i+1) + '/' + cards.length + ')';
+          if (prog) { prog.value = i; prog.max = cards.length; }
+
           const clone = card.cloneNode(true);
           clone.querySelectorAll('.no-print').forEach(el => el.remove());
-          const html = '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">'
-            + '<title>' + prof + ' — Récap surveillance</title>'
-            + '<style>' + css + '</style></head>'
-            + '<body style="background:#fff;margin:0">' + clone.outerHTML + '</body></html>';
-          zip.file(prof + '.html', html);
-        });
-        const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+          clone.style.cssText = 'width:297mm;height:210mm;overflow:visible;background:#fff;padding:6mm 8mm 5mm;box-sizing:border-box;display:flex;flex-direction:column';
+          offscreen.innerHTML = '';
+          offscreen.appendChild(clone);
+
+          const blob = await html2pdf().set({
+            margin: 0,
+            filename: prof + '.pdf',
+            image: { type: 'jpeg', quality: 0.97 },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+          }).from(clone).output('blob');
+
+          zip.file(prof + '.pdf', blob);
+        }
+
+        document.body.removeChild(offscreen);
+        btn.textContent = 'ZIP en cours…';
+        if (prog) prog.value = cards.length;
+        const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
         const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
+        a.href = URL.createObjectURL(zipBlob);
         a.download = 'recap-surveillance-juin2026.zip';
         a.click();
-        btn.disabled = false; btn.textContent = '⬇ ZIP tous les profs';
+        btn.disabled = false;
+        btn.textContent = '⬇ ZIP tous les profs';
+        if (prog) prog.value = 0;
       }
     `
 
@@ -1574,12 +1586,14 @@ ${datalistHtml}
 <title>Récap surveillance — Juin 2026</title>
 <style>${cssRP}</style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head><body>
 <div class="topbar">
   <h1>Récap surveillance — 1 page / prof — ${sorted.length} profs</h1>
   <div class="topbar-right">
     <button class="btn btn-s" id="sb" onclick="toggleSort()">Tri : présences ↓</button>
-    <button class="btn btn-z" id="zip-btn" onclick="downloadZip()">⬇ ZIP tous les profs</button>
+    <progress id="zip-prog" value="0" max="100" style="height:16px;display:none"></progress>
+    <button class="btn btn-z" id="zip-btn" onclick="document.getElementById('zip-prog').style.display='inline';downloadZip()">⬇ ZIP PDF</button>
     <button class="btn btn-p" onclick="window.print()">Imprimer tout A4 paysage</button>
   </div>
 </div>
@@ -1603,33 +1617,22 @@ ${datalistHtml}
           }
           let html = `<td><div class="cell-inner">`
           survs.forEach(s => {
-            const part   = partMap.get(s.id)
-            const eleves = elevesMap.get(s.id) ?? []
+            const part     = partMap.get(s.id)
+            const eleves   = elevesMap.get(s.id) ?? []
             const nivLabel = s.niv ? NIVEAU_LABELS[NIVEAUX.indexOf(s.niv)] ?? s.niv : ''
-            html += `<div><span class="s-mat">${s.mat}</span>${nivLabel ? ` <span class="s-niv">${nivLabel}</span>` : ''}</div>`
+            const showTit  = s.titulaire && s.titulaire !== dispCode
+            html += `<div><span class="s-mat">${s.mat}</span>${nivLabel ? ` <span class="s-niv">${nivLabel}</span>` : ''}${showTit ? ` <span class="s-tit">(${s.titulaire})</span>` : ''}</div>`
             html += `<div class="s-detail">${s.grp}${s.local ? ' · <span class="s-loc">' + s.local + '</span>' : ''}</div>`
             if (part?.type === 'tous') {
-              html += `<div class="re-elv-all">Tous les élèves participent</div>`
+              html += `<div class="re-elv-all">Tous les élèves</div>`
             } else if (eleves.length) {
-              const noms = eleves.map(el => [el.nom, el.prenom].filter(Boolean).join(' ')).join(', ')
-              html += `<div class="re-elv">${eleves.length} élève${eleves.length > 1 ? 's' : ''} : ${noms}</div>`
+              eleves.forEach(el => {
+                html += `<div class="re-elv-name">${[el.nom, el.prenom].filter(Boolean).join(' ')}</div>`
+              })
             }
           })
           if (isRes) {
-            const slotExams = exams.filter(e => e.jour === jour && periodesOf(e).includes(per))
-            html += `<div class="cell-res">★ Réserviste`
-            if (slotExams.length) {
-              html += `<div class="res-exams">`
-              slotExams.forEach(e => {
-                const loc  = locMap[e.id + '@' + per] ?? locMap[e.id] ?? e.local ?? ''
-                const part = partMap.get(e.id)
-                if (part?.type === 'annule') return
-                html += `<div class="re-item"><span class="re-mat">${e.matiere}</span> · ${e.groupe}${loc ? ' · <span class="re-loc">' + loc + '</span>' : ''}`
-                html += `</div>`
-              })
-              html += `</div>`
-            }
-            html += `</div>`
+            html += `<div class="cell-res">★ Réserviste</div>`
           }
           html += `</div></td>`
           return html
@@ -1652,7 +1655,6 @@ ${datalistHtml}
     <div class="prof-tri">${dispCode}</div>
     ${profFullName ? `<div class="prof-fullname">${profFullName}</div>` : ''}
     <div class="prof-meta">${ns} surveillance${ns !== 1 ? 's' : ''}${nr ? ' · ' + nr + ' réserviste' + (nr > 1 ? 's' : '') : ''} · Juin 2026 · Collège des Hayeffes</div>
-    <button class="btn-1prof no-print" onclick="printOne(this.closest('.ppage'))">⬇ PDF ${dispCode}</button>
   </div>
   <div class="grid-wrap">
     <table class="rp"><thead>${thead}</thead><tbody>${tbody}</tbody></table>
