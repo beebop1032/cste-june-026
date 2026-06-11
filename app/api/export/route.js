@@ -1500,16 +1500,18 @@ ${datalistHtml}
       }
       .res-summary strong{font-weight:700;font-size:8.5px;color:#000}
 
+      @page{size:210mm 297mm portrait;margin:0}
       @media print{
-        @page{size:A4 portrait;margin:0}
         body{background:#fff}
         .topbar,.btn,.btn-p,.btn-s{display:none!important}
+        #pw{display:block}
         .ppage{
-          width:100%;height:100vh;
+          width:210mm;height:297mm;
           margin:0;padding:8mm 8mm 6mm;
           box-shadow:none;
           page-break-after:always;
           break-after:page;
+          overflow:hidden;
         }
         .ppage:last-child{page-break-after:auto;break-after:auto}
       }
