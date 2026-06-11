@@ -1382,6 +1382,7 @@ ${datalistHtml}
     const allProfsR = [...new Set([
       ...exams.map(e => e.profCode),
       ...Object.keys(resByProf),
+      ...Object.keys(survBySlot).map(k => k.split('|')[0]),  // profs sans examen mais avec surveillance
     ])].sort()
     const nSurvOf = p => Object.keys(survBySlot).filter(k => k.startsWith(p + '|')).length
     const nResOf  = p => (resByProf[p] ? resByProf[p].size : 0)
