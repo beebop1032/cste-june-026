@@ -1602,6 +1602,11 @@ ${datalistHtml}
 
     for (const prof of sorted) {
       const ns = nSurvOf(prof), nr = nResOf(prof)
+      const dispCode     = displayCode(prof)
+      const profInfo     = profsData[prof] ?? {}
+      const profFullName = profInfo.prenom && profInfo.nom
+        ? `${profInfo.prenom} ${profInfo.nom.toUpperCase()}${profInfo.remplacant ? ' (remplaçant·e)' : ''}`
+        : ''
 
       const thead = `<tr>
         <th class="per-hdr">Période</th>
@@ -1643,12 +1648,6 @@ ${datalistHtml}
         </tr>`
       }).join('')
 
-
-      const profInfo    = profsData[prof] ?? {}
-      const dispCode    = displayCode(prof)
-      const profFullName = profInfo.prenom && profInfo.nom
-        ? `${profInfo.prenom} ${profInfo.nom.toUpperCase()}${profInfo.remplacant ? ' (remplaçant·e)' : ''}`
-        : ''
 
       htmlRP += `<div class="ppage" data-prof="${dispCode}" data-s="${ns + nr}">
   <div class="prof-hdr">
