@@ -1448,7 +1448,8 @@ ${datalistHtml}
       table { width: 100%; table-layout: fixed; border-collapse: collapse }
       thead tr.niv-row th { padding: 3px; font-size: 9.5px; font-weight: 700; color: #fff; letter-spacing: .3px; text-align: center; border: 1px solid rgba(255,255,255,.2) }
       thead tr.col-row th { font-size: 7.5px; font-weight: 700; text-transform: uppercase; padding: 2px 3px; border: 1px solid rgba(255,255,255,.25); text-align: center; color: #fff; overflow: hidden }
-      tbody td { border: 1px solid #e2dfd8; padding: 2px 3px; text-align: center; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+      tbody tr { height: 18px }
+      tbody td { height: 18px; border: 1px solid #e2dfd8; padding: 0 3px; text-align: center; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
       tbody tr:nth-child(even) td { background: #faf9f6 }
       .tc { background: #374151 !important; color: #fff !important; font-weight: 700; font-size: 8.5px }
       .tm { font-weight: 600; font-size: 9px }
@@ -1500,7 +1501,8 @@ ${datalistHtml}
         .tp { font-size: 6px }
         thead tr.niv-row th { font-size: 7.5px; padding: 1px 2px }
         thead tr.col-row th { font-size: 6px; padding: 1px 1px }
-        tbody td { padding: 1px 1px }
+        tbody tr { height: 11px }
+        tbody td { height: 11px; padding: 0 1px }
         .badge { font-size: 5.5px; padding: 0 2px }
         .vf-surv, .vf-loc { font-size: 6.5px; padding: 0 2px !important }
         .tc { font-size: 7px }
