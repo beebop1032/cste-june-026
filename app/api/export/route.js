@@ -1477,7 +1477,7 @@ ${datalistHtml}
         line-height:1.2;
       }
       .cell-inner{display:flex;flex-direction:column;gap:2px}
-      .elv-list{max-height:55mm;overflow:hidden}
+      .elv-list{max-height:75mm;overflow:hidden}
       .s-mat{font-weight:700;font-size:12px;line-height:1.2}
       .s-niv{font-weight:400;font-size:10px;color:#555}
       .s-tit{font-weight:400;font-size:10px;color:#888}
@@ -1485,7 +1485,7 @@ ${datalistHtml}
       .s-loc{font-weight:700}
       .cell-res{font-weight:900;font-size:12px;padding:4px 0;letter-spacing:.4px;text-transform:uppercase}
       .re-elv-all{font-style:italic;color:#555;font-size:10px}
-      .re-elv-name{color:#333;font-size:10px;line-height:1.5}
+      .re-elv-name{color:#333;font-size:9px;line-height:1.25}
       .cell-dash{color:#ccc;text-align:center;padding-top:10px;font-size:20px;line-height:1}
 
       /* Réserviste summary en bas de page */
