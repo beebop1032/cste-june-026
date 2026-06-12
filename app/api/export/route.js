@@ -652,7 +652,8 @@ export async function GET(request) {
         .print-hdr h1 { font-family:'Playfair Display',Georgia,serif; font-size:12px; font-weight:700; color:var(--navy) }
         .print-hdr p  { font-size:8px; color:var(--muted); margin-top:2px }
         .content { padding:0; max-width:none }
-        .day  { box-shadow:none; border-radius:0; border:1px solid #bbb; margin-bottom:5px }
+        .day  { box-shadow:none; border-radius:0; border:1px solid #bbb; margin-bottom:5px; break-after:page; page-break-after:always }
+        .day:last-child { break-after:avoid; page-break-after:avoid }
         .day-hdr { padding:3px 7px }
         .day-name { font-size:9px }
         .per  { padding:2px 7px 4px }
@@ -1486,7 +1487,8 @@ ${datalistHtml}
         .print-hdr { display: block; text-align: center; margin-bottom: 4px; padding-bottom: 3px; border-bottom: 2px solid #1a3254 }
         .print-hdr h1 { font-family: 'Playfair Display', Georgia, serif; font-size: 11px; font-weight: 700; color: #1a3254 }
         .print-hdr p { font-size: 7.5px; color: #6b7280; margin-top: 2px }
-        .day { box-shadow: none; border-radius: 0; border: 1px solid #bbb; margin-bottom: 4px }
+        .day { box-shadow: none; border-radius: 0; border: 1px solid #bbb; margin-bottom: 4px; break-after: page; page-break-after: always }
+        .day:last-child { break-after: avoid; page-break-after: avoid }
         .day-hdr { padding: 2px 7px }
         .day-name { font-size: 8.5px }
         .day-res { font-size: 7px }
