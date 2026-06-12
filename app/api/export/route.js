@@ -680,7 +680,7 @@ export async function GET(request) {
         }
         .loc-inp { color:#5b21b6 }
         .fin-inp::placeholder, .loc-inp::placeholder { color:#9ca3af; font-style:italic; font-weight:400 }
-        -webkit-print-color-adjust: exact; print-color-adjust: exact
+        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important }
       }
     `
 
@@ -1444,7 +1444,7 @@ ${datalistHtml}
       .per-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--navy); margin-bottom: 5px; display: flex; align-items: center; gap: 6px }
       .per-label::after { content: ''; flex: 1; height: 1px; background: var(--border) }
       .half-gap { height: 4px }
-      table { table-layout: fixed; border-collapse: collapse }
+      table { width: 100%; table-layout: fixed; border-collapse: collapse }
       thead tr.niv-row th { padding: 3px; font-size: 9.5px; font-weight: 700; color: #fff; letter-spacing: .3px; text-align: center; border: 1px solid rgba(255,255,255,.2) }
       thead tr.col-row th { font-size: 7.5px; font-weight: 700; text-transform: uppercase; padding: 2px 3px; border: 1px solid rgba(255,255,255,.25); text-align: center; color: #fff; overflow: hidden }
       tbody td { border: 1px solid #e2dfd8; padding: 2px 3px; text-align: center; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
@@ -1502,7 +1502,7 @@ ${datalistHtml}
         .badge { font-size: 5.5px; padding: 0 2px }
         .vf-surv, .vf-loc { font-size: 6.5px; padding: 0 2px !important }
         .tc { font-size: 7px }
-        -webkit-print-color-adjust: exact; print-color-adjust: exact
+        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important }
       }
     `
 
