@@ -1591,31 +1591,6 @@ ${datalistHtml}
       htmlV += `</div>`
     }
 
-    // Summary
-    const activeByGroupeV = {}
-    let totalActiveV = 0
-    for (const ex of exams) {
-      const p = partMap.get(ex.id)
-      if (!p || p.type === 'annule') continue
-      const nPer = periodesOf(ex).length
-      totalActiveV += nPer
-      activeByGroupeV[ex.groupe] = (activeByGroupeV[ex.groupe] || 0) + nPer
-    }
-
-    htmlV += `<div class="recap-final">
-  <div class="rf-title">Récapitulatif — ${totalActiveV} période${totalActiveV > 1 ? 's' : ''} à surveiller</div>
-  <div class="rf-grid">${NIVEAUX.map((n, ni) => {
-      const groups = [...new Set(exams.filter(e => e.niveau === n).map(e => e.groupe))].sort()
-      const items = groups.map(g => {
-        const count = activeByGroupeV[g] || 0
-        if (!count) return ''
-        return `<span class="rf-item"><span class="rf-groupe">${g}</span><span class="rf-count">${count}</span></span>`
-      }).filter(Boolean).join('')
-      if (!items) return ''
-      return `<div class="rf-niv"><span class="rf-niv-label">${NIVEAU_LABELS[ni]}</span>${items}</div>`
-    }).filter(Boolean).join('')}</div>
-</div>`
-
     htmlV += `</div></body></html>`
     return new Response(htmlV, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
   }
