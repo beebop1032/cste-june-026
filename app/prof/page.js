@@ -1,17 +1,7 @@
 import { requireProf } from '@/lib/auth'
-import { redirect } from 'next/navigation'
-import exams from '@/lib/exams.json'
-
-const PROF_CODES = [...new Set(exams.map(e => e.profCode))].sort()
 
 export default async function ProfSelectPage() {
   await requireProf()
-
-  async function selectProf(formData) {
-    'use server'
-    const code = formData.get('profCode')
-    redirect(`/prof/${code}`)
-  }
 
   return (
     <main style={{
@@ -28,33 +18,20 @@ export default async function ProfSelectPage() {
           <div style={{ background: 'var(--primary)', borderRadius: 10, padding: '12px 28px' }}>
             <img src="/logo.png" alt="Collège des Hayeffes" style={{ height: 44, width: 'auto', display: 'block', filter: 'brightness(0) invert(1)' }} />
           </div>
-          <div>
-            <h1 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 4px', color: 'var(--fg)' }}>
-              Sélectionnez votre code
-            </h1>
-            <p style={{ margin: 0, fontSize: 13, color: 'var(--fg-muted)' }}>
-              Examens juin 2026 — Collège des Hayeffes
-            </p>
-          </div>
         </div>
 
-        <div className="card" style={{ padding: '24px', boxShadow: 'var(--shadow)' }}>
-          <form action={selectProf} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div>
-              <label htmlFor="profCode" style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--fg)', marginBottom: 6 }}>
-                Code professeur
-              </label>
-              <select name="profCode" id="profCode" required defaultValue="" className="select">
-                <option value="" disabled>— Sélectionnez votre code —</option>
-                {PROF_CODES.map(code => (
-                  <option key={code} value={code}>{code}</option>
-                ))}
-              </select>
-            </div>
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '12px', fontSize: 15 }}>
-              Continuer
-            </button>
-          </form>
+        <div className="card" style={{ padding: '28px 24px', boxShadow: 'var(--shadow)', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ fontSize: 36 }}>🔒</div>
+          <h1 style={{ fontSize: 17, fontWeight: 700, margin: 0, color: 'var(--fg)' }}>
+            Période de saisie terminée
+          </h1>
+          <p style={{ margin: 0, fontSize: 14, color: 'var(--fg-muted)', lineHeight: 1.5 }}>
+            La période de saisie des listes de présence est clôturée.<br />
+            Merci pour votre participation.
+          </p>
+          <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--fg-muted)' }}>
+            Collège des Hayeffes · Examens juin 2026
+          </p>
         </div>
 
         <p style={{ textAlign: 'center', margin: 0 }}>

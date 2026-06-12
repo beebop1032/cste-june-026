@@ -6,11 +6,15 @@ import { cookies } from 'next/headers'
 import exams from '@/lib/exams.json'
 import ProfForm from './ProfForm'
 
+import { redirect } from 'next/navigation'
+
 export default async function ProfPage({ params, searchParams }) {
   const { code } = await params
   const sp = await searchParams
   await requireProf()
   const isAdmin = await verifySession('admin')
+
+  if (!isAdmin) redirect('/prof')
 
   const jar = await cookies()
   const dejaRempli = isAdmin ? !!(await read(`prof-${code}.json`)) : jar.get('prof_done')?.value === code
