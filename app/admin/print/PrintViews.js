@@ -1023,38 +1023,63 @@ function ViewPdfSurveillances({ exams, partData, jourFilter, locaux, surveillant
   const locOf  = e => (locaux && (locaux[e.uid] || locaux[e.ex.id])) || e.ex.local || ''
 
   const pages = useMemo(() => {
-    const kept = []
+    const uidOfEx = (ex, per) => ex.periode === 'P1+P2' ? `${ex.id}@${per}` : ex.id
+    const gidOfUid = (uid, ex, per) => {
+      const legacyGid = liaisons?.[ex.id] && uid !== ex.id ? `${liaisons[ex.id]}@${per}` : null
+      return (liaisons && liaisons[uid]) || legacyGid || null
+    }
+
+    // Passe 1 : trouver les gids qui ont au moins un membre de type 'liste'
+    const listeGids = new Set()
     for (const ex of exams) {
-      if (!keep(partData[ex.id])) continue
+      if (partData[ex.id]?.type !== 'liste') continue
       if (jourFilter && ex.jour !== jourFilter) continue
       for (const per of ex.periode === 'P1+P2' ? ['P1', 'P2'] : [ex.periode]) {
-        kept.push({ ex, periode: per, uid: ex.periode === 'P1+P2' ? `${ex.id}@${per}` : ex.id })
+        const uid = uidOfEx(ex, per)
+        const gid = gidOfUid(uid, ex, per)
+        if (gid) listeGids.add(gid)
+      }
+    }
+
+    // Passe 2 : kept = exams de type 'liste' + leurs partenaires liés (pas 'annule')
+    const kept = []
+    for (const ex of exams) {
+      if (partData[ex.id]?.type === 'annule') continue
+      if (jourFilter && ex.jour !== jourFilter) continue
+      for (const per of ex.periode === 'P1+P2' ? ['P1', 'P2'] : [ex.periode]) {
+        const uid = uidOfEx(ex, per)
+        const p   = partData[ex.id]
+        const gid = gidOfUid(uid, ex, per)
+        // Inclure si 'liste', ou si lié à un groupe qui contient au moins un 'liste'
+        if (p?.type !== 'liste' && !listeGids.has(gid)) continue
+        kept.push({ ex, periode: per, uid })
       }
     }
 
     // Une fiche par examen, sauf examens liés dans le Tableau Final : une fiche par groupe
     const groups = new Map()
     for (const e of kept) {
-      const legacyGid = liaisons && liaisons[e.ex.id] && e.uid !== e.ex.id ? `${liaisons[e.ex.id]}@${e.periode}` : null
-      const gid = (liaisons && liaisons[e.uid]) || legacyGid || `solo-${e.uid}`
+      const gid = gidOfUid(e.uid, e.ex, e.periode) || `solo-${e.uid}`
       if (!groups.has(gid)) groups.set(gid, [])
       groups.get(gid).push(e)
     }
 
-    return [...groups.values()].map(gEntries => {
-      const entries = gEntries.map(e => {
-        const p = partData[e.ex.id]
-        const eleves = p.type === 'liste'
-          ? [...p.eleves].sort((a, b) => (a.nom || '').localeCompare(b.nom || '') || (a.prenom || '').localeCompare(b.prenom || ''))
-          : []
-        return { ...e, p, eleves }
-      })
-      const first   = entries[0]
-      const local   = entries.map(locOf).find(Boolean) || ''
-      const surv    = entries.map(survOf).find(Boolean) || ''
-      const nEleves = entries.reduce((s, e) => s + e.eleves.length, 0)
-      return { key: first.uid, jour: first.ex.jour, periode: first.periode, local, surv, entries, nEleves }
-    }).sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode) || a.local.localeCompare(b.local))
+    return [...groups.values()]
+      .filter(gEntries => gEntries.some(e => partData[e.ex.id]?.type === 'liste'))
+      .map(gEntries => {
+        const entries = gEntries.map(e => {
+          const p = partData[e.ex.id]
+          const eleves = p?.type === 'liste'
+            ? [...p.eleves].sort((a, b) => (a.nom || '').localeCompare(b.nom || '') || (a.prenom || '').localeCompare(b.prenom || ''))
+            : []
+          return { ...e, p, eleves }
+        })
+        const first   = entries[0]
+        const local   = entries.map(locOf).find(Boolean) || ''
+        const surv    = entries.map(survOf).find(Boolean) || ''
+        const nEleves = entries.reduce((s, e) => s + e.eleves.length, 0)
+        return { key: first.uid, jour: first.ex.jour, periode: first.periode, local, surv, entries, nEleves }
+      }).sort((a, b) => a.jour.localeCompare(b.jour) || a.periode.localeCompare(b.periode) || a.local.localeCompare(b.local))
   }, [exams, partData, jourFilter, locaux, surveillants, liaisons])
 
   if (pages.length === 0) return (
@@ -1067,11 +1092,12 @@ function ViewPdfSurveillances({ exams, partData, jourFilter, locaux, surveillant
   return (
     <div className="pdf-wrap">
       {pages.map(({ key, jour, periode, local, surv, entries, nEleves }) => {
-        const merged     = entries.length > 1
-        const hasTous    = entries.some(e => e.p.type === 'tous')
-        const titulaires = entries.filter(e => e.p.surveilleParTitulaire).map(e => e.ex.profCode)
-        const profs      = [...new Set(entries.map(e => e.ex.profCode))]
-        const rows       = entries.flatMap(e => e.eleves.map(el => ({ el, ex: e.ex })))
+        const merged        = entries.length > 1
+        const listeEntries  = entries.filter(e => e.eleves.length > 0)
+        const tableIsMerged = listeEntries.length > 1
+        const titulaires    = entries.filter(e => e.p?.surveilleParTitulaire).map(e => e.ex.profCode)
+        const profs         = [...new Set(entries.map(e => e.ex.profCode))]
+        const rows          = listeEntries.flatMap(e => e.eleves.map(el => ({ el, ex: e.ex })))
         return (
           <div key={key} className="pdf-page">
             <div className="pdf-school-hdr">
@@ -1130,7 +1156,7 @@ function ViewPdfSurveillances({ exams, partData, jourFilter, locaux, surveillant
               </div>
             </div>
 
-            {entries.filter(e => e.p.type === 'tous').map(e => (
+            {entries.filter(e => e.p?.type === 'tous').map(e => (
               <div key={e.ex.id} className="pdf-notice">
                 L'examen <strong>{e.ex.matiere}</strong> est maintenu pour <strong>tous les élèves</strong> du groupe {e.ex.groupe}.
               </div>
@@ -1148,9 +1174,9 @@ function ViewPdfSurveillances({ exams, partData, jourFilter, locaux, surveillant
                   </tr>
                 </thead>
                 <tbody>
-                  {merged ? (
-                    entries.map((e, ei) => {
-                      const offset = entries.slice(0, ei).reduce((s, e2) => s + e2.eleves.length, 0)
+                  {tableIsMerged ? (
+                    listeEntries.map((e, ei) => {
+                      const offset = listeEntries.slice(0, ei).reduce((s, e2) => s + e2.eleves.length, 0)
                       return (
                         <React.Fragment key={e.ex.id}>
                           <tr>
@@ -1218,7 +1244,7 @@ const TABS = [
   { id: 'eleve',       label: 'Par élève'    },
   { id: 'pdf-classes', label: 'PDF — Classes' },
   { id: 'pdf-eleves',  label: 'PDF — Élèves'  },
-  { id: 'pdf-surv',    label: 'PDF — Surveillances' },
+  { id: 'pdf-surv',    label: 'PDF — Présences' },
 ]
 
 const PrintIcon = () => (
