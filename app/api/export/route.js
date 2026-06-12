@@ -680,6 +680,7 @@ export async function GET(request) {
         }
         .loc-inp { color:#5b21b6 }
         .fin-inp::placeholder, .loc-inp::placeholder { color:#9ca3af; font-style:italic; font-weight:400 }
+        -webkit-print-color-adjust: exact; print-color-adjust: exact
       }
     `
 
@@ -1345,8 +1346,18 @@ ${datalistHtml}
       return ''
     }
 
-    // Pre-count exams per (slot+surv) to detect fusions (≥2 exams, same surv, same plage)
-    const fusionCount = {}
+    // Palette tournante pour distinguer visuellement chaque groupe de fusion
+    const FPAL = [
+      { bg: '#ede9fe', border: '#7c3aed', text: '#4c1d95' }, // violet
+      { bg: '#dcfce7', border: '#16a34a', text: '#14532d' }, // vert
+      { bg: '#fef3c7', border: '#d97706', text: '#78350f' }, // ambre
+      { bg: '#e0f2fe', border: '#0284c7', text: '#075985' }, // bleu ciel
+      { bg: '#fce7f3', border: '#db2777', text: '#831843' }, // rose
+      { bg: '#ccfbf1', border: '#0d9488', text: '#134e4a' }, // sarcelle
+    ]
+
+    // Compter les exams actifs par (slot+surv), puis assigner un indice de palette
+    const fusionCountV = {}
     for (const j of JOURS) {
       for (const per of ['P1', 'P2']) {
         for (const ex of examsForBloc(j, per)) {
@@ -1355,17 +1366,22 @@ ${datalistHtml}
           const surv = legacyV(survMapV, uidOf(ex, per))
           if (!surv) continue
           const key = `${j}|${per}|${surv}`
-          fusionCount[key] = (fusionCount[key] || 0) + 1
+          fusionCountV[key] = (fusionCountV[key] || 0) + 1
         }
       }
     }
+    const fusionPalIdx = {}   // slotSurvKey → index dans FPAL
+    let palCounter = 0
+    for (const [key, cnt] of Object.entries(fusionCountV)) {
+      if (cnt >= 2) fusionPalIdx[key] = palCounter++ % FPAL.length
+    }
 
-    function partBadgeV(ex) {
+    function partBadgeV(ex, isAn) {
       const p = partMap.get(ex.id)
-      if (!p) return `<td class="p-ns"><span class="badge b-ns">–</span></td>`
-      if (p.type === 'annule') return `<td class="p-an"><span class="badge b-an">✕</span></td>`
-      if (p.type === 'tous')   return `<td class="p-to"><span class="badge b-to">✓</span></td>`
-      return `<td class="p-li"><span class="badge b-li">${p.label}</span></td>`
+      const anCls = isAn ? ' an' : ''
+      if (!p || p.type === 'annule') return `<td class="p-an${anCls}"><span class="badge b-an">✕</span></td>`
+      if (p.type === 'tous')         return `<td class="p-to${anCls}"><span class="badge b-to">✓</span></td>`
+      return `<td class="p-li${anCls}"><span class="badge b-li">${p.label}</span></td>`
     }
 
     function survViewCells(ex, periode, jourV) {
@@ -1374,20 +1390,36 @@ ${datalistHtml}
       if (!p || p.type === 'annule') {
         return `<td class="vf-surv va"></td><td class="vf-loc va"></td>`
       }
-      const surv    = legacyV(survMapV, uid)
-      const defLoc  = (ex.niveau === '1re' || ex.niveau === '2e') ? (ex.local ?? '') : ''
-      const loc     = legacyV(locMapV, uid) || defLoc
-      const isFused = (fusionCount[`${jourV}|${periode}|${surv}`] ?? 0) >= 2
-      const survTd  = surv
-        ? `<td class="vf-surv filled${isFused ? ' fused' : ''}">${isFused ? '🔗 ' : ''}${surv}</td>`
-        : `<td class="vf-surv empty">—</td>`
-      const locTd   = loc
-        ? `<td class="vf-loc filled">${loc}</td>`
-        : `<td class="vf-loc empty">—</td>`
+      const surv   = legacyV(survMapV, uid)
+      const defLoc = (ex.niveau === '1re' || ex.niveau === '2e') ? (ex.local ?? '') : ''
+      const loc    = legacyV(locMapV, uid) || defLoc
+      const palKey = `${jourV}|${periode}|${surv}`
+      const fIdx   = surv ? fusionPalIdx[palKey] : undefined
+      const pal    = fIdx !== undefined ? FPAL[fIdx] : null
+
+      const survTd = !surv
+        ? `<td class="vf-surv empty">—</td>`
+        : pal
+          ? `<td class="vf-surv" style="background:${pal.bg};color:${pal.text};border-left:3px solid ${pal.border}">🔗 ${surv}</td>`
+          : `<td class="vf-surv filled">${surv}</td>`
+      const locTd  = !loc
+        ? `<td class="vf-loc empty">—</td>`
+        : pal
+          ? `<td class="vf-loc" style="background:${pal.bg};color:${pal.text}">${loc}</td>`
+          : `<td class="vf-loc filled">${loc}</td>`
       return survTd + locTd
     }
 
     const NIV_COLORS_V = ['#1a3254','#1e4976','#1d5fa8','#1a6b8a','#1a7a6e','#236b3e']
+
+    // Largeurs fixes pour aligner les colonnes de même type à travers les niveaux
+    // Pér(22) Mat(36) Cl(24) Prof(28) Él(18) SURV(42) Loc(32) → total/demi = 22 + 3×180 = 562px
+    const COL_WIDTHS = { tc: 22, mat: 36, cl: 24, prof: 28, el: 18, surv: 42, loc: 32 }
+    const colGroupHtml = () => {
+      let cg = `<colgroup><col style="width:${COL_WIDTHS.tc}px">`
+      for (let i = 0; i < 3; i++) cg += `<col style="width:${COL_WIDTHS.mat}px"><col style="width:${COL_WIDTHS.cl}px"><col style="width:${COL_WIDTHS.prof}px"><col style="width:${COL_WIDTHS.el}px"><col style="width:${COL_WIDTHS.surv}px"><col style="width:${COL_WIDTHS.loc}px">`
+      return cg + `</colgroup>`
+    }
 
     const cssV = `
       @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Playfair+Display:wght@700&family=JetBrains+Mono:wght@500&display=swap');
@@ -1412,33 +1444,32 @@ ${datalistHtml}
       .per-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--navy); margin-bottom: 5px; display: flex; align-items: center; gap: 6px }
       .per-label::after { content: ''; flex: 1; height: 1px; background: var(--border) }
       .half-gap { height: 4px }
-      table { width: 100%; border-collapse: collapse }
+      table { table-layout: fixed; border-collapse: collapse }
       thead tr.niv-row th { padding: 3px; font-size: 9.5px; font-weight: 700; color: #fff; letter-spacing: .3px; text-align: center; border: 1px solid rgba(255,255,255,.2) }
-      thead tr.col-row th { font-size: 7.5px; font-weight: 700; text-transform: uppercase; padding: 2px 3px; border: 1px solid rgba(255,255,255,.25); text-align: center; color: #fff }
-      tbody td { border: 1px solid #e2dfd8; padding: 2px 3px; text-align: center; vertical-align: middle; white-space: nowrap }
+      thead tr.col-row th { font-size: 7.5px; font-weight: 700; text-transform: uppercase; padding: 2px 3px; border: 1px solid rgba(255,255,255,.25); text-align: center; color: #fff; overflow: hidden }
+      tbody td { border: 1px solid #e2dfd8; padding: 2px 3px; text-align: center; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
       tbody tr:nth-child(even) td { background: #faf9f6 }
       .tc { background: #374151 !important; color: #fff !important; font-weight: 700; font-size: 8.5px }
       .tm { font-weight: 600; font-size: 9px }
       .tg { font-weight: 700; font-size: 9px; color: var(--navy) }
       .tp { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--muted) }
       .te { background: #faf9f7 !important }
+      .an { opacity: 0.28 }
       .badge { display: inline-block; padding: 1px 3px; border-radius: 2px; font-weight: 700; font-size: 7.5px }
       .b-an { background: #fde8e8; color: #991b1b }
       .b-to { background: #d1fae5; color: #065f46 }
       .b-li { background: #dbeafe; color: #1e40af }
-      .b-ns { color: #9ca3af; font-style: italic; font-weight: 400 }
       td.p-an { background: #fff5f5 }
       td.p-to { background: #f0fff4 }
       td.p-li { background: #eff6ff }
-      .vf-surv { font-family: 'JetBrains Mono', monospace; font-size: 9px; min-width: 42px; padding: 1px 4px !important; font-weight: 700 }
+      .vf-surv { font-family: 'JetBrains Mono', monospace; font-size: 9px; padding: 1px 4px !important; font-weight: 700; overflow: hidden; text-overflow: ellipsis }
       .vf-surv.filled { color: #14532d; background: #f0fdf4 }
-      .vf-surv.empty { color: #9ca3af; font-style: italic; font-weight: 400; font-size: 8px }
-      .vf-surv.va { background: #f5f5f5 !important; opacity: .25 }
-      .vf-surv.fused { background: #ede9fe !important; color: #4c1d95 !important; border-left: 3px solid #7c3aed !important }
-      .vf-loc { font-family: 'JetBrains Mono', monospace; font-size: 9px; min-width: 36px; padding: 1px 4px !important; font-weight: 700 }
+      .vf-surv.empty  { color: #9ca3af; font-style: italic; font-weight: 400; font-size: 8px }
+      .vf-surv.va     { background: #f5f5f5 !important; opacity: .25 }
+      .vf-loc { font-family: 'JetBrains Mono', monospace; font-size: 9px; padding: 1px 4px !important; font-weight: 700; overflow: hidden; text-overflow: ellipsis }
       .vf-loc.filled { color: #4c1d95; background: #f5f3ff }
-      .vf-loc.empty { color: #9ca3af; font-style: italic; font-weight: 400; font-size: 8px }
-      .vf-loc.va { background: #f5f5f5 !important; opacity: .25 }
+      .vf-loc.empty  { color: #9ca3af; font-style: italic; font-weight: 400; font-size: 8px }
+      .vf-loc.va     { background: #f5f5f5 !important; opacity: .25 }
       .recap-final { margin-top: 12px; padding: 9px 13px; background: #f8f6f1; border: 1px solid #e2dfd8; border-radius: 4px; page-break-inside: avoid }
       .rf-title { font-size: 10px; font-weight: 700; color: #1a3254; margin-bottom: 7px; text-transform: uppercase; letter-spacing: .5px }
       .rf-grid { display: flex; flex-direction: column; gap: 4px }
@@ -1469,7 +1500,7 @@ ${datalistHtml}
         thead tr.col-row th { font-size: 6px; padding: 1px 1px }
         tbody td { padding: 1px 1px }
         .badge { font-size: 5.5px; padding: 0 2px }
-        .vf-surv, .vf-loc { font-size: 6.5px; padding: 0 2px !important; min-width: unset }
+        .vf-surv, .vf-loc { font-size: 6.5px; padding: 0 2px !important }
         .tc { font-size: 7px }
         -webkit-print-color-adjust: exact; print-color-adjust: exact
       }
@@ -1492,9 +1523,9 @@ ${datalistHtml}
 </div>
 <div class="legend">
   <span class="leg"><span class="leg-dot" style="background:#f0fdf4;border:1px solid #86efac"></span>Surveillant attribué</span>
-  <span class="leg"><span class="leg-dot" style="background:#ede9fe;border:2px solid #7c3aed"></span>🔗 Fusion (même surveillant · même plage)</span>
+  <span class="leg"><span class="leg-dot" style="background:#ede9fe;border:2px solid #7c3aed"></span>🔗 Fusion (couleurs distinctes par groupe)</span>
   <span class="leg"><span class="leg-dot" style="background:#f5f3ff;border:1px solid #c4b5fd"></span>Local attribué</span>
-  <span class="leg"><span class="leg-dot" style="background:#fde8e8;border:1px solid #fca5a5"></span>Annulé</span>
+  <span class="leg"><span class="leg-dot" style="background:#fde8e8;border:1px solid #fca5a5;opacity:.4"></span>Annulé (grisé)</span>
   <span class="leg"><span class="leg-dot" style="background:#d1fae5;border:1px solid #6ee7b7"></span>Tous les élèves</span>
   <span class="leg"><span class="leg-dot" style="background:#dbeafe;border:1px solid #93c5fd"></span>Liste nominative</span>
 </div>
@@ -1525,14 +1556,14 @@ ${datalistHtml}
         halvesV.forEach((indices, hi) => {
           if (hi > 0) htmlV += `<div class="half-gap"></div>`
 
-          htmlV += `<table><thead><tr class="niv-row"><th class="tc"></th>`
+          htmlV += `<table>${colGroupHtml()}<thead><tr class="niv-row"><th class="tc"></th>`
           indices.forEach(i => {
             htmlV += `<th colspan="6" style="background:${NIV_COLORS_V[i]}">${NIVEAU_LABELS[i]}</th>`
           })
           htmlV += `</tr><tr class="col-row"><th class="tc">Pér.</th>`
           indices.forEach(i => {
             const c = NIV_COLORS_V[i]
-            htmlV += `<th style="background:${c}">Mat.</th><th style="background:${c}">Cl.</th><th style="background:${c}">Prof.</th><th style="background:${c}">Él.</th><th style="background:#14532d">Fin.</th><th style="background:#4c1d95">Loc.</th>`
+            htmlV += `<th style="background:${c}">Mat.</th><th style="background:${c}">Cl.</th><th style="background:${c}">Prof.</th><th style="background:${c}">Él.</th><th style="background:#14532d">SURV</th><th style="background:#4c1d95">Loc.</th>`
           })
           htmlV += `</tr></thead><tbody>`
 
@@ -1545,7 +1576,9 @@ ${datalistHtml}
                 htmlV += `<td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td>`
                 return
               }
-              htmlV += `<td class="tm">${ex.matiere}</td><td class="tg">${ex.groupe}</td><td class="tp">${ex.profCode}</td>${partBadgeV(ex)}${survViewCells(ex, periode, jour)}`
+              const isAn = !partMap.get(ex.id) || partMap.get(ex.id).type === 'annule'
+              const anCls = isAn ? ' an' : ''
+              htmlV += `<td class="tm${anCls}">${ex.matiere}</td><td class="tg${anCls}">${ex.groupe}</td><td class="tp${anCls}">${ex.profCode}</td>${partBadgeV(ex, isAn)}${survViewCells(ex, periode, jour)}`
             })
             htmlV += `</tr>`
           }
