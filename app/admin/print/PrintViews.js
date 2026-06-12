@@ -1028,6 +1028,15 @@ function ViewPdfSurveillances({ exams, partData, jourFilter, locaux, surveillant
       const legacyGid = liaisons?.[ex.id] && uid !== ex.id ? `${liaisons[ex.id]}@${per}` : null
       return (liaisons && liaisons[uid]) || legacyGid || null
     }
+    // Fallback : même surveillant non-vide + même local non-vide + même créneau
+    // = même salle → fusion automatique même sans liaison explicite
+    const autoGid = (uid, ex, per) => {
+      const s = (surveillants && (surveillants[uid] || surveillants[ex.id])) || ''
+      const l = (locaux && (locaux[uid] || locaux[ex.id])) || ex.local || ''
+      if (!s || !l) return null
+      return `auto|${s}|${l}|${ex.jour}|${per}`
+    }
+    const effectiveGid = (uid, ex, per) => gidOfUid(uid, ex, per) || autoGid(uid, ex, per)
 
     // Passe 1 : trouver les gids qui ont au moins un membre de type 'liste'
     const listeGids = new Set()
@@ -1036,12 +1045,12 @@ function ViewPdfSurveillances({ exams, partData, jourFilter, locaux, surveillant
       if (jourFilter && ex.jour !== jourFilter) continue
       for (const per of ex.periode === 'P1+P2' ? ['P1', 'P2'] : [ex.periode]) {
         const uid = uidOfEx(ex, per)
-        const gid = gidOfUid(uid, ex, per)
+        const gid = effectiveGid(uid, ex, per)
         if (gid) listeGids.add(gid)
       }
     }
 
-    // Passe 2 : kept = exams de type 'liste' + leurs partenaires liés (pas 'annule')
+    // Passe 2 : kept = exams de type 'liste' + leurs partenaires dans le même groupe
     const kept = []
     for (const ex of exams) {
       if (partData[ex.id]?.type === 'annule') continue
@@ -1049,17 +1058,17 @@ function ViewPdfSurveillances({ exams, partData, jourFilter, locaux, surveillant
       for (const per of ex.periode === 'P1+P2' ? ['P1', 'P2'] : [ex.periode]) {
         const uid = uidOfEx(ex, per)
         const p   = partData[ex.id]
-        const gid = gidOfUid(uid, ex, per)
-        // Inclure si 'liste', ou si lié à un groupe qui contient au moins un 'liste'
+        const gid = effectiveGid(uid, ex, per)
+        // Inclure si 'liste', ou si dans un groupe qui contient au moins un 'liste'
         if (p?.type !== 'liste' && !listeGids.has(gid)) continue
         kept.push({ ex, periode: per, uid })
       }
     }
 
-    // Une fiche par examen, sauf examens liés dans le Tableau Final : une fiche par groupe
+    // Une fiche par examen — ou par groupe (liaison explicite ou auto-détectée)
     const groups = new Map()
     for (const e of kept) {
-      const gid = gidOfUid(e.uid, e.ex, e.periode) || `solo-${e.uid}`
+      const gid = effectiveGid(e.uid, e.ex, e.periode) || `solo-${e.uid}`
       if (!groups.has(gid)) groups.set(gid, [])
       groups.get(gid).push(e)
     }
