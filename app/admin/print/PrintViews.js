@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 
 function fmtJour(iso) {
   const d = new Date(iso + 'T12:00:00')
@@ -397,7 +397,7 @@ body {
 
 /* ── Print media ───────────────────────────────────────── */
 @media print {
-  @page { size: A4 portrait; margin: 12mm 15mm; }
+  @page { size: A4 portrait; margin: 6mm 8mm; }
 
   .no-print, .topbar, .controls, footer { display: none !important; }
   .content { padding: 0; max-width: none; }
@@ -425,7 +425,7 @@ body {
   /* PDF pages */
   .pdf-wrap { background: none; padding: 0; }
   .pdf-page {
-    width: 100%; min-height: 0; margin: 0; padding: 0;
+    width: 100%; min-height: 0; margin: 0; padding: 14mm 18mm 12mm;
     box-shadow: none; break-after: page; page-break-after: always;
   }
   .pdf-page:last-child { break-after: avoid; page-break-after: avoid; }
@@ -1012,7 +1012,11 @@ function ViewPdfEleves({ exams, partData, allGroupes, manuscriptGroupes = [], lo
 
 // ── View: PDF Surveillances ───────────────────────────────────────────────────
 
-function ViewPdfSurveillances({ exams, partData, jourFilter, locaux, surveillants, liaisons }) {
+function ViewPdfSurveillances({ exams, partData, jourFilter, locaux, surveillants, liaisons, profsData = {} }) {
+  const profLabel = code => {
+    const p = profsData[code]
+    return p ? `${p.prenom} ${p.nom}` : code
+  }
   // Les examens P1+P2 sont gérés par période dans le Tableau Final (clé id@P1 / id@P2) :
   // une fiche par plage. Les saisies héritées sous l'id brut servent de repli.
   const survOf = e => (surveillants && (surveillants[e.uid] || surveillants[e.ex.id])) || ''
@@ -1097,7 +1101,7 @@ function ViewPdfSurveillances({ exams, partData, jourFilter, locaux, surveillant
                 )}
                 {titulaires.length > 0 && (
                   <span style={{ fontSize: 11, fontWeight: 600, color: '#065f46' }}>
-                    Surveillé par le titulaire ({titulaires.join(', ')})
+                    Surveillé par le titulaire ({titulaires.map(profLabel).join(', ')})
                   </span>
                 )}
               </div>
@@ -1118,7 +1122,7 @@ function ViewPdfSurveillances({ exams, partData, jourFilter, locaux, surveillant
               </div>
               <div className="pdf-surv-meta-item">
                 <div className="lbl">Professeur{profs.length > 1 ? 's' : ''}</div>
-                <div className="val" style={profs.length > 2 ? { fontSize: 10.5 } : undefined}>{profs.join(' + ')}</div>
+                <div className="val" style={profs.length > 1 ? { fontSize: 10.5 } : undefined}>{profs.map(profLabel).join(' + ')}</div>
               </div>
               <div className="pdf-surv-meta-item" style={{ borderColor: 'var(--gold)', background: 'var(--gold-bg)' }}>
                 <div className="lbl">Surveillant</div>
@@ -1140,21 +1144,47 @@ function ViewPdfSurveillances({ exams, partData, jourFilter, locaux, surveillant
                     <th>Nom</th>
                     <th>Prénom</th>
                     <th>Classe</th>
-                    {merged && <th>Examen</th>}
                     <th style={{ width: 60, textAlign: 'center' }}>Présent</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map(({ el, ex }, i) => (
-                    <tr key={i}>
-                      <td className="pdf-surv-num">{i + 1}</td>
-                      <td style={{ fontWeight: 700 }}>{el.nom}</td>
-                      <td>{el.prenom}</td>
-                      <td>{el.classe || ex.groupe}</td>
-                      {merged && <td><span className="mono">{ex.matiere} {ex.groupe}</span></td>}
-                      <td style={{ textAlign: 'center' }}><span className="pdf-check" /></td>
-                    </tr>
-                  ))}
+                  {merged ? (
+                    entries.map((e, ei) => {
+                      const offset = entries.slice(0, ei).reduce((s, e2) => s + e2.eleves.length, 0)
+                      return (
+                        <React.Fragment key={e.ex.id}>
+                          <tr>
+                            <td colSpan={5} style={{
+                              background: 'var(--navy)', color: '#fff', fontWeight: 700,
+                              padding: '5px 10px', fontSize: 10.5, letterSpacing: '.3px',
+                              WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact',
+                            }}>
+                              {e.ex.matiere} — {e.ex.groupe} · {profLabel(e.ex.profCode)} · {e.eleves.length} élève{e.eleves.length !== 1 ? 's' : ''}
+                            </td>
+                          </tr>
+                          {e.eleves.map((el, i) => (
+                            <tr key={i}>
+                              <td className="pdf-surv-num">{offset + i + 1}</td>
+                              <td style={{ fontWeight: 700 }}>{el.nom}</td>
+                              <td>{el.prenom}</td>
+                              <td>{el.classe || e.ex.groupe}</td>
+                              <td style={{ textAlign: 'center' }}><span className="pdf-check" /></td>
+                            </tr>
+                          ))}
+                        </React.Fragment>
+                      )
+                    })
+                  ) : (
+                    rows.map(({ el, ex }, i) => (
+                      <tr key={i}>
+                        <td className="pdf-surv-num">{i + 1}</td>
+                        <td style={{ fontWeight: 700 }}>{el.nom}</td>
+                        <td>{el.prenom}</td>
+                        <td>{el.classe || ex.groupe}</td>
+                        <td style={{ textAlign: 'center' }}><span className="pdf-check" /></td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             )}
@@ -1242,7 +1272,7 @@ function buildCsvRows(exams, partData, filterFn) {
   return rows
 }
 
-export default function PrintViews({ exams, partData, allGroupes, allProfs, manuscriptGroupes = [], locaux = {}, surveillants = {}, liaisons = {} }) {
+export default function PrintViews({ exams, partData, allGroupes, allProfs, manuscriptGroupes = [], locaux = {}, surveillants = {}, liaisons = {}, profsData = {} }) {
   const [tab,     setTab]     = useState('classe')
   const [groupe,  setGroupe]  = useState('')
   const [prof,    setProf]    = useState('')
@@ -1368,7 +1398,7 @@ export default function PrintViews({ exams, partData, allGroupes, allProfs, manu
       {/* PDF views — full width, one A4 page per item */}
       {tab === 'pdf-classes' && <ViewPdfClasses exams={exams} partData={partData} allGroupes={allGroupes} manuscriptGroupes={manuscriptGroupes} locaux={locaux} />}
       {tab === 'pdf-eleves'  && <ViewPdfEleves  exams={exams} partData={partData} allGroupes={allGroupes} manuscriptGroupes={manuscriptGroupes} locaux={locaux} />}
-      {tab === 'pdf-surv'    && <ViewPdfSurveillances exams={exams} partData={partData} jourFilter={jourPdf} locaux={locaux} surveillants={surveillants} liaisons={liaisons} />}
+      {tab === 'pdf-surv'    && <ViewPdfSurveillances exams={exams} partData={partData} jourFilter={jourPdf} locaux={locaux} surveillants={surveillants} liaisons={liaisons} profsData={profsData} />}
     </>
   )
 }

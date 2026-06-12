@@ -793,13 +793,13 @@ export async function GET(request) {
       async function syncServer() {
         const surveillants = {}, locaux = {}, reservistes = {};
         document.querySelectorAll('.fin-inp').forEach(i => {
-          if (i.value.trim() && i.dataset.exid) surveillants[i.dataset.exid] = i.value.trim().toUpperCase();
+          if (i.dataset.exid) surveillants[i.dataset.exid] = i.value.trim().toUpperCase();
         });
         document.querySelectorAll('.loc-inp').forEach(i => {
-          if (i.value.trim() && i.dataset.exid) locaux[i.dataset.exid] = i.value.trim().toUpperCase();
+          if (i.dataset.exid) locaux[i.dataset.exid] = i.value.trim().toUpperCase();
         });
         document.querySelectorAll('.res-inp').forEach(i => {
-          if (i.value.trim() && i.dataset.slot) reservistes[i.dataset.slot] = i.value.trim().toUpperCase();
+          if (i.dataset.slot) reservistes[i.dataset.slot] = i.value.trim().toUpperCase();
         });
         try {
           const r = await fetch('/api/final', {

@@ -2,6 +2,7 @@ import { requireAdmin } from '@/lib/auth'
 import { getAllResponses, getLocksData } from '@/actions/admin'
 import { read } from '@/lib/storage'
 import exams from '@/lib/exams.json'
+import profsData from '@/lib/profs.json'
 import PrintViews from './PrintViews'
 
 export default async function PrintPage() {
@@ -90,7 +91,7 @@ export default async function PrintPage() {
           </nav>
         </div>
       </div>
-      <PrintViews exams={exams} partData={partData} allGroupes={allGroupes} allProfs={allProfs} manuscriptGroupes={manuscriptGroupes} locaux={locauxFinal} surveillants={surveillantsFinal} liaisons={liaisonsFinal} />
+      <PrintViews exams={exams} partData={partData} allGroupes={allGroupes} allProfs={allProfs} manuscriptGroupes={manuscriptGroupes} locaux={locauxFinal} surveillants={surveillantsFinal} liaisons={liaisonsFinal} profsData={profsData} />
     </>
   )
 }
