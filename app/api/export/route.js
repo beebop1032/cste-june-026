@@ -1414,10 +1414,10 @@ ${datalistHtml}
     const NIV_COLORS_V = ['#1a3254','#1e4976','#1d5fa8','#1a6b8a','#1a7a6e','#236b3e']
 
     // Largeurs fixes pour aligner les colonnes de même type à travers les niveaux
-    // Pér(22) Mat(36) Cl(24) Prof(28) Él(18) SURV(42) Loc(32) → total/demi = 22 + 3×180 = 562px
-    const COL_WIDTHS = { tc: 22, mat: 36, cl: 24, prof: 28, el: 18, surv: 42, loc: 32 }
+    // Mat(36) Cl(24) Prof(28) Él(18) SURV(42) Loc(32) → total/demi = 3×180 = 540px
+    const COL_WIDTHS = { mat: 36, cl: 24, prof: 28, el: 18, surv: 42, loc: 32 }
     const colGroupHtml = () => {
-      let cg = `<colgroup><col style="width:${COL_WIDTHS.tc}px">`
+      let cg = `<colgroup>`
       for (let i = 0; i < 3; i++) cg += `<col style="width:${COL_WIDTHS.mat}px"><col style="width:${COL_WIDTHS.cl}px"><col style="width:${COL_WIDTHS.prof}px"><col style="width:${COL_WIDTHS.el}px"><col style="width:${COL_WIDTHS.surv}px"><col style="width:${COL_WIDTHS.loc}px">`
       return cg + `</colgroup>`
     }
@@ -1451,7 +1451,6 @@ ${datalistHtml}
       tbody tr { height: 18px }
       tbody td { height: 18px; border: 1px solid #e2dfd8; padding: 0 3px; text-align: center; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
       tbody tr:nth-child(even) td { background: #faf9f6 }
-      .tc { background: #374151 !important; color: #fff !important; font-weight: 700; font-size: 8.5px }
       .tm { font-weight: 600; font-size: 9px }
       .tg { font-weight: 700; font-size: 9px; color: var(--navy) }
       .tp { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--muted) }
@@ -1505,7 +1504,6 @@ ${datalistHtml}
         tbody td { height: 11px; padding: 0 1px }
         .badge { font-size: 5.5px; padding: 0 2px }
         .vf-surv, .vf-loc { font-size: 6.5px; padding: 0 2px !important }
-        .tc { font-size: 7px }
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important }
       }
     `
@@ -1560,11 +1558,11 @@ ${datalistHtml}
         halvesV.forEach((indices, hi) => {
           if (hi > 0) htmlV += `<div class="half-gap"></div>`
 
-          htmlV += `<table>${colGroupHtml()}<thead><tr class="niv-row"><th class="tc"></th>`
+          htmlV += `<table>${colGroupHtml()}<thead><tr class="niv-row">`
           indices.forEach(i => {
             htmlV += `<th colspan="6" style="background:${NIV_COLORS_V[i]}">${NIVEAU_LABELS[i]}</th>`
           })
-          htmlV += `</tr><tr class="col-row"><th class="tc">Pér.</th>`
+          htmlV += `</tr><tr class="col-row">`
           indices.forEach(i => {
             const c = NIV_COLORS_V[i]
             htmlV += `<th style="background:${c}">Mat.</th><th style="background:${c}">Cl.</th><th style="background:${c}">Prof.</th><th style="background:${c}">Él.</th><th style="background:#14532d">SURV</th><th style="background:#4c1d95">Loc.</th>`
@@ -1572,7 +1570,7 @@ ${datalistHtml}
           htmlV += `</tr></thead><tbody>`
 
           for (let i = 0; i < maxRows; i++) {
-            htmlV += `<tr><td class="tc">${i === 0 ? periode : ''}</td>`
+            htmlV += `<tr>`
             indices.forEach(idx => {
               const n  = NIVEAUX[idx]
               const ex = byNiveau[n][i]
