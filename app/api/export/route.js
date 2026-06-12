@@ -516,6 +516,7 @@ export async function GET(request) {
       .print-btn  { background:var(--gold); color:#fff; border:none; padding:7px 16px; font-family:inherit; font-size:11.5px; font-weight:700; cursor:pointer; border-radius:4px }
       .copy-all-btn { background:#374151; color:#fff; border:none; padding:7px 14px; font-family:inherit; font-size:11px; font-weight:600; cursor:pointer; border-radius:4px }
       .reset-btn    { background:transparent; color:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.25); padding:6px 12px; font-family:inherit; font-size:10.5px; cursor:pointer; border-radius:4px }
+      .view-pdf-btn { background:#1a7a6e; color:#fff; border:none; padding:7px 14px; font-family:inherit; font-size:11px; font-weight:700; cursor:pointer; border-radius:4px }
       .save-status  { font-size:10px; color:rgba(255,255,255,.5); min-width:80px }
       .legend { display:flex; gap:12px; align-items:center; padding:7px 28px; background:#fff; border-bottom:1px solid var(--border); font-size:10px; color:var(--muted); flex-wrap:wrap }
       .leg { display:flex; align-items:center; gap:4px }
@@ -1169,6 +1170,7 @@ ${datalistHtml}
     <span class="save-status" id="save-status"></span>
     <button class="copy-all-btn" onclick="copyAll()">↙ Copier toutes les suggestions</button>
     <button class="reset-btn" onclick="resetAll()">Réinitialiser</button>
+    <button class="view-pdf-btn" onclick="window.open('/api/export?format=print-final-view','_blank')">Vue PDF propre</button>
     <button class="print-btn" onclick="window.print()">Imprimer A3 / PDF</button>
   </div>
 </div>
@@ -1326,6 +1328,261 @@ ${datalistHtml}
 
 <script>const COPIES_PER_PROF=${JSON.stringify(copiesPerProfF)};const REP_DATA=${JSON.stringify(repDataF)};${jsF}</script></body></html>`
     return new Response(htmlF, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+  }
+
+  // ── Vue PDF finale — statique, sans inputs ────────────────────────────────
+
+  if (format === 'print-final-view') {
+    const partMap   = await buildPartMap()
+    const finalData = (await read('final-locaux.json')) ?? {}
+    const survMapV  = finalData.surveillants ?? {}
+    const locMapV   = finalData.locaux       ?? {}
+    const resMapV   = finalData.reservistes  ?? {}
+
+    const legacyV = (map, uid) => {
+      const v = map[uid]; if (v) return v
+      if (uid.includes('@')) { const b = map[uid.split('@')[0]]; if (b) return b }
+      return ''
+    }
+
+    // Pre-count exams per (slot+surv) to detect fusions (≥2 exams, same surv, same plage)
+    const fusionCount = {}
+    for (const j of JOURS) {
+      for (const per of ['P1', 'P2']) {
+        for (const ex of examsForBloc(j, per)) {
+          const p = partMap.get(ex.id)
+          if (!p || p.type === 'annule') continue
+          const surv = legacyV(survMapV, uidOf(ex, per))
+          if (!surv) continue
+          const key = `${j}|${per}|${surv}`
+          fusionCount[key] = (fusionCount[key] || 0) + 1
+        }
+      }
+    }
+
+    function partBadgeV(ex) {
+      const p = partMap.get(ex.id)
+      if (!p) return `<td class="p-ns"><span class="badge b-ns">–</span></td>`
+      if (p.type === 'annule') return `<td class="p-an"><span class="badge b-an">✕</span></td>`
+      if (p.type === 'tous')   return `<td class="p-to"><span class="badge b-to">✓</span></td>`
+      return `<td class="p-li"><span class="badge b-li">${p.label}</span></td>`
+    }
+
+    function survViewCells(ex, periode, jourV) {
+      const p   = partMap.get(ex.id)
+      const uid = uidOf(ex, periode)
+      if (!p || p.type === 'annule') {
+        return `<td class="vf-surv va"></td><td class="vf-loc va"></td>`
+      }
+      const surv    = legacyV(survMapV, uid)
+      const defLoc  = (ex.niveau === '1re' || ex.niveau === '2e') ? (ex.local ?? '') : ''
+      const loc     = legacyV(locMapV, uid) || defLoc
+      const isFused = (fusionCount[`${jourV}|${periode}|${surv}`] ?? 0) >= 2
+      const survTd  = surv
+        ? `<td class="vf-surv filled${isFused ? ' fused' : ''}">${isFused ? '🔗 ' : ''}${surv}</td>`
+        : `<td class="vf-surv empty">—</td>`
+      const locTd   = loc
+        ? `<td class="vf-loc filled">${loc}</td>`
+        : `<td class="vf-loc empty">—</td>`
+      return survTd + locTd
+    }
+
+    const NIV_COLORS_V = ['#1a3254','#1e4976','#1d5fa8','#1a6b8a','#1a7a6e','#236b3e']
+
+    const cssV = `
+      @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Playfair+Display:wght@700&family=JetBrains+Mono:wght@500&display=swap');
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
+      :root { --navy: #1a3254; --bg: #f4f3ef; --white: #fff; --text: #1c1c1c; --muted: #6b7280; --border: #d6d2c8 }
+      body { font-family: 'Source Sans 3', 'Helvetica Neue', sans-serif; font-size: 11px; background: var(--bg); color: var(--text); line-height: 1.4 }
+      .topbar { background: var(--navy); color: #fff; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px }
+      .topbar h1 { font-family: 'Playfair Display', Georgia, serif; font-size: 17px; font-weight: 700 }
+      .topbar p { font-size: 9.5px; color: rgba(255,255,255,.5); margin-top: 2px }
+      .print-btn { background: #b8893a; color: #fff; border: none; padding: 7px 16px; font-family: inherit; font-size: 11.5px; font-weight: 700; cursor: pointer; border-radius: 4px }
+      .legend { display: flex; gap: 10px; align-items: center; padding: 6px 24px; background: #fff; border-bottom: 1px solid var(--border); font-size: 10px; color: var(--muted); flex-wrap: wrap }
+      .leg { display: flex; align-items: center; gap: 4px }
+      .leg-dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0 }
+      .content { max-width: 1700px; margin: 0 auto; padding: 12px 18px 32px }
+      .print-hdr { display: none }
+      .day { background: var(--white); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 10px; box-shadow: 0 1px 5px rgba(0,0,0,.05) }
+      .day-hdr { background: var(--navy); color: #fff; padding: 5px 13px 6px; display: flex; align-items: center; gap: 14px }
+      .day-name { font-weight: 700; font-size: 11.5px; letter-spacing: .5px; text-transform: uppercase }
+      .day-res { font-size: 9px; color: rgba(255,255,255,.7) }
+      .per { padding: 7px 13px 9px; border-top: 1px solid var(--border) }
+      .per:first-of-type { border-top: none }
+      .per-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--navy); margin-bottom: 5px; display: flex; align-items: center; gap: 6px }
+      .per-label::after { content: ''; flex: 1; height: 1px; background: var(--border) }
+      .half-gap { height: 4px }
+      table { width: 100%; border-collapse: collapse }
+      thead tr.niv-row th { padding: 3px; font-size: 9.5px; font-weight: 700; color: #fff; letter-spacing: .3px; text-align: center; border: 1px solid rgba(255,255,255,.2) }
+      thead tr.col-row th { font-size: 7.5px; font-weight: 700; text-transform: uppercase; padding: 2px 3px; border: 1px solid rgba(255,255,255,.25); text-align: center; color: #fff }
+      tbody td { border: 1px solid #e2dfd8; padding: 2px 3px; text-align: center; vertical-align: middle; white-space: nowrap }
+      tbody tr:nth-child(even) td { background: #faf9f6 }
+      .tc { background: #374151 !important; color: #fff !important; font-weight: 700; font-size: 8.5px }
+      .tm { font-weight: 600; font-size: 9px }
+      .tg { font-weight: 700; font-size: 9px; color: var(--navy) }
+      .tp { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--muted) }
+      .te { background: #faf9f7 !important }
+      .badge { display: inline-block; padding: 1px 3px; border-radius: 2px; font-weight: 700; font-size: 7.5px }
+      .b-an { background: #fde8e8; color: #991b1b }
+      .b-to { background: #d1fae5; color: #065f46 }
+      .b-li { background: #dbeafe; color: #1e40af }
+      .b-ns { color: #9ca3af; font-style: italic; font-weight: 400 }
+      td.p-an { background: #fff5f5 }
+      td.p-to { background: #f0fff4 }
+      td.p-li { background: #eff6ff }
+      .vf-surv { font-family: 'JetBrains Mono', monospace; font-size: 9px; min-width: 42px; padding: 1px 4px !important; font-weight: 700 }
+      .vf-surv.filled { color: #14532d; background: #f0fdf4 }
+      .vf-surv.empty { color: #9ca3af; font-style: italic; font-weight: 400; font-size: 8px }
+      .vf-surv.va { background: #f5f5f5 !important; opacity: .25 }
+      .vf-surv.fused { background: #ede9fe !important; color: #4c1d95 !important; border-left: 3px solid #7c3aed !important }
+      .vf-loc { font-family: 'JetBrains Mono', monospace; font-size: 9px; min-width: 36px; padding: 1px 4px !important; font-weight: 700 }
+      .vf-loc.filled { color: #4c1d95; background: #f5f3ff }
+      .vf-loc.empty { color: #9ca3af; font-style: italic; font-weight: 400; font-size: 8px }
+      .vf-loc.va { background: #f5f5f5 !important; opacity: .25 }
+      .recap-final { margin-top: 12px; padding: 9px 13px; background: #f8f6f1; border: 1px solid #e2dfd8; border-radius: 4px; page-break-inside: avoid }
+      .rf-title { font-size: 10px; font-weight: 700; color: #1a3254; margin-bottom: 7px; text-transform: uppercase; letter-spacing: .5px }
+      .rf-grid { display: flex; flex-direction: column; gap: 4px }
+      .rf-niv { display: flex; align-items: center; gap: 4px; flex-wrap: wrap }
+      .rf-niv-label { font-size: 8px; font-weight: 700; color: #6b7280; min-width: 38px; text-transform: uppercase; letter-spacing: .5px }
+      .rf-item { display: inline-flex; align-items: center; gap: 3px; background: #fff; border: 1px solid #d6d2c8; border-radius: 3px; padding: 1px 5px }
+      .rf-groupe { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; color: #1a3254 }
+      .rf-count { font-size: 8px; color: #6b7280 }
+      @media print {
+        @page { size: A3 landscape; margin: 5mm 7mm }
+        body { background: #fff; font-size: 7.5px }
+        .topbar, .legend, .print-btn { display: none }
+        .content { padding: 0; max-width: none; margin: 0 }
+        .print-hdr { display: block; text-align: center; margin-bottom: 4px; padding-bottom: 3px; border-bottom: 2px solid #1a3254 }
+        .print-hdr h1 { font-family: 'Playfair Display', Georgia, serif; font-size: 11px; font-weight: 700; color: #1a3254 }
+        .print-hdr p { font-size: 7.5px; color: #6b7280; margin-top: 2px }
+        .day { box-shadow: none; border-radius: 0; border: 1px solid #bbb; margin-bottom: 4px }
+        .day-hdr { padding: 2px 7px }
+        .day-name { font-size: 8.5px }
+        .day-res { font-size: 7px }
+        .per { padding: 1px 7px 3px }
+        .per-label { font-size: 7px; margin-bottom: 2px }
+        .half-gap { height: 1px }
+        table { font-size: 6.5px }
+        .tm, .tg { font-size: 6.5px }
+        .tp { font-size: 6px }
+        thead tr.niv-row th { font-size: 7.5px; padding: 1px 2px }
+        thead tr.col-row th { font-size: 6px; padding: 1px 1px }
+        tbody td { padding: 1px 1px }
+        .badge { font-size: 5.5px; padding: 0 2px }
+        .vf-surv, .vf-loc { font-size: 6.5px; padding: 0 2px !important; min-width: unset }
+        .tc { font-size: 7px }
+        -webkit-print-color-adjust: exact; print-color-adjust: exact
+      }
+    `
+
+    const dateStr = new Date().toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })
+
+    let htmlV = `<!DOCTYPE html>
+<html lang="fr"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vue PDF — Surveillance juin 2026</title>
+<style>${cssV}</style>
+</head><body>
+<div class="topbar">
+  <div>
+    <h1>Vue PDF — Tableau de surveillance</h1>
+    <p>Collège des Hayeffes · Juin 2026 · données au ${dateStr}</p>
+  </div>
+  <button class="print-btn" onclick="window.print()">Imprimer A3 / PDF</button>
+</div>
+<div class="legend">
+  <span class="leg"><span class="leg-dot" style="background:#f0fdf4;border:1px solid #86efac"></span>Surveillant attribué</span>
+  <span class="leg"><span class="leg-dot" style="background:#ede9fe;border:2px solid #7c3aed"></span>🔗 Fusion (même surveillant · même plage)</span>
+  <span class="leg"><span class="leg-dot" style="background:#f5f3ff;border:1px solid #c4b5fd"></span>Local attribué</span>
+  <span class="leg"><span class="leg-dot" style="background:#fde8e8;border:1px solid #fca5a5"></span>Annulé</span>
+  <span class="leg"><span class="leg-dot" style="background:#d1fae5;border:1px solid #6ee7b7"></span>Tous les élèves</span>
+  <span class="leg"><span class="leg-dot" style="background:#dbeafe;border:1px solid #93c5fd"></span>Liste nominative</span>
+</div>
+<div class="print-hdr">
+  <h1>Tableau de surveillance — Juin 2026</h1>
+  <p>Collège des Hayeffes · Imprimé le ${dateStr}</p>
+</div>
+<div class="content">
+`
+
+    for (const jour of JOURS) {
+      const resP1 = resMapV[`${jour}@P1`] || ''
+      const resP2 = resMapV[`${jour}@P2`] || ''
+      const resParts = [resP1 && `Rés. P1 : ${resP1}`, resP2 && `Rés. P2 : ${resP2}`].filter(Boolean)
+      htmlV += `<div class="day">
+  <div class="day-hdr">
+    <span class="day-name">${labelJour(jour)}</span>${resParts.length ? ` <span class="day-res">${resParts.join(' &nbsp;·&nbsp; ')}</span>` : ''}
+  </div>`
+
+      for (const periode of ['P1', 'P2']) {
+        const bloc = examsForBloc(jour, periode)
+        if (!bloc.length) continue
+        const { byNiveau, maxRows } = buildBlocRows(bloc)
+
+        htmlV += `<div class="per"><div class="per-label">${periode}</div>`
+
+        const halvesV = [[0,1,2],[3,4,5]]
+        halvesV.forEach((indices, hi) => {
+          if (hi > 0) htmlV += `<div class="half-gap"></div>`
+
+          htmlV += `<table><thead><tr class="niv-row"><th class="tc"></th>`
+          indices.forEach(i => {
+            htmlV += `<th colspan="6" style="background:${NIV_COLORS_V[i]}">${NIVEAU_LABELS[i]}</th>`
+          })
+          htmlV += `</tr><tr class="col-row"><th class="tc">Pér.</th>`
+          indices.forEach(i => {
+            const c = NIV_COLORS_V[i]
+            htmlV += `<th style="background:${c}">Mat.</th><th style="background:${c}">Cl.</th><th style="background:${c}">Prof.</th><th style="background:${c}">Él.</th><th style="background:#14532d">Fin.</th><th style="background:#4c1d95">Loc.</th>`
+          })
+          htmlV += `</tr></thead><tbody>`
+
+          for (let i = 0; i < maxRows; i++) {
+            htmlV += `<tr><td class="tc">${i === 0 ? periode : ''}</td>`
+            indices.forEach(idx => {
+              const n  = NIVEAUX[idx]
+              const ex = byNiveau[n][i]
+              if (!ex) {
+                htmlV += `<td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td><td class="te"></td>`
+                return
+              }
+              htmlV += `<td class="tm">${ex.matiere}</td><td class="tg">${ex.groupe}</td><td class="tp">${ex.profCode}</td>${partBadgeV(ex)}${survViewCells(ex, periode, jour)}`
+            })
+            htmlV += `</tr>`
+          }
+          htmlV += `</tbody></table>`
+        })
+        htmlV += `</div>`
+      }
+      htmlV += `</div>`
+    }
+
+    // Summary
+    const activeByGroupeV = {}
+    let totalActiveV = 0
+    for (const ex of exams) {
+      const p = partMap.get(ex.id)
+      if (!p || p.type === 'annule') continue
+      const nPer = periodesOf(ex).length
+      totalActiveV += nPer
+      activeByGroupeV[ex.groupe] = (activeByGroupeV[ex.groupe] || 0) + nPer
+    }
+
+    htmlV += `<div class="recap-final">
+  <div class="rf-title">Récapitulatif — ${totalActiveV} période${totalActiveV > 1 ? 's' : ''} à surveiller</div>
+  <div class="rf-grid">${NIVEAUX.map((n, ni) => {
+      const groups = [...new Set(exams.filter(e => e.niveau === n).map(e => e.groupe))].sort()
+      const items = groups.map(g => {
+        const count = activeByGroupeV[g] || 0
+        if (!count) return ''
+        return `<span class="rf-item"><span class="rf-groupe">${g}</span><span class="rf-count">${count}</span></span>`
+      }).filter(Boolean).join('')
+      if (!items) return ''
+      return `<div class="rf-niv"><span class="rf-niv-label">${NIVEAU_LABELS[ni]}</span>${items}</div>`
+    }).filter(Boolean).join('')}</div>
+</div>`
+
+    htmlV += `</div></body></html>`
+    return new Response(htmlV, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
   }
 
   // ── Récap prof : corrections + surveillances ──────────────────────────────
